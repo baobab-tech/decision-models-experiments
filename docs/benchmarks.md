@@ -166,6 +166,7 @@ Self-reported, not on the board: `autotrust/JEV-Gemma4-26B-A4B` 58.05 on 0.2.1; 
 | Typed Decision Leaderboard | AUC | Jev 0.7350; ZTC 27B 0.7289; open-jev 4B 0.6101; Laya 421M 0.5144 (AaJ) | [mayafree Space](https://huggingface.co/spaces/mayafree/typed-decision-leaderboard) |
 | Open JevBench, model-agnostic | Choice/Score/Noul across LLMs and encoders | gpt-oss-20b 88.4; Open-Jev-9B 82.3; NeoHorse-Jev-4B 77.6 (AaJ) | [model-collapse/jev-bench](https://github.com/model-collapse/jev-bench) |
 | decisionbench | Banking77, 154 messages | Jev 79.9% at $0.07/1k, p50 0.26 s; Claude Opus 5.5 83.8% at $13.68/1k (AaJ) | [stas4000/decisionbench](https://github.com/stas4000/decisionbench) |
+| jev_vs_oss (LlamaIndex) | 5 PDF tasks via liteparse, 32–96 decisions each; accuracy, latency, cost | Jev / Qwen3.5-4B (SemIf-style) / Laya / jeff: language 100 / 100 / 40 / 48%; orientation 94 / 91 / 28 / 22%; RVL-CDIP 16-class 54 / 51 / 24 / 26%; split 96 / 88 / 71 / 73%; triage 85 / 96 / 52 / 65%. lingua 100%, tesseract OSD 100%, heuristic triage 94% | [run-llama/jev_vs_oss](https://github.com/run-llama/jev_vs_oss); [experiment 03](../experiments/03-jev-vs-open-document-tasks/) |
 
 ## Reading the leaderboards across models
 

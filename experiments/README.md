@@ -6,8 +6,11 @@ The maintainer picks which experiment runs next; see [AGENTS.md](../AGENTS.md).
 |---|---|---|---|
 | 01 | [Many-option classification](01-many-option-classification/) | proposed | Do decision models hold up at 10–200+ labels, multi-label tags and document types, on ~100 and ~2,000-token inputs? |
 | 02 | [Fine-tuning decision models](02-fine-tuning/) | proposed | Which models can we fine-tune, how many labels does it take to beat zero-shot, and on what hardware? |
+| 03 | [Jev vs open models on document tasks](03-jev-vs-open-document-tasks/) | done (LlamaIndex) | How do Jev, Qwen3.5-4B, Laya, jeff and specialised tools compare on language, orientation, classification, splitting and parse triage of PDFs? |
 
 Statuses: `proposed` → `planned` (plan approved) → `running` → `done`.
+
+Experiment 03 is [LlamaIndex's `jev_vs_oss`](https://github.com/run-llama/jev_vs_oss) (MIT), copied with credit; its results are theirs.
 
 ## Layout
 

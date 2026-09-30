@@ -83,6 +83,7 @@ These come from published sources; we haven't run anything yet.
 |---|---|---|
 | 01 | [Many-option classification](experiments/01-many-option-classification/): 10–200+ labels, tags, document types; ~100 vs ~2,000-token inputs | proposed |
 | 02 | [Fine-tuning](experiments/02-fine-tuning/): which models, how, and how many labels it takes to beat zero-shot | proposed |
+| 03 | [Jev vs open models on document tasks](experiments/03-jev-vs-open-document-tasks/): language, orientation, RVL-CDIP classes, bundle splitting and parse triage on PDFs; by [LlamaIndex](https://github.com/run-llama/jev_vs_oss) | done |
 
 Each experiment starts as a written plan. Results, code and run metadata are published in its folder ([index](experiments/README.md)).
 

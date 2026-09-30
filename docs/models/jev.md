@@ -137,6 +137,7 @@ Via Vercel AI Gateway (`typesafe-ai/jev`):
 ## Caveats
 
 - Closed model with early-access keys; rate limits change without notice during the capacity ramp.
+- Text only: PDFs need a parse or OCR step first. On LlamaIndex's five PDF tasks (32–96 decisions each, jev-1.13.0, run 2026-09-24), free specialised tools matched or beat Jev: lingua 100% vs 100% on language, tesseract OSD 100% vs 93.8% on orientation, a two-rule heuristic 93.8% vs 85.4% on parse triage ([experiment 03](../../experiments/03-jev-vs-open-document-tasks/)).
 - Noul answers carry no `confidence`. Calibration holds across groups of predictions, not for single answers.
 - Documented jev-1.13 weak spots: literal reading, counting and arithmetic, date comparison, multi-hop indirection, large irrelevant state, injected state content, instructions contradicting criteria, and inconsistent related questions (a Noul and its negation summed to 1.19).
 - Open questions: `confidence` formula, max questions per request, free tier, `jev-1.12` availability, accuracy vs option count and state length.
