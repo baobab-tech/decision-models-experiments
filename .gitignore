@@ -11,3 +11,4 @@ node_modules/
 *.gguf
 *.bin
 results/raw/
+data/all-about-jev/*.jsonl
