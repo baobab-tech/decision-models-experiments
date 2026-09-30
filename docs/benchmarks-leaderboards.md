@@ -126,10 +126,11 @@ Source: [`benchmarkheaven.com/api/jevbench/v1.5.4`](https://benchmarkheaven.com/
 
 ## Decision Index 0.2.1
 
-Source: [`multimodalart/jev-decision-index` `data/index.json`](https://huggingface.co/spaces/multimodalart/jev-decision-index), generated 2026-09-28T00:39Z, read 2026-09-30. 71 rows including Jev.
+Source: [`multimodalart/jev-decision-index` `data/index-v0.2.1.json`](https://huggingface.co/spaces/multimodalart/jev-decision-index/resolve/main/data/index-v0.2.1.json) (byte-identical to `data/index.json`), generated 2026-09-28T00:39Z, read 2026-09-30. 71 rows: 70 entrants plus Jev. Liquid d1 has no row; its vendor-run result is [below](#vendor-reported-results-on-the-same-suite).
 
 - Score: balanced skill (headline). ECE: calibration sample over 32 benchmarks.
 - Median ms: open models are CUDA-synchronized request time on one RTX PRO 6000 without HTTP; Jev is an HTTPS round trip.
+- Base "not stated": the entry's `base_model` field is empty.
 
 | # | Entrant | Params (served) | Base | Score | ECE | Median ms |
 |---:|---|---:|---|---:|---:|---:|
@@ -190,17 +191,30 @@ Source: [`multimodalart/jev-decision-index` `data/index.json`](https://huggingfa
 | 55 | MoganAI Lavoir ModernBERT-large | 396M | ModernBERT-large | 8.69 | 0.149 | 20.0 |
 | 56 | jeff GLiFormer-large | 576M | gliformer-large-v1 | 8.04 | 0.097 | 21.8 |
 | 57 | CLM-v0.1-8B Qwen3-8B heads | 8.2B | Qwen3-8B-Base | 7.40 | 0.323 | 46.8 |
-| 58 | GLiNER 2.5 base | 194M | s | 6.76 | 0.367 | 14.1 |
+| 58 | GLiNER 2.5 base | 194M | not stated | 6.76 | 0.367 | 14.1 |
 | 59 | LFM2.5-2.6B-RLCD | 2.7B | LFM2.5-2.6B-Base | 6.76 | 0.255 | 39.3 |
 | 60 | Decision 1.0 Kai | 308M | mmBERT-base | 6.52 | 0.185 | 30.4 |
-| 61 | Laya | 421M | s | 6.04 | 0.140 | 5.8 |
+| 61 | Laya | 421M | not stated | 6.04 | 0.140 | 5.8 |
 | 62 | Supersonic Labs Julia 1 | 141M | mmBERT-small | 5.54 | 0.420 | 5.8 |
 | 63 | system-one-gemma | 268M | gemma-3-270m | 5.07 | 0.239 | 31.9 |
 | 64 | Decision 1.0 Lex | 308M | mmBERT-base | 4.54 | 0.169 | 29.8 |
-| 65 | GLiNER 2.5 multilingual | 287M | s | 4.26 | 0.254 | 14.0 |
-| 66 | GLiNER 2.5 small | 74M | s | 3.82 | 0.161 | 13.6 |
+| 65 | GLiNER 2.5 multilingual | 287M | not stated | 4.26 | 0.254 | 14.0 |
+| 66 | GLiNER 2.5 small | 74M | not stated | 3.82 | 0.161 | 13.6 |
 | 67 | Qwen-2.5-1B-RLCD | 1.5B | Qwen2.5-1.5B | 3.78 | 0.205 | 43.8 |
 | 68 | Lumma-Fev-0.6B | 649M | Lumma-0.6B-Base | 2.97 | 0.236 | 21.3 |
 | 69 | Verdict | 151M | gliclass-modern-base-v2.0 | 1.87 | 0.154 | 11.4 |
 | 70 | Lumma-Fev-0.1B | 153M | Nandi-Mini-150M | 1.78 | 0.157 | 20.9 |
-| 71 | LFM2.5-350M-RLCD | 354M | s | 1.38 | 0.568 | 26.7 |
+| 71 | LFM2.5-350M-RLCD | 354M | not stated | 1.38 | 0.568 | 26.7 |
+
+### Vendor-reported results on the same suite
+
+Not on the public board. Each row is the vendor's or author's own run of the Decision Index 0.2.1 suite; none was scored by the board maintainer.
+
+| Entrant | Reported score | Jev on the same run | Run by | Source (checked 2026-09-30) |
+|---|---:|---:|---|---|
+| Liquid d1 (hosted API) | 58.9 | 57.9 | Liquid AI | [KuCoin](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), 2026-09-30 |
+| Darwin-27B-JEV (AutoJev-27B plus a Darwin-27B-RSI reasoning path) | 61.17 | — | author (seawolf2357) | [apolinario/decision-index PR #15](https://github.com/apolinario/decision-index/pull/15), open |
+| autotrust/JEV-Gemma4-26B-A4B | 58.05 | 57.91 (board) | autotrust | [model card](https://huggingface.co/autotrust/JEV-Gemma4-26B-A4B) |
+
+- Liquid d1 by area: ahead of Jev on arts and human judgment, language, and retrieval and classification; slightly behind on tools; 8 points behind on knowledge and reasoning. Liquid publishes no per-area numbers.
+- Liquid's [launch thread](https://threadreaderapp.com/thread/2105003472332693869.html) (2026-09-29) calls d1 "the first model to outperform Jev" on the index.
