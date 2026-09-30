@@ -4,7 +4,9 @@
 [![Docs checked](https://img.shields.io/badge/docs%20checked-2026--09--30-informational)](docs/README.md)
 [![Status](https://img.shields.io/badge/status-research%20phase-lightgrey)](experiments/README.md)
 
-Guides, run instructions and open experiments for **System One decision models**: Jev, Liquid d1, GLiNER2.5-Decide, Kev, Laya and 250+ open models on Hugging Face. Maintained by [Baobab Tech](https://github.com/baobab-tech).
+Guides, run instructions and open experiments for **System One decision models**: Jev, Liquid d1, GLiNER2.5-Decide, Kev, Laya and 250+ open models on Hugging Face.
+
+This repo is maintained by [Baobab Tech](https://github.com/baobab-tech). Baobab Tech is not affiliated with any model, vendor, benchmark or dataset listed here. Each model, name, benchmark and dataset belongs to its authors, and each doc links to the original source. What this repo adds is the docs, experiment plans and results.
 
 ## What a decision model does
 
