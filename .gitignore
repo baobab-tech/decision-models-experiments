@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+*.onnx
+*.safetensors
+*.gguf
+*.bin
+results/raw/
