@@ -59,7 +59,8 @@ Reference wire format; see [concepts.md](../concepts.md#request-and-response-sha
 | [AutoTrust](https://huggingface.co/blog/autotrust/autotrustjev-27b-fast-calibrated-decisions-and-ful) (not affiliated) | Mean 83.85 over six benchmarks: JevBench 87.18, Kev 85.52, OpenJev text 72.96, Nimble 91.84, VitaminC 78.46, MASSIVE-en 87.14; its open JEV-27B scores 84.07 (unverified) |
 
 - TypeSafe's reference labels are the average of GPT-6 Astra and Claude Fable 5.1 predictions, not ground truth; TypeSafe notes a bias toward those models and calls the speed/cost ratios "on the higher end".
-- The HF "Decision Index" ([dataset](https://huggingface.co/datasets/autotrust/jev-decision-index-results)) is AutoTrust's board of its own open models, not a TypeSafe product.
+- The [Jev Decision Index](https://huggingface.co/spaces/multimodalart/jev-decision-index) is a community HF Space (multimodalart, [kit](https://github.com/apolinario/decision-index)) that scores open Jev reproductions and the hosted Jev API on one suite; it is not a TypeSafe product. AutoTrust publishes its own runs for the board in a [dataset](https://huggingface.co/datasets/autotrust/jev-decision-index-results).
+- Board data generated 2026-09-28 (edition 0.2.1, 43 benchmarks): `jev-1.13.0` has the top balanced skill score, 57.91; the next row is Surogate Rune 26B-A4B v3 at 57.44. The board has no Liquid d1 row. Liquid reports d1 at 58.9 vs Jev 1.13 at 57.9 on edition 0.2.1 from its own run of the suite ([KuCoin](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), 2026-09-30); Liquid publishes no score itself and no independent run exists.
 - Community harnesses: [4esv/jev-eval](https://github.com/4esv/jev-eval), [dhruvmehra/jevbench](https://github.com/dhruvmehra/jevbench), [fstandhartinger/jevbench](https://github.com/fstandhartinger/jevbench).
 
 ## Running it
@@ -71,7 +72,7 @@ API only. Local runs on Apple Silicon are impossible: no weights, GGUF, MLX or o
 | Price | $0.042 per million input tokens; output free. No free tier documented |
 | Rate limits | 100K tokens/s, 40 requests/s (adjusted dynamically; higher on enterprise) |
 | Context | 64k tokens per request; 32k for state + longest single question |
-| Latency | 70–500 ms end-to-end (vendor claim; service hosted on the US West Coast) |
+| Latency | 70–500 ms end-to-end (vendor claim; service based on the US West Coast) ([launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev)) |
 
 Get early access at [console.typesafe.ai](https://console.typesafe.ai/) (waitlist possible), export a key as `TYPESAFE_API_KEY`, then `uv run jev_min.py`:
 
@@ -93,9 +94,9 @@ with TypeSafeClient() as client:  # reads TYPESAFE_API_KEY, defaults to jev-late
 print(r.answers["department"].choice, r.answers["is_urgent"].noul, r.usage)
 ```
 
-- SDKs: Python ≥ 3.10 [`typesafe-sdk`](https://github.com/typesafe-ai/typesafe-sdk-python) (`[http2]` extra available; sync and async clients); Node ≥ 20 [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js) (v0.6.0). Both retry 429/529 with backoff.
+- SDKs: Python ≥ 3.10 [`typesafe-sdk`](https://github.com/typesafe-ai/typesafe-sdk-python) (v0.7.2; `[http2]` extra available; sync and async clients); Node ≥ 20 [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js) (v0.6.0). Both retry 429/529 with backoff.
 - Agent skill: `claude plugin marketplace add typesafe-ai/skills && claude plugin install typesafe@typesafe-ai`, or `npx skills add typesafe-ai/skills --skill typesafe-ai`.
-- Vercel AI Gateway serves it as `typesafe-ai/jev` via AI SDK `experimental_evaluate` (≥ 7.0.105). Its example uses type `"boolean"` instead of `"noul"`; the mapping is not in TypeSafe docs.
+- Vercel AI Gateway serves it as `typesafe-ai/jev` via AI SDK `experimental_evaluate` (≥ 7.0.105), at the same $0.042 per million input tokens. The gateway lists a 32,000-token context window; its description repeats TypeSafe's 64k / 32k limits. Its example uses type `"boolean"` instead of `"noul"`; the mapping is not in TypeSafe docs.
 
 ## Scaling limits
 
@@ -119,19 +120,19 @@ Not legal advice.
 
 | Field | Jev API (`api.typesafe.ai`) |
 |---|---|
-| Processing location | United States ([privacy policy](https://typesafe.ai/legal/privacy-policy), effective 2025-11-19). AWS hosts live-request data; Modal processes prompts without storing them ([trust center](https://trust.typesafe.ai/)). |
-| EU region | None as of 2026-09-30. EU data moves to the US under SCCs Module 2 ([DPA](https://typesafe.ai/legal/data-processing)). |
+| Processing location | United States ([privacy policy](https://typesafe.ai/legal/privacy-policy), last updated 2025-11-19). AWS hosts live-request data; Modal, Nebius and CoreWeave process prompts without storing them ([subprocessors](https://trust.typesafe.ai/subprocessors)). |
+| EU region | None as of 2026-09-30. EU data moves to the US under SCCs Module 2, or Module 3 when the customer is a processor ([DPA](https://typesafe.ai/legal/data-processing)). |
 | Retention | DPA: "as long as necessary". ZDR for enterprise via sales@typesafe.ai ([Legal](https://docs.typesafe.ai/legal)). Default prompt retention undocumented. |
 | Trains on inputs | No: TypeSafe "will not train or fine tune any … models on Input" (privacy policy). |
-| DPA / GDPR | Public DPA (2026-04-24): SCCs, UK Addendum, 72-hour breach notice, 15-day subprocessor notice. |
-| Certifications | SOC 2 Type II (2026, on request). ISO 27001 undocumented. |
-| Subprocessors | AWS, Modal, Slack, Google Workspace (all USA). |
+| DPA / GDPR | Public DPA (last updated 2026-04-24): SCCs, UK Addendum, 72-hour breach notice, 15 days to object to a new subprocessor. |
+| Certifications | SOC 2 Type II (2026 report, on request via the [trust center](https://trust.typesafe.ai/resources)). ISO 27001 undocumented. |
+| Subprocessors | AWS, Modal, Nebius, CoreWeave, Slack, Google Workspace (all USA). |
 | Self-host / fine-tuning | No / no. |
 | Weights licence | Proprietary; no weights distributed. |
 
 Via Vercel AI Gateway (`typesafe-ai/jev`):
 
-- No ZDR as of 2026-09-30. The gateway routes `typesafe-ai/jev` through one provider, `digitalocean`, with `"has_zdr": false` and `"has_no_training": true` ([`/v1/models/typesafe-ai/jev/endpoints`](https://ai-gateway.vercel.sh/v1/models/typesafe-ai/jev/endpoints)); [`/v1/models`](https://ai-gateway.vercel.sh/v1/models) matches with `"zdr": "none"`, `"no_training": "all"` and no `regions` field. The [ZDR page](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr) (updated 2026-09-22) lists TypeSafe AI as a ZDR provider, and the [2026-09-16 changelog](https://vercel.com/changelog/typesafe-ai-jev-now-available-on-ai-gateway) says Jev supports ZDR, but TypeSafe is not the serving provider. Per the ZDR page, a `zeroDataRetention: true` request fails with `no_providers_available` when no ZDR provider serves the model (not tested).
+- No ZDR as of 2026-09-30. The gateway routes `typesafe-ai/jev` through one provider, `digitalocean`, with `"has_zdr": false` and `"has_no_training": true` ([`/v1/models/typesafe-ai/jev/endpoints`](https://ai-gateway.vercel.sh/v1/models/typesafe-ai/jev/endpoints)); [`/v1/models`](https://ai-gateway.vercel.sh/v1/models) matches with `"zdr": "none"`, `"no_training": "all"` and no `regions` field. The [ZDR page](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr) (updated 2026-09-22) lists TypeSafe AI as a ZDR provider, and the [2026-09-16 changelog](https://vercel.com/changelog/typesafe-ai-jev-now-available-on-ai-gateway) says Jev supports ZDR, but TypeSafe is not the serving provider. DigitalOcean is on the same ZDR list, yet its `typesafe-ai/jev` endpoint reports `has_zdr: false`. Per the ZDR page, a `zeroDataRetention: true` request fails with `no_providers_available` when no ZDR provider serves the model (not tested).
 - Without `regions`, EU pinning via `inferenceRegion` is unavailable ([Regional Inference](https://vercel.com/docs/ai-gateway/security-and-compliance/regional-inference)).
 
 ## Caveats
@@ -148,4 +149,4 @@ Via Vercel AI Gateway (`typesafe-ai/jev`):
 - Primitives and cookbooks: [Choice](https://docs.typesafe.ai/primitives/choice), [Score](https://docs.typesafe.ai/primitives/score), [Noul](https://docs.typesafe.ai/primitives/noul), [Jev 1.13 jaggedness](https://docs.typesafe.ai/model-jaggedness/jev-1.13), [parallel questions](https://docs.typesafe.ai/cookbooks/parallel_questions), [classification using confidence](https://docs.typesafe.ai/cookbooks/classification_using_confidence), [line-by-line search](https://docs.typesafe.ai/cookbooks/semantic_find), [Python SDK](https://docs.typesafe.ai/sdk/python), [JavaScript SDK](https://docs.typesafe.ai/sdk/javascript), [agent skill](https://docs.typesafe.ai/agent-skill)
 - Legal: [Legal](https://docs.typesafe.ai/legal), [DPA](https://typesafe.ai/legal/data-processing), [privacy policy](https://typesafe.ai/legal/privacy-policy), [MCA](https://typesafe.ai/legal/mca), [trust center](https://trust.typesafe.ai/)
 - Vercel: [changelog 2026-09-16](https://vercel.com/changelog/typesafe-ai-jev-now-available-on-ai-gateway), [ZDR](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr), [Regional Inference](https://vercel.com/docs/ai-gateway/security-and-compliance/regional-inference), [`/v1/models`](https://ai-gateway.vercel.sh/v1/models)
-- Third-party: [AutoTrust JEV-27B blog](https://huggingface.co/blog/autotrust/autotrustjev-27b-fast-calibrated-decisions-and-ful), [Decision Index dataset](https://huggingface.co/datasets/autotrust/jev-decision-index-results), [orcarouter.ai](https://www.orcarouter.ai/blog/jev-typesafe-system-one-what-we-know), [systemonemodels.org](https://systemonemodels.org); unofficial: [HF blog (paidaxccc)](https://huggingface.co/blog/paidaxccc/jev-system-one-model-a-practical-guide-to-typed-ai), [HF blog (sora-2)](https://huggingface.co/blog/sora-2/what-is-jev-ai-a-practical-guide-to-system-one-and)
+- Third-party: [AutoTrust JEV-27B blog](https://huggingface.co/blog/autotrust/autotrustjev-27b-fast-calibrated-decisions-and-ful), [Jev Decision Index](https://huggingface.co/spaces/multimodalart/jev-decision-index), [AutoTrust Decision Index runs](https://huggingface.co/datasets/autotrust/jev-decision-index-results), [orcarouter.ai](https://www.orcarouter.ai/blog/jev-typesafe-system-one-what-we-know), [systemonemodels.org](https://systemonemodels.org); unofficial: [HF blog (paidaxccc)](https://huggingface.co/blog/paidaxccc/jev-system-one-model-a-practical-guide-to-typed-ai), [HF blog (sora-2)](https://huggingface.co/blog/sora-2/what-is-jev-ai-a-practical-guide-to-system-one-and)

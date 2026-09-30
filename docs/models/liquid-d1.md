@@ -50,12 +50,13 @@ Same wire format as Jev; see [concepts.md](../concepts.md#request-and-response-s
 
 | Benchmark | d1 | Jev 1.13 | Source |
 |---|---|---|---|
-| HF Decision Index 0.2.1 (composite) | 58.9 | 57.9 | [KuCoin](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), 2026-09-30 (secondary, unverified) |
+| Decision Index 0.2.1 (composite) | 58.9 | 57.9 | Liquid's own run of the suite, reported by [KuCoin](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), 2026-09-30 |
 
-- Per KuCoin, d1 leads on artistic judgment, language understanding and retrieval classification; Jev leads on tool usage and knowledge reasoning (by 8 points).
-- [AlphaSignal](https://alphasignal.ai/news/liquid-ai-s-d1-makes-decisions-without-generating-a-single-token) says the index covers 132,422 requests over 37 benchmarks and ranks d1 first, with Jev 1.13 "near 74.4". This conflicts with 57.9 (unverified).
-- d1 is not on the Decision Index board. The [DI Space](https://huggingface.co/spaces/multimodalart/jev-decision-index) data files (`index-v0.2.1.json`, 70 entrants plus Jev, generated 2026-09-28T00:39Z; `index-v2.json`, 2026-09-27) have no d1 or Liquid-hosted row (checked 2026-09-30). The Space was last updated 2026-09-28, before d1's 2026-09-29 release. [Liquid's launch thread](https://threadreaderapp.com/thread/2105003472332693869.html) claims d1 is "the first model to outperform Jev" on the index without giving a score. 58.9 appears only in press reports (unverified).
-- Liquid publishes no benchmark, accuracy or latency numbers.
+- By area, d1 leads on arts and human judgment, language understanding, and retrieval and classification. It is slightly behind Jev on tools and 8 points behind on knowledge and reasoning.
+- The Jev figure matches the public board: Jev 1.13 scores 57.91 on Decision Index 0.2.1 in the [DI Space](https://huggingface.co/spaces/multimodalart/jev-decision-index) (`data/index-v0.2.1.json`, 38 index benchmarks, 120,340 requests).
+- d1 has no row on the public board. Its data files (`index-v0.2.1.json`, 70 entrants plus Jev, generated 2026-09-28T00:39Z) predate d1's 2026-09-29 release (checked 2026-09-30).
+- [Liquid's launch thread](https://threadreaderapp.com/thread/2105003472332693869.html) calls d1 "the first model to outperform Jev" on the index.
+- Liquid publishes no per-benchmark scores and no latency numbers. [DataNorth](https://datanorth.ai/news/liquid-ai-releases-d1) notes the index ranks open-weight models and d1 has no weights.
 
 ## Running it
 
@@ -72,15 +73,16 @@ curl -s https://api.liquid.ai/decisions/v1/systemone \
 ```
 
 - SDKs: `TypeSafeClient(api_key=..., base_url="https://api.liquid.ai").system_one(model="d1:free", ...)` in Python; `new TypeSafeClient({apiKey, baseURL: "https://api.liquid.ai"}).systemOne(...)` in TS.
-- Vercel AI Gateway: `evaluate({model: 'liquid/d1', ...})` from `ai`, auth via `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN` (`vercel link && vercel env pull`). AI SDK 7.0.105+ is required for Jev; the minimum for d1 is not stated (unverified). Only the AI SDK path is documented, not a raw HTTP or `/v1/chat/completions` route.
+- Vercel AI Gateway: `experimental_evaluate({model: 'liquid/d1', ...})` from `ai`, auth via `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN` (`vercel link && vercel env pull`). AI SDK 7.0.105+ is required for Jev; the minimum for d1 is not stated (unverified). Only the AI SDK path is documented, not a raw HTTP or `/v1/chat/completions` route.
 - OpenRouter support is planned, no date.
 
 | Pricing and limits | Value |
 |---|---|
 | Billing | Input tokens only |
 | Free tier | `d1:free`; quotas undocumented |
-| Paid pricing / paid model id | Not documented; [liquid.ai/pricing](https://www.liquid.ai/pricing) lists no d1 rates |
-| Context | 32,000 tokens ([Vercel](https://vercel.com/ai-gateway/models/d1), DataNorth) |
+| Paid pricing / paid model id | Not documented; [liquid.ai/pricing](https://www.liquid.ai/pricing) covers open LFM licensing only |
+| AI Gateway price | $0 input and output for `liquid/d1` ([`/v1/models`](https://ai-gateway.vercel.sh/v1/models)); whether this draws on the `d1:free` quota is undocumented |
+| Context | 32,000 tokens ([Vercel](https://vercel.com/ai-gateway/models/d1), [gateway endpoints](https://ai-gateway.vercel.sh/v1/models/liquid/d1/endpoints), DataNorth) |
 | Rate limits, regions | Not documented |
 
 ## Scaling limits
@@ -107,10 +109,10 @@ Not legal advice.
 |---|---|---|
 | Processing location | US, "and possibly other countries" ([privacy policy](https://www.liquid.ai/privacy-policy)). Cloud provider undocumented. | Gateway in any Vercel region on AWS, Azure, GCP ([DPA](https://vercel.com/legal/dpa)); inference routed to `liquid` only. |
 | EU region | Undocumented. US transfers "may" rely on standard clauses. | No: no `regions` in [`/v1/models`](https://ai-gateway.vercel.sh/v1/models), so EU `inferenceRegion` fails ([Regional Inference](https://vercel.com/docs/ai-gateway/security-and-compliance/regional-inference)). |
-| Retention | "As long as necessary". Terms §3.3.4: inputs and outputs usable "in perpetuity for our internal business purposes" ([terms](https://www.liquid.ai/terms-conditions)). No ZDR. | Vercel logs metadata only ([FAQ](https://vercel.com/docs/ai-gateway/faq)). `"zdr": "none"`; Liquid absent from the [ZDR list](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr). `zeroDataRetention: true` fails with `no_providers_available` (unverified). |
-| Trains on inputs | Permitted: inputs and outputs used for "enhancing AI models"; users asked not to submit personal data. | Vercel does not ([docs](https://vercel.com/docs/ai-gateway/security-and-compliance/disallow-prompt-training)). `"no_training": "none"`, so Liquid's terms apply. |
+| Retention | "As long as necessary". Terms §3.3.4: inputs and outputs usable "in perpetuity for our internal business purposes" ([terms](https://www.liquid.ai/terms-conditions)). No ZDR. | Vercel logs metadata only ([FAQ](https://vercel.com/docs/ai-gateway/faq)). `"zdr": "none"` and `has_zdr: false` ([endpoints](https://ai-gateway.vercel.sh/v1/models/liquid/d1/endpoints)); Liquid absent from the [ZDR list](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr). `zeroDataRetention: true` fails with `no_providers_available` (unverified). |
+| Trains on inputs | Permitted: inputs and outputs used for "enhancing AI models"; users asked not to submit personal data. | Vercel does not ([docs](https://vercel.com/docs/ai-gateway/security-and-compliance/disallow-prompt-training)). `"no_training": "none"` and `has_no_training: false`, so Liquid's terms apply. |
 | DPA / GDPR | Referenced, no public link. Requests: legal@liquid.ai. | Vercel DPA (2021 SCCs, UK IDTA); covers Vercel only. |
-| Certifications | Access-gated [trust center](https://trust.liquid.ai/); contents undocumented. | Vercel SOC 2 Type 2, ISO 27001:2013 ([security](https://vercel.com/security)). |
+| Certifications | Access-gated [trust center](https://trust.liquid.ai/) hosted on Vanta; contents not public. | Vercel SOC 2 Type 2, ISO 27001:2013 ([security](https://vercel.com/security)). |
 | Subprocessors | Undocumented. | Vercel's via its DPA. |
 | Self-host / fine-tuning | No / no. Open LFMs run on-prem but are not d1. | No / no. |
 | Weights licence | Proprietary; none distributed. | Same. |
@@ -121,14 +123,13 @@ Not legal advice.
 ## Caveats
 
 - Paid pricing, rate limits, quotas, size and architecture are undocumented.
-- Benchmarks come only from secondary news; DataNorth questions a leaderboard listing for a model with no weights.
+- The only benchmark figures come from Liquid's own run of the Decision Index; no independent run exists.
 - Code is not portable between the Liquid API (`noul` / `.noul`) and AI SDK (`boolean` / `.probability`) without renaming.
-- Whether AI Gateway bills against the Liquid free tier or at a gateway rate is undocumented.
 
 ## Sources
 
 - Liquid: [Decision Models](https://docs.liquid.ai/lfm/models/decision-models), [Decision Model Guide](https://docs.liquid.ai/guides/decision-model-guide), [fine-tuning](https://docs.liquid.ai/lfm/fine-tuning/overview), [pricing](https://www.liquid.ai/pricing), [cookbook](https://github.com/Liquid4All/cookbook), [HF models](https://huggingface.co/LiquidAI/models)
 - Vercel / AI SDK: [d1 model page](https://vercel.com/ai-gateway/models/d1), [`evaluate` reference](https://ai-sdk.dev/docs/reference/ai-sdk-core/evaluate), [Evaluation](https://ai-sdk.dev/docs/ai-sdk-core/evaluation), [Jev + AI SDK guide](https://vercel.com/kb/guide/typesafe-jev-and-ai-sdk)
-- News: [MarkTechPost](https://www.marktechpost.com/2026/09/29/liquid-ai-releases-d1-a-decision-model-that-returns-calibrated-probabilities-with-zero-output-tokens/), [KuCoin](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), [DataNorth](https://datanorth.ai/news/liquid-ai-releases-d1), [AlphaSignal](https://alphasignal.ai/news/liquid-ai-s-d1-makes-decisions-without-generating-a-single-token)
+- News: [MarkTechPost](https://www.marktechpost.com/2026/09/29/liquid-ai-releases-d1-a-decision-model-that-returns-calibrated-probabilities-with-zero-output-tokens/), [KuCoin](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), [DataNorth](https://datanorth.ai/news/liquid-ai-releases-d1), [Decision Index Space](https://huggingface.co/spaces/multimodalart/jev-decision-index)
 - Limits: [perch PR #230](https://github.com/lakeday-org/perch/pull/230), [Telnyx](https://developers.telnyx.com/api-reference/decision-models/evaluate-decision-models-typesafe-compatible.md), [LLM Gateway](https://llmgateway.io/changelog/system-one-typed-decisions), [integrallis PR #216](https://github.com/integrallis/models/pull/216), [Mapika/decider-2b](https://huggingface.co/Mapika/decider-2b)
-- Governance: [privacy policy](https://www.liquid.ai/privacy-policy), [terms](https://www.liquid.ai/terms-conditions), [trust center](https://trust.liquid.ai/), [Vercel security and compliance](https://vercel.com/docs/ai-gateway/security-and-compliance), [ZDR](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr), [prompt training](https://vercel.com/docs/ai-gateway/security-and-compliance/disallow-prompt-training), [Regional Inference](https://vercel.com/docs/ai-gateway/security-and-compliance/regional-inference), [FAQ](https://vercel.com/docs/ai-gateway/faq), [`/v1/models`](https://ai-gateway.vercel.sh/v1/models), [DPA](https://vercel.com/legal/dpa), [security](https://vercel.com/security)
+- Governance: [privacy policy](https://www.liquid.ai/privacy-policy), [terms](https://www.liquid.ai/terms-conditions), [trust center](https://trust.liquid.ai/), [Vercel security and compliance](https://vercel.com/docs/ai-gateway/security-and-compliance), [ZDR](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr), [prompt training](https://vercel.com/docs/ai-gateway/security-and-compliance/disallow-prompt-training), [Regional Inference](https://vercel.com/docs/ai-gateway/security-and-compliance/regional-inference), [FAQ](https://vercel.com/docs/ai-gateway/faq), [`/v1/models`](https://ai-gateway.vercel.sh/v1/models), [`liquid/d1` endpoints](https://ai-gateway.vercel.sh/v1/models/liquid/d1/endpoints), [DPA](https://vercel.com/legal/dpa), [security](https://vercel.com/security)

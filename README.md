@@ -39,7 +39,7 @@ You send a piece of text (the `state`) and typed questions. You get back a proba
 | **Score** | a level on a 2–10 point scale |
 | **Noul** | yes / no, as a probability |
 
-The same request works against Jev, Liquid d1, Kev, Bonsai-Llama-Jev, Decider 1 and Solar Decide. More in [concepts](docs/concepts.md).
+The same request works against Jev, Liquid d1, Kev, Laya (`laya-serve`), Bonsai-Llama-Jev, Decider 1 and Solar Decide. More in [concepts](docs/concepts.md).
 
 ## Start here
 
@@ -56,7 +56,7 @@ The same request works against Jev, Liquid d1, Kev, Bonsai-Llama-Jev, Decider 1 
 | Jev (TypeSafe AI) | closed | API only | no | [jev](docs/models/jev.md) |
 | Liquid d1 | closed | API only | no | [liquid-d1](docs/models/liquid-d1.md) |
 | Decider 1 (meraGPT), Solar Decide (Upstage), Span-01 (Respan), OpenAI Decisions | closed | API only | no | [models/](docs/models/) |
-| GLiNER2.5-Decide (Fastino) | DeBERTa-v3, 340M | Apache-2.0 | yes, CPU | [gliner-decide](docs/models/gliner-decide.md) |
+| GLiNER2.5-Decide (Fastino) | DeBERTa-v3-large, 340M per card | Apache-2.0 | yes, CPU | [gliner-decide](docs/models/gliner-decide.md) |
 | Laya and other BERT-family encoders | ModernBERT / mmBERT / DeBERTa | Apache-2.0 | yes | [open models](docs/models/open-reproductions.md#bert-family-encoders) |
 | Kev (0.8B–27B) | Qwen3.5 / Qwen3.8 | Apache-2.0 | 0.8B–9B via MLX | [kev](docs/models/kev.md) |
 | JevK5, Jev-Style, decider and other Qwen models | Qwen | mostly Apache-2.0 | mostly | [open models](docs/models/open-reproductions.md#qwen-based) |
@@ -71,8 +71,8 @@ All 255 models in Han Xiao's [All about Jev](https://hanxiao.io/all-about-jev/) 
 
 These come from published sources; we haven't run anything yet.
 
-- Jev tops the Decision Index 0.2.1 at 57.91. Every BERT-family encoder scores below 12 ([benchmarks](docs/benchmarks.md#reading-the-leaderboards-across-models)).
-- On JevBench, which also scores speed and cost, 4B–12B open models rank alongside Jev ([leaderboards](docs/benchmarks-leaderboards.md)).
+- On Decision Index 0.2.1, Liquid AI reports d1 at 58.9 and Jev 1.13 at 57.9 from its own run of the suite ([KuCoin/BlockBeats](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), 2026-09-29). The public board, generated 2026-09-28 before d1's release, lists Jev first at 57.91 and has no d1 row ([Space](https://huggingface.co/spaces/multimodalart/jev-decision-index), checked 2026-09-30). Every BERT-family encoder scores below 12 ([benchmarks](docs/benchmarks.md#reading-the-leaderboards-across-models)).
+- On JevBench v1.5.4, which also scores speed and cost, two open Gemma-4-12B models (Cygnet 73.7, Winnow-12B Q8 73.2) lead Jev 1.13 (72.1) in a statistical tie, and 4B models follow within 0.5 points ([live board](https://benchmarkheaven.com/jev-models), checked 2026-09-30).
 - Choice is capped at 255 options on Jev and Kev, and at 26 on AnyJev. No vendor publishes accuracy for 100+ options ([experiment 01](experiments/01-many-option-classification/)).
 - Multi-label tagging means one Noul per label on every Jev-compatible API. Only GLiNER2.5-Decide has a native multi-label mode.
 - Jev and d1 process data in the US and cannot be fine-tuned. Open models can run and train on your own hardware ([data governance](docs/data-governance.md)).

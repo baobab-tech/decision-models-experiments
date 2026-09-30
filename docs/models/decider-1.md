@@ -7,7 +7,7 @@
 | Backbone | Not disclosed |
 | Size | Not disclosed |
 | Licence | Proprietary; hosted API only |
-| Run it via | `POST https://meragpt.com/v1/systemone`, model `sd-1` (alias `state-decider-1`); TypeSafe SDKs with base URL `https://meragpt.com` (unverified) |
+| Run it via | `POST https://meragpt.com/v1/systemone`, model `state-decider-1` (alias `sd-1`); TypeSafe SDKs (`typesafe-sdk` 0.7.2, `@typesafe-ai/sdk` 0.6.0) with `TYPESAFE_BASE_URL=https://meragpt.com`. Not listed on OpenRouter or Vercel AI Gateway |
 | Status | GA (2026-09-22) |
 
 Checked 2026-09-30.
@@ -22,10 +22,11 @@ meraGPT's guidance: "Batch questions, not items" (several questions about one it
 ## Schema
 
 Same path and shape as TypeSafe: `model` + `state` + `questions` → `answers` + `usage`. Auth: `Authorization: Bearer $MERAGPT_API_KEY`.
+`model` is optional; omitted, or the typesafe-sdk's default model name, means Decider 1.
 
 - Choice: 2–10 labels; returns `choice`, `probabilities`, `confidence`.
 - Score: 2–10 levels (`criteria` array, lowest first); returns `score`, `probabilities`, `confidence`, `legend`.
-- Noul: `instructions` only; returns `noul`.
+- Noul: `instructions`, optional `criteria` `{"true": …, "false": …}`; returns `noul`.
 - The envelope adds `id`, `object`, `usage.cost_usd` and `balance_usd`.
 
 In the documented example, Choice `confidence` equals the top probability (0.8969) and Score `confidence` equals the top level probability (0.4393); Score `score` is the probability-weighted mean level (2.1852).
@@ -33,17 +34,19 @@ Liquid d1 computes Choice `confidence` differently.
 
 ## Benchmarks
 
-meraGPT's own evaluation on `LocalLLaMA/typed-decisions` (400 test cases, 2,000 decisions):
+meraGPT's own evaluation on `LocalLLaMA/typed-decisions` (Apache-2.0; 400 test cases, 2,000 decisions, single run), from the [model page](https://meragpt.com/models/state-decider-1) and the [dataset card](https://huggingface.co/datasets/LocalLLaMA/typed-decisions) (ECE):
 
 | Metric | Decider 1 | Jev 1.13.0 |
 |---|---|---|
 | Accuracy (all) | 0.768 | 0.727 |
-| Noul / Choice / Score accuracy | 0.840 / 0.733 / 0.739 | n/d |
+| Noul / Choice / Score accuracy | 0.840 / 0.733 / 0.739 | 0.775 / 0.720 / 0.696 |
 | KL divergence from reference | 0.096 | 1.442 |
 | Brier score | 0.052 | 0.148 |
-| ECE | 0.180 (binning not stated) | n/d |
+| ECE | 0.180 (binning not stated) | 0.144 |
 
-Labels come from a teacher model; meraGPT notes "scores well above 0.735 mean a model is learning the teacher's quirks".
+The dataset card builds gold from three samples of one teacher model and notes "scores well above 0.735 mean a model is learning the teacher's quirks"; meraGPT's pages describe the reference as an ensemble of teacher models.
+The card also lists Liquid AI d1 at 0.742 accuracy (measured 2026-09-30).
+systemonemodels.org reports that meraGPT's submission says its team built the benchmark; the card calls it independent.
 No third-party results.
 
 ## Running it
@@ -66,8 +69,8 @@ curl https://meragpt.com/v1/systemone \
 
 Documented answers: `team` → `technical` (0.8969), `urgency` → 2.1852, `refund_requested` → 0.0975.
 Price: $0.03 per 1M input tokens; output not billed.
-The playground allows 10 signed-out runs per day per IP.
-Launch-post latency: p50 about 526 ms end to end.
+The playground allows 10 signed-out runs per day per IP, 2,000 characters each.
+Latency: p50 526 ms end to end on the dataset card; the launch post says about half a second at the median.
 
 ## Scaling limits
 
@@ -76,7 +79,7 @@ Launch-post latency: p50 about 526 ms end to end.
 - **Context:** 4,096 tokens for state plus questions; more returns `400 input_too_long`.
 - **Multi-label:** one Noul per label in the same call.
 - **100+ options:** ≥10 Choice questions of ≤10 labels (distributions not comparable across groups), or a two-call coarse-to-fine hierarchy. 100 options at ~20 tokens each use ~2,000 of the 4,096 tokens.
-- **Rate limits:** no number published; saturation returns `429` with `Retry-After`.
+- **Rate limits:** no number published; per-key concurrency limits apply. Saturation returns `429 capacity_saturated` with `Retry-After` of 5 s (30 s while capacity starts).
 - **Cost:** a full 4,096-token request costs about $0.00012.
 
 ## Data governance
@@ -85,11 +88,11 @@ Launch-post latency: p50 about 526 ms end to end.
 |---|---|---|
 | Self-host | No | [systemonemodels.org](https://systemonemodels.org/models/meragpt-decider-1/) |
 | Fine-tuning | n/d | |
-| Processing location | Not stated; "including the United States". Subprocessors: Vercel, Neon, Stripe, Google, unnamed model hosts | [privacy policy](https://meragpt.com/privacy) |
+| Processing location | Not stated; "including the United States". Models run by meraGPT; no third-party AI provider receives content. Subprocessors: Vercel, Neon, Stripe, Google, unnamed cloud hosts for the models | [privacy policy](https://meragpt.com/privacy) (2026-09-19) |
 | EU processing option | n/d | |
-| Retention / ZDR | Request text "held in memory only… never written to our database or our logs"; usage records kept for billing | [privacy policy](https://meragpt.com/privacy), [terms](https://meragpt.com/terms) |
+| Retention / ZDR | Request text "held in memory only… never written to our database or our logs"; usage and request records (no text) kept for billing | [privacy policy](https://meragpt.com/privacy), [terms](https://meragpt.com/terms) |
 | Training on inputs | No ("We do not train on it") | [terms](https://meragpt.com/terms) |
-| DPA / GDPR | No DPA; transfers rely on "standard contractual clauses" | [privacy policy](https://meragpt.com/privacy) |
+| DPA / GDPR | No DPA published; transfers rely on "standard contractual clauses" | [privacy policy](https://meragpt.com/privacy) |
 | Certifications | n/d | |
 | Legal entity / law | Okyasoft Pte Ltd; Singapore law | [terms](https://meragpt.com/terms) |
 
@@ -101,6 +104,6 @@ Launch-post latency: p50 about 526 ms end to end.
 
 ## Sources
 
-- meraGPT: [System One API docs](https://meragpt.com/docs/systemone), [cookbooks](https://meragpt.com/docs/cookbooks), [errors](https://meragpt.com/docs/errors), [model page](https://meragpt.com/models/state-decider-1), [launch blog](https://meragpt.com/blog/introducing-decider-1), [terms](https://meragpt.com/terms), [privacy policy](https://meragpt.com/privacy)
+- meraGPT: [System One API docs](https://meragpt.com/docs/systemone), [models](https://meragpt.com/docs/models), [`GET /v1/models`](https://meragpt.com/v1/models), [cookbooks](https://meragpt.com/docs/cookbooks), [errors](https://meragpt.com/docs/errors), [model page](https://meragpt.com/models/state-decider-1), [launch blog](https://meragpt.com/blog/introducing-decider-1), [terms](https://meragpt.com/terms), [privacy policy](https://meragpt.com/privacy)
 - [HF: LocalLLaMA/typed-decisions](https://huggingface.co/datasets/LocalLLaMA/typed-decisions)
 - [systemonemodels.org: Decider 1](https://systemonemodels.org/models/meragpt-decider-1/)

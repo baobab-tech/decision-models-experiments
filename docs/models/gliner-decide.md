@@ -7,13 +7,13 @@
 | Backbone | `microsoft/deberta-v3-large` (24 layers, hidden 1024); `base_model` `fastino/gliner2-large-v1`; `span` head (`SpanExtractor`) |
 | Size | 340M parameters per card; `model.safetensors` 1.95 GB fp32 |
 | Licence | Apache 2.0 (weights, `gliner2` package, `fast-decisions` dataset) |
-| Run it via | `uv pip install "gliner2[local]"`, then `AutoExtractor.from_pretrained("fastino/GLiNER2.5-Decide")`; hosted at `https://api.fastino.ai` |
+| Run it via | `uv pip install "gliner2[local]"`, then `AutoExtractor.from_pretrained("fastino/GLiNER2.5-Decide")`; hosted at `https://api.fastino.ai` as model `fastino/GLiNER-2.5-Decide` |
 
 Checked 2026-09-30. Not run locally; no weights downloaded.
 
 ## Overview
 
-- HF repo [`fastino/GLiNER2.5-Decide`](https://huggingface.co/fastino/GLiNER2.5-Decide), released 2026-09-24, last modified 2026-09-28; 34,664 downloads at check time. English only. Siblings: [`GLiNER2.5-multi-Decide`](https://huggingface.co/fastino/GLiNER2.5-multi-Decide) (287M, multilingual) and [`GLiNER2.5-Decide-1B`](https://huggingface.co/fastino/GLiNER2.5-Decide-1B).
+- HF repo [`fastino/GLiNER2.5-Decide`](https://huggingface.co/fastino/GLiNER2.5-Decide), announced 2026-09-24 (repo created 2026-09-23), last modified 2026-09-28, revision `5a7adf7`; 34,664 downloads at check time. English only. Siblings: [`GLiNER2.5-multi-Decide`](https://huggingface.co/fastino/GLiNER2.5-multi-Decide) (287M, mDeBERTa-v3-base, multilingual; 6,532 downloads) and [`GLiNER2.5-Decide-1B`](https://huggingface.co/fastino/GLiNER2.5-Decide-1B) ("approximately 1B", Ettin encoder `jhu-clsp/ettin-enc-from-dec-1b`; 1.19B fp32 values, 4.76 GB; 1,144 downloads).
 - Scope per card: intent, routing, sentiment, document type, handoff, agent completion, moderation, severity, urgency, spam, yes/no over a passage, ordinal scores. It does not reason, explain or answer open questions.
 - Adds multi-label questions and cross-question rules decoded jointly, which Jev lacks.
 - Framework paper: [GLiNER2, arXiv:2507.18546](https://arxiv.org/abs/2507.18546).
@@ -49,7 +49,7 @@ Response (`ClassificationResult`): `r.value("intent")`, `r.selected(...)`, `r.co
 
 ## Benchmarks
 
-[`fastino/fast-decisions`](https://huggingface.co/datasets/fastino/fast-decisions) (Fastino-built, Apache 2.0): 17 English domains, 300 test rows each (5,100), exact-match accuracy, same labels for every model.
+[`fastino/fast-decisions`](https://huggingface.co/datasets/fastino/fast-decisions) (Fastino-built, Apache 2.0): 17 English domains, 300 test rows each (5,100), exact-match accuracy, same labels for every model. The test split is held out; the HF repo holds only the development split (100 rows per domain, 1,700 rows), so the scores cannot be reproduced from public data.
 
 | Model | Avg exact match |
 |---|---:|
@@ -61,7 +61,7 @@ Response (`ClassificationResult`): `r.value("intent")`, `r.selected(...)`, `r.co
 | GLiFormer large-v1 | 49.0% |
 | Laya Router | 46.6% |
 
-- Source: model and dataset cards. The [blog](https://fastino.ai/blog/gliner-2-5-decide-open-weight-decision-model) and MarkTechPost report 60.1% and 57.5%; the dataset card labels the 59.6% row "GLiNER2 XL (1B)".
+- Source: model and dataset cards. The [blog](https://fastino.ai/blog/gliner-2-5-decide-open-weight-decision-model) and MarkTechPost report 60.1% and 57.5%, and describe JevK5 as a 4B-class Qwen3.5 decoder; the dataset card labels the 59.6% row "GLiNER2 XL (1B)".
 - Decide led 9 of 17 domains; support intent 75.3%, banking intent 64.3%. No independent replication found. Blog latency, batch 1, two heads, 15 labels, p50 at 64 / 1,024 tokens: 48-vCPU Xeon 8581C 167.3 ms / —; T4 43.6 / —; L4 43.4 / 131.4; V100 38.3 / 75.6; A100 47.3 / 52.6 ms. No Apple Silicon numbers.
 
 ## Running it
@@ -86,8 +86,9 @@ print(model.classify_text(
 ```
 
 - `map_location` calls `model.to(...)`; the package has no MPS-specific inference code. CPU is supported. Other load options: `quantize=True`, `compile=True`, `word_splitter=...`.
-- Hosted API: `https://api.fastino.ai` (override with `GLINER2_API_BASE_URL`); keys at agent.fastino.ai. Auth header `X-API-Key: $FASTINO_API_KEY` per `SKILL.md`, but the 2.0.0 client reads `PIONEER_API_KEY`.
-- API operations (`SKILL.md`): `GET /v1/models`, `POST /v1/chat/completions`, dataset upload, `POST /v1/training-jobs`, checkpoint deploy ([OpenAPI](https://docs.fastino.ai/openapi.json)). `from gliner2 import API` mirrors `classify_text`; it takes no model argument, so which model serves a call is undocumented (unverified). Decide pricing is unpublished. models.dev lists a different model, `gliner2.5-base-v1`, at $0.03 per million input tokens (unverified).
+- Hosted API: `https://api.fastino.ai`; keys (prefix `fast_sk_`) at agent.fastino.ai. Auth header `X-API-Key` or `Authorization: Bearer` ([llms-full.txt](https://agent.fastino.ai/llms-full.txt)). `SKILL.md` names the env var `FASTINO_API_KEY`; the 2.0.0 client reads `PIONEER_API_KEY` (base URL override `GLINER2_API_BASE_URL`).
+- Decide is in the hosted catalog ([`GET /v1/base-models`](https://api.fastino.ai/v1/base-models)) as `fastino/GLiNER-2.5-Decide`: $0.15 per million input and $0.15 per million output tokens, 8,192 max input tokens, ZDR and training supported. Call it through `POST /v1/chat/completions` with `"model": "fastino/GLiNER-2.5-Decide"` and `"schema": {"classifications": [{"task": ..., "labels": [...]}]}` (untested). The [pricing page](https://docs.fastino.ai/pricing) lists only the generic GLiNER rate ($0.03 per million input tokens, $0 output; training $0.07 per minute). Plans include a daily free credit allowance ([terms](https://agent.fastino.ai/terms) §7B).
+- `from gliner2 import API` mirrors `classify_text` and takes no model argument. It posts to `{base}/gliner-2`; the [OpenAPI](https://docs.fastino.ai/openapi.json) lists `POST /v1/gliner-2`, which serves the "GLiNER-2 base model", not Decide. Other operations: `GET /v1/models`, dataset upload, `POST /v1/training-jobs`, checkpoint deploy.
 
 ## Scaling limits
 
@@ -126,16 +127,16 @@ Not legal advice.
 |---|---|---|
 | Processing location | Your hardware. | US on AWS ([Trust & Safety](https://docs.fastino.ai/trust-safety)). |
 | EU region | Yes, if hosted in the EU. | None as of 2026-09-30; all subprocessors are US. |
-| Retention | You control it; inference runs in-process. | Inputs and outputs "retained indefinitely" by default. `store: false` per request gives zero retention "for eligible use cases"; team-wide ZDR may disable some models ([privacy policy](https://agent.fastino.ai/privacy)). |
-| Trains on inputs | No. | Yes by default; opt-out for enterprise only. Inference data also trains your own task models regardless. ZDR data is never used. |
+| Retention | You control it; inference runs in-process. | Inputs and outputs "retained indefinitely" by default; `store: false` per request gives zero retention "for eligible use cases" ([Trust & Safety](https://docs.fastino.ai/trust-safety)). The [privacy policy](https://agent.fastino.ai/privacy) keeps inference data in your history until account deletion; team-wide ZDR stops storage and may make some models unavailable. The catalog marks Decide `supports_zdr: true`. |
+| Trains on inputs | No. | Yes by default. Opt-out for "Pro plans and above" by emailing support@fastino.ai ([terms](https://agent.fastino.ai/terms) §6); the Trust & Safety page says Enterprise only. Inference data also trains your own task models regardless. ZDR data is never used. |
 | DPA / GDPR | Not applicable. | "At this time, we do not offer a Data Processing Addendum (DPA)". Requests: security@fastino.ai. |
 | Certifications | Not applicable. | SOC 2 Type II and ISO 27001 in progress; first audit expected November 2026. |
 | Subprocessors | None. | AWS, Anthropic, Intercom, OpenAI, Twilio (SendGrid), Amplitude, Vercel, Supabase, Modal, Microsoft Azure, Datadog, Sentry, Stripe, Attio, Linear; all US; list dated 2026-07-30. |
-| Self-host / air-gap | Yes: download once, load from a local path (air-gap untested). | No. |
+| Self-host / air-gap | Yes: download once, load from a local path (air-gap untested). | Custom plans "allow running in your VPCs" ([llms-full.txt FAQ](https://agent.fastino.ai/llms-full.txt)); no public details (unverified). |
 | Fine-tuning | Yes, full or LoRA (see [Fine-tuning](#fine-tuning)). | Yes, `POST /v1/training-jobs`; `GET /v1/training-jobs/{job_id}/download` exists. Data and checkpoints stored until deleted. |
 | Weights licence | Apache-2.0 for Decide, multi-Decide and Decide-1B ([HF API](https://huggingface.co/api/models/fastino/GLiNER2.5-Decide)); keep licence and NOTICE. | Same weights; API under Fastino's [terms](https://agent.fastino.ai/terms). |
 
-- The privacy policy (Fastino, Inc., effective 2026-08-06) routes prompts to "upstream inference providers", including OpenAI and Anthropic. Which requests reach them is undocumented. For EU personal data, self-hosting is the only option with EU-only processing and no vendor training.
+- The privacy policy (Fastino, Inc., effective 2026-08-06) routes prompts to "upstream inference providers"; the subprocessor list includes OpenAI and Anthropic. Which requests reach them is undocumented. The terms (effective 2026-08-06) bar using outputs to train competing models (§4A). For EU personal data, self-hosting is the only option with EU-only processing and no vendor training.
 
 ## Caveats
 
@@ -146,5 +147,5 @@ Not legal advice.
 
 - Model: [HF card](https://huggingface.co/fastino/GLiNER2.5-Decide) (README, SKILL.md, configs), [HF API](https://huggingface.co/api/models/fastino/GLiNER2.5-Decide), [fast-decisions](https://huggingface.co/datasets/fastino/fast-decisions), [blog](https://fastino.ai/blog/gliner-2-5-decide-open-weight-decision-model), [models page](https://fastino.ai/models), [X launch post](https://x.com/fastinoAI/status/2103188985292157353)
 - Code: [fastino-ai/GLiNER2](https://github.com/fastino-ai/GLiNER2), [PyPI gliner2 2.0.0](https://pypi.org/project/gliner2/) (sdist: `auto.py`, `inference/runtime.py`, `classification/*`, `processor.py`, `models/loading.py`, `training/trainer.py`, `api_client.py`; tutorials 8, 9, 10, 12, 14), [arXiv:2507.18546](https://arxiv.org/abs/2507.18546)
-- Coverage: [MarkTechPost 2026-09-24](https://www.marktechpost.com/2026/09/24/fastino-releases-gliner2-5-decide-a-340m-open-weight-decision-model-that-runs-on-cpu/), [systemonemodels.org launch page](https://systemonemodels.org/examples/tools/gliner-2-5-decide-launch/), glossary [Noul](https://systemonemodels.org/glossary/noul/), [Score](https://systemonemodels.org/glossary/score/), [opentweet.io](https://opentweet.io/jev/choice-score-noul), [models.dev PR #8312](https://github.com/anomalyco/models.dev/pull/8312)
-- Governance: [Trust & Safety](https://docs.fastino.ai/trust-safety), [privacy policy](https://agent.fastino.ai/privacy), [terms](https://agent.fastino.ai/terms), [OpenAPI](https://docs.fastino.ai/openapi.json), [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+- Coverage: [MarkTechPost 2026-09-24](https://www.marktechpost.com/2026/09/24/fastino-releases-gliner2-5-decide-a-340m-open-weight-decision-model-that-runs-on-cpu/), [systemonemodels.org launch page](https://systemonemodels.org/examples/tools/gliner-2-5-decide-launch/), glossary [Noul](https://systemonemodels.org/glossary/noul/), [Score](https://systemonemodels.org/glossary/score/), [opentweet.io](https://opentweet.io/jev/choice-score-noul)
+- Hosted API and governance: [base-model catalog](https://api.fastino.ai/v1/base-models), [pricing](https://docs.fastino.ai/pricing), [llms-full.txt](https://agent.fastino.ai/llms-full.txt), [Trust & Safety](https://docs.fastino.ai/trust-safety), [privacy policy](https://agent.fastino.ai/privacy), [terms](https://agent.fastino.ai/terms), [OpenAPI](https://docs.fastino.ai/openapi.json), [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)

@@ -7,8 +7,8 @@
 | Backbone | Not disclosed |
 | Size | Not disclosed |
 | Licence | Proprietary; hosted API only |
-| Run it via | `POST https://api.respan.ai/api/v1/scores`, models `span-01-free` (default) / `span-01-pro`; OpenRouter `respan/span-01`, `respan/span-01-lite` |
-| Status | GA (2026-09-24) |
+| Run it via | `POST https://api.respan.ai/api/v1/scores`, models `span-01-free` (default) / `span-01-pro`; OpenRouter `respan/span-01`, `respan/span-01-lite`, `respan/span-01-lite:free` (slugs dated 2026-09-25) |
+| Status | Public since 2026-09-24 (launch post); on OpenRouter since 2026-09-26 |
 
 Checked 2026-09-30.
 
@@ -17,7 +17,8 @@ Checked 2026-09-30.
 Span-01 reads a conversation span (prior messages plus one target turn) and a list of plain-language behaviour definitions.
 For each behaviour it returns `p_present`, `p_absent` and `p_not_observable`, which "sum to about 1".
 Respan says to treat `p_not_observable` as unknown, not absent.
-All behaviours are scored in one forward pass.
+All behaviours are scored in one forward pass; the model generates no tokens.
+Respan says hybrid attention handles long traces.
 Training: "general classification reasoning with RLAIF", then specialisation for behaviour detection.
 Tiers: Span-01 Lite (`span-01-free`), free with a daily cap resetting 00:00 UTC; Span-01 (`span-01-pro`), paid.
 
@@ -30,12 +31,13 @@ Auth: `Authorization: Bearer $RESPAN_API_KEY`.
 | `span` | yes | `input`: list of `{role, content}`; `output`: one `{role, content}` to classify |
 | `behaviors` | yes | list of `{id, definition}`; `definition` ≥ 3 characters |
 | `model` | no | default `span-01-free` |
-| `respan_params` | no | logging metadata, e.g. `customer_identifier` |
+| `respan_params` | no | logging metadata: `customer_identifier`, `metadata` map |
 
 Response: `{"model", "results": [{"id", "p_present", "p_absent", "p_not_observable"}], "usage": {"input_tokens"}}`.
-Errors: 400 bad request, 402 no credits (Pro), 403 key/access, 413 span too large, 422 validation, 424/503/504 scorer unreachable or timeout, 429 rate limit.
+Errors: 400 bad request (unknown model, `stream` set), 402 no credits (Pro), 403 key invalid or access not enabled, 413 span too large, 422 validation, 424/503/504 scorer unreachable, overloaded or timed out, 429 tier, endpoint or capacity limit.
 
-TypeSafe compatibility: none (different path, `span` for `state`, `behaviors` list for `questions`, `results` list for `answers`).
+TypeSafe compatibility: the Respan API has none (different path, `span` for `state`, `behaviors` list for `questions`, `results` list for `answers`).
+On OpenRouter, Span-01 is called through the System One endpoint `POST https://openrouter.ai/api/v1/systemone` with one `noul` question per behaviour and a plain-string state; it rejects `criteria: null` ([zero-shot-ie-bench client](https://github.com/umstek/zero-shot-ie-bench/blob/main/engines/openrouter_client.py); OpenRouter's [System One reference](https://openrouter.ai/docs/api/api-reference/systemone/submit-a-system-one-request.md) names only Jev, so unverified for Span-01).
 Each behaviour maps to a Noul via `p_present`; an adapter must decide whether to fold `p_not_observable` into "no" or renormalise.
 Choice and Score are not supported.
 
@@ -58,12 +60,12 @@ The [launch post](https://www.respan.ai/blog/introducing-span-1) (2026-09-24, ch
 | Overall | 0.806 | 0.716 | 0.719 | 0.885 |
 
 - systemonemodels.org repeats both figures and adds Lite 0.761 (unverified; not in the launch post text).
-- zero-shot-ie-bench (sentiment/topic): Span-01 85.4%, Lite 79.2%, Jev 93.8% (systemonemodels.org).
+- [zero-shot-ie-bench](https://github.com/umstek/zero-shot-ie-bench) mixed pool (48 sentiment/topic questions, accuracy, via OpenRouter): Span-01 85.4%, Lite 79.2%, Jev 93.8%.
 - No calibration metric published.
 
 ## Running it
 
-1. Create a Respan account, `export RESPAN_API_KEY=...`.
+1. Create a Respan account, create a key under [API keys](https://platform.respan.ai/platform/api/api-keys), `export RESPAN_API_KEY=...`.
 2. Call the free tier ([quickstart](https://www.respan.ai/docs/documentation/span-01/quickstart)):
 
 ```bash
@@ -76,14 +78,15 @@ curl https://api.respan.ai/api/v1/scores \
 ```
 
 Price: `span-01-pro` $0.02 per 1M input tokens; `span-01-free` free with an unpublished daily cap; output free.
-The OpenRouter call shape for Span-01 is not documented.
+OpenRouter lists the same prices: `respan/span-01` $0.02 per 1M prompt tokens, Lite $0.
+The OpenRouter call shape is covered under Schema.
 
 ## Scaling limits
 
 - **Behaviours per request:** "no per-request cap"; multi-label is native.
-- **Context / span size:** not published; oversized spans return 413. OpenRouter lists `context_length: 0`.
+- **Context / span size:** not published; oversized spans return 413. OpenRouter lists `context_length: 0` and `max_completion_tokens: 0`.
 - **Cost:** 100 one-line definitions (~2,000 tokens) plus a 2,000-token trace cost about $0.00008 on Pro, assuming definitions are billed as input (unverified).
-- **Rate limits:** not published for Pro.
+- **Rate limits:** not published for Pro; the API reference names tier and endpoint limits without numbers.
 
 ## Data governance
 
@@ -92,22 +95,22 @@ The OpenRouter call shape for Span-01 is not documented.
 | Self-host | Platform offers AWS/GCP/Azure, on-prem and VPC deployment; Span-01 not stated | [Respan enterprise](https://respan.ai/solutions/enterprise) |
 | Fine-tuning | n/d | |
 | Processing location | Not stated; AI providers named: Anthropic, Google Cloud AI, OpenAI | [privacy policy](https://respan.ai/legal/privacy-policy) |
-| EU processing option | "EU data residency available upon request" (search summary; trust center returned 403, unverified) | [enterprise](https://respan.ai/solutions/enterprise), [trust center](https://trustcenter.respan.ai/) |
-| Retention / ZDR | Kept while the account exists; custom retention on enterprise contracts; no ZDR mode for Span-01 | [privacy policy](https://respan.ai/legal/privacy-policy) |
-| Training on inputs | n/d | [privacy policy](https://respan.ai/legal/privacy-policy) |
-| DPA / GDPR | GDPR/UK GDPR rights covered; DPA and BAA "on request" (search summary); `respan.ai/legal/dpa` "Not Found" | [privacy policy](https://respan.ai/legal/privacy-policy) |
-| Certifications | SOC 2 Type II, HIPAA (BAA), ISO 27001, "GDPR ready" (platform-wide) | [enterprise](https://respan.ai/solutions/enterprise) |
+| EU processing option | Enterprise page: "Full control over where data is stored and processed"; "EU data residency available upon request" appears only in a search-index snippet of a Respan GDPR docs page, which returns 404 (unverified); trust center does not mention EU residency | [enterprise](https://respan.ai/solutions/enterprise), [trust center](https://trustcenter.respan.ai/) |
+| Retention / ZDR | Personal data kept "as long as necessary", no longer than the account exists; custom retention on enterprise contracts; OpenRouter's provider record says Respan retains prompts (`retainsPrompts: true`); no ZDR mode | [privacy policy](https://respan.ai/legal/privacy-policy), [enterprise](https://respan.ai/solutions/enterprise), [OpenRouter endpoints](https://openrouter.ai/api/v1/models/respan/span-01/endpoints) |
+| Training on inputs | Respan's policy and terms don't say; OpenRouter's provider record for Respan says `training: false` | [privacy policy](https://respan.ai/legal/privacy-policy), [OpenRouter model page](https://openrouter.ai/respan/span-01) |
+| DPA / GDPR | GDPR/UK GDPR rights covered; site footer "DPA" link is `mailto:team@respan.ai`; BAA available for healthcare; `respan.ai/legal/dpa` returns "Not Found"; no published subprocessor list | [privacy policy](https://respan.ai/legal/privacy-policy), [enterprise](https://respan.ai/solutions/enterprise) |
+| Certifications | Trust center: SOC 2 and HIPAA compliant; ISO 27001 and GDPR "In progress". Enterprise page claims SOC 2 Type II, HIPAA, ISO 27001, "GDPR ready" (platform-wide) | [trust center](https://trustcenter.respan.ai/), [enterprise](https://respan.ai/solutions/enterprise) |
 
 ## Caveats
 
 - Not documented: model size, context length, span-size limit, Lite daily cap, Pro rate limits, training on inputs.
 - Span-01's 84.3 (behavior benchmark) and 0.806 (production behavior benchmark) are different Respan benchmarks, both vendor-run on Respan data.
 - The only external result is on sentiment/topic, outside Span-01's target domain.
-- Organisation enablement may be needed before calls succeed (systemonemodels.org, unverified).
+- Calls can fail with 403 until access is enabled for the account; the API reference lists "access not enabled" as a 403 cause.
 
 ## Sources
 
 - Respan: [launch blog (2026-09-24)](https://www.respan.ai/blog/introducing-span-1), [concept](https://www.respan.ai/docs/documentation/span-01/concept), [quickstart](https://www.respan.ai/docs/documentation/span-01/quickstart), [API reference](https://www.respan.ai/docs/apis/respan-models/score-span-behaviors), [privacy policy](https://respan.ai/legal/privacy-policy), [terms](https://respan.ai/legal/terms-of-use), [enterprise](https://respan.ai/solutions/enterprise), [trust center](https://trustcenter.respan.ai/)
-- OpenRouter: [respan/span-01](https://openrouter.ai/respan/span-01), [respan/span-01-lite](https://openrouter.ai/respan/span-01-lite), [endpoints](https://openrouter.ai/api/v1/models/respan/span-01/endpoints)
+- OpenRouter: [respan/span-01](https://openrouter.ai/respan/span-01), [respan/span-01-lite](https://openrouter.ai/respan/span-01-lite), [endpoints](https://openrouter.ai/api/v1/models/respan/span-01/endpoints), [models list](https://openrouter.ai/api/v1/models?output_modalities=all), [System One reference](https://openrouter.ai/docs/api/api-reference/systemone/submit-a-system-one-request.md)
 - [systemonemodels.org: Span-01](https://systemonemodels.org/models/span-01/)
 - [umstek/zero-shot-ie-bench](https://github.com/umstek/zero-shot-ie-bench)
