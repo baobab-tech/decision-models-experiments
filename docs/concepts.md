@@ -144,7 +144,7 @@ Rows marked (inference) follow from the architecture, not measurement.
 
 | Architecture | More options | Longer input | Cost |
 |---|---|---|---|
-| Jev (API) | option text adds input tokens; 77-class intent routing trailed flagship LLMs by about 7 points | 375 ms at 1K tokens, 734 ms at 32K ([longjev](https://github.com/avshalomd/longjev)); accuracy drops with irrelevant detail | input only; ~260 overhead tokens per request |
+| Jev (API) | option text adds input tokens; 77-class intent routing trailed flagship LLMs by about 7 points | 375 ms at 1K tokens, 734 ms at 32K (attributed to [longjev](https://github.com/avshalomd/longjev); not in its README or results, unverified); accuracy drops with irrelevant detail | input only; ~260 overhead tokens per request |
 | Encoder (GLiNER2.5-Decide, Laya) | options share the encoder context (inference) | Laya 512 tokens (en), 1,024 (mmBERT); 2,000-token documents need chunking | local; quadratic attention cost (inference) |
 | Decoder + pointer head (Kev) | each option adds prompt tokens | Qwen base context; hybrid DeltaNet checkpoints need one pass per question | local |
 | Decoder logprobs (AnyJev) | L0 cyclic shifts: passes scale with option count (inference) | decoder context | local; vLLM prefix caching helps |
@@ -159,7 +159,7 @@ Rows marked (inference) follow from the architecture, not measurement.
 | SST-2, AG News, Emotion, BANKING77, mean | Jev 79.3%, 381 ms | ModernBERT cross-encoder 78.7%; bi-encoder 69.9% at 15.7 ms | [dylantom2012](https://huggingface.co/blog/dylantom2012/i-benchmarked-jev-against-open-cpu-only-stacks-it) |
 | CLINC150 (150) | Jev 87% | gpt-5.4-nano 80%; GPT-5.6 Terra 92% | search summary (unverified) |
 | Fast Decisions (17 datasets) | GLiNER2.5-Decide 60.2% (card; blog 60.1%) | JevK5 57.6%, Laya 46.6% (vendor suite) | [Fastino blog](https://fastino.ai/blog/gliner-2-5-decide-open-weight-decision-model) |
-| KLUE-YNAT (7), Korean | Kev / Winnow 73–74% | — | [local-jev-bench](https://github.com/tak-bro/local-jev-bench) |
+| KLUE-YNAT (7), Korean | Kev / Winnow 73–74%; AnyJev 75–76% | — | [local-jev-bench](https://github.com/tak-bro/local-jev-bench) |
 
 A supervised encoder beat zero-shot Jev by about 13 points on BANKING77; retrieved labelled examples in the state closed most of the gap.
 No published study covers 100+ multi-label tags, Choice vs many-Noul formulations, or accuracy as a function of option count. Leaderboards (Decision Index, JevBench) are in [benchmarks.md](benchmarks.md).
@@ -171,13 +171,12 @@ No published study covers 100+ multi-label tags, Choice vs many-Noul formulation
 | 2011 / 2019-12 | Kahneman, *Thinking, Fast and Slow* / Bengio's System 1–2 NeurIPS keynote |
 | 2025-07-24 | GLiNER2 paper |
 | 2026-09-15 | TypeSafe AI launches Jev |
-| 2026-09-16 | GPT-6 Luna (base of OpenAI's Decisions API) |
 | 2026-09-18 | Convai releases Laya |
-| 2026-09-21 | Jev-Mem on arXiv; Kev on Hacker News (inferred date, unverified) |
-| 2026-09-22 | meraGPT Decider 1; Upstage Solar Decide (beta); Decision Index posted |
+| 2026-09-21 | Jev-Mem on arXiv; Kev on Hacker News |
+| 2026-09-22 | meraGPT Decider 1; Upstage Solar Decide (beta); Decision Index 0.1 posted; GPT-6 Luna (base of OpenAI's Decisions API) |
 | 2026-09-23 | Together AI Tev1; CLM-8B; Nokia AnyJev |
 | 2026-09-24 | Fastino GLiNER2.5-Decide; Respan Span-01 |
-| 2026-09-27 | Decision Index 0.2.1 |
+| 2026-09-26 | Decision Index 0.2.1 |
 | 2026-09-29 | Liquid AI d1; OpenAI Decisions API (limited preview) |
 | 2026-09-30 | Kev-27B `main` becomes v2 |
 
@@ -196,4 +195,5 @@ No published study covers 100+ multi-label tags, Choice vs many-Noul formulation
 - systemonemodels.org: [models](https://systemonemodels.org/models), [glossary](https://systemonemodels.org/glossary/), [Choice, Score and Noul](https://systemonemodels.org/guides/choice-score-noul/), [How to build](https://systemonemodels.org/guides/how-to-build-with-system-one-models/), [Is Jev just a zero-shot classifier?](https://systemonemodels.org/guides/is-jev-just-a-classifier/), [Jev architecture](https://systemonemodels.org/guides/jev-architecture/), [examples](https://systemonemodels.org/examples)
 - TypeSafe [API docs](https://docs.typesafe.ai/api); [jevwiki OpenAPI reference](https://jevwiki.ai/wiki/reference/openapi-schemas.md); [Latent Space podcast](https://www.latent.space/p/jev); [NoulXP](https://github.com/systemonemodels/noulxp); [Jev-Mem](https://huggingface.co/papers/2609.23986); [jaredpalmer/kev](https://github.com/jaredpalmer/kev); MarkTechPost on [d1](https://www.marktechpost.com/2026/09/29/liquid-ai-releases-d1-a-decision-model-that-returns-calibrated-probabilities-with-zero-output-tokens/) and [AnyJev](https://www.marktechpost.com/2026/09/23/nokia-open-sources-anyjev-a-training-free-layer-that-turns-any-open-llm-into-a-calibrated-decision-model/)
 - Evaluations: [AI/ML API](https://aimlapi.com/blog/what-is-jev), [MindStudio](https://www.mindstudio.ai/blog/jev-vs-classic-classifiers-benchmark), [simonmesmith](https://github.com/simonmesmith/jev-banking77-experiment), [dylantom2012](https://huggingface.co/blog/dylantom2012/i-benchmarked-jev-against-open-cpu-only-stacks-it), [local-jev-bench](https://github.com/tak-bro/local-jev-bench), [longjev](https://github.com/avshalomd/longjev), [opentweet.io](https://opentweet.io/jev/classification)
+- Timeline (checked 2026-09-30): [GLiNER2 on arXiv](https://arxiv.org/abs/2507.18546), [Kev on HN](https://news.ycombinator.com/item?id=49783999), [Decision Index Space commits](https://huggingface.co/spaces/multimodalart/jev-decision-index/commits/main), GPT-6 Luna creation date on [OpenRouter](https://openrouter.ai/openai/gpt-6-luna) and [Vercel AI Gateway](https://ai-gateway.vercel.sh/v1/models), [Kev-27B commits](https://huggingface.co/jaredpalmer/kev-27b/commits/main)
 - Vendor-specific claims: the model docs in [models/](models/).

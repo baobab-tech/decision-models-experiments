@@ -17,7 +17,7 @@ Keys go in `.env`, which is gitignored (see [AGENTS.md](../AGENTS.md)). API-only
 
 ## One client for every Jev-compatible endpoint
 
-Jev, d1, Kev, Bonsai-Llama-Jev, Decider 1 and Solar Decide all accept the same `/v1/systemone` request ([concepts.md](concepts.md)). The TypeSafe SDK talks to any of them by changing `base_url`:
+Jev, d1, Kev, Laya (`laya-serve`), Bonsai-Llama-Jev, Decider 1 and Solar Decide all accept the same `/v1/systemone` request ([concepts.md](concepts.md)). The TypeSafe SDK talks to any of them by changing `base_url`:
 
 ```python
 # /// script
@@ -47,11 +47,11 @@ with TypeSafeClient(base_url=base_url, api_key=key) as client:
 print(r.answers["department"].choice, r.answers["is_urgent"].noul)
 ```
 
-Run with `TARGET=d1 uv run quickstart.py`. Liquid's d1 lives at `/decisions/v1/systemone`. Whether the SDK's `base_url` handles that path prefix is unverified; if it doesn't, use the curl call in [liquid-d1.md](models/liquid-d1.md#running-it).
+Run with `TARGET=d1 uv run quickstart.py`. Liquid's [decision model guide](https://docs.liquid.ai/guides/decision-model-guide) uses this SDK with `base_url="https://api.liquid.ai"` (checked 2026-09-30); the raw HTTP path is `/decisions/v1/systemone` ([liquid-d1.md](models/liquid-d1.md#running-it)).
 
 ## Local models
 
-**GLiNER2.5-Decide** (DeBERTa encoder, 340M, Apache-2.0):
+**GLiNER2.5-Decide** (DeBERTa-v3-large encoder, 340M per card, Apache-2.0):
 
 ```bash
 uv venv --python 3.10 && uv pip install "gliner2[local]==2.0.0"
