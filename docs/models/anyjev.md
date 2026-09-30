@@ -26,7 +26,7 @@ Checked 2026-09-30. Nothing was run locally; no weights were downloaded.
 | `L2` | 100–300 labels/question | Closed-form head (shrunk LDA or ridge) on the hidden state at ~⅔ depth; one prompt per state |
 | `auto` | — | L2 where a head routes, else L1, else L0 |
 
-- L0 (`docs/levels.md`): default prior is batch calibration (Zhou et al., 2024), strength 0.75, from a running per-question mean after 8 items (`min_prior_n`); none before that. The prior accumulates across calls (local-jev-bench restarts its adapter per run). Opt-in `prior="content_free"` (Zhao et al., 2021). Noul reads "Yes or No" and "No or Yes"; Score bins are never permuted. `canonical_order=True` (opt-in in 0.2) makes any listing of an option set give identical probabilities. `adaptive_shifts=True` reads rotations until a log-odds margin clears a threshold certified by `calibrate_adaptive(q, states, target=0.01)` on unlabelled states; README says opt-in in 0.2.0, CHANGELOG says "now the default".
+- L0 (`docs/levels.md`): default prior is batch calibration (Zhou et al., 2024), strength 0.75, from a running per-question mean after 8 items (`min_prior_n`); none before that. The prior accumulates across calls (local-jev-bench restarts its adapter per run). Opt-in `prior="content_free"` (Zhao et al., 2021). Noul reads "Yes or No" and "No or Yes"; Score bins are never permuted. `canonical_order=True` (opt-in in 0.2) makes any listing of an option set give identical probabilities. `adaptive_shifts=True` reads rotations until a log-odds margin clears a threshold certified by `calibrate_adaptive(q, states, target=0.01)` on unlabelled states; README and `anyjev/decider.py` (`adaptive_shifts: bool = False`) make it opt-in in 0.2.0; CHANGELOG says "now the default".
 - L2 (`docs/jev_mode.md`): `fit_head(q, states, labels)` is one forward plus a closed-form solve, seconds on CPU; `observe(q, state, label)` solves at 30 labels, re-solving at 60, 120, …. A reworded question drops Qwen3-8B from 0.767 to 0.646–0.701; recentring on 30 unlabelled states recovers 0.742–0.749 (`adapt="routed"`, default). Needs hidden states (transformers backend or vLLM embed server); log-prob-only backends stop at L1. Heads are per (model, question).
 
 ## Schema
@@ -134,14 +134,14 @@ python -m demo.jev_mode --backend fake       # no-GPU check (README)
 
 ## Caveats
 
-- Choice capped at 26 options; no TypeSafe wire server (third-party adapter only). README and CHANGELOG disagree on the `adaptive_shifts` default in 0.2.0.
+- Choice capped at 26 options; no TypeSafe wire server (third-party adapter only). CHANGELOG calls `adaptive_shifts` "now the default" in 0.2.0; the code default is `False`.
 - L0 on many options is slow on a Mac: 7.9 s p50 for 20-way (full cycle, 0.1.0).
 - The batch prior hurts when one label dominates traffic (`docs/when_l0_helps.md`). L1/L2 need labels per question; heads do not transfer across questions or models.
 - Headline tables are Qwen only; each decision is scored in isolation, not in an agent loop (README).
 
 ## Sources
 
-- [GitHub: nokia-applied-research/AnyJev](https://github.com/nokia-applied-research/AnyJev) (README, `docs/levels.md`, `docs/jev_mode.md`, `docs/results_small_models.md`, `anyjev/question.py`, `anyjev/result.py`, `anyjev/backends/hf.py`, `anyjev/truncate.py`, `ROADMAP.md`, `CHANGELOG.md`, `THIRD_PARTY.md`)
+- [GitHub: nokia-applied-research/AnyJev](https://github.com/nokia-applied-research/AnyJev) (README, `docs/levels.md`, `docs/jev_mode.md`, `anyjev/decider.py`, `docs/results_small_models.md`, `anyjev/question.py`, `anyjev/result.py`, `anyjev/backends/hf.py`, `anyjev/truncate.py`, `ROADMAP.md`, `CHANGELOG.md`, `THIRD_PARTY.md`)
 - [PyPI: anyjev](https://pypi.org/project/anyjev/)
 - [MarkTechPost, 2026-09-23](https://www.marktechpost.com/2026/09/23/nokia-open-sources-anyjev-a-training-free-layer-that-turns-any-open-llm-into-a-calibrated-decision-model/)
 - [GitHub: tak-bro/local-jev-bench](https://github.com/tak-bro/local-jev-bench) (README, `scripts/serve-llm.sh`, `scripts/serve-anyjev.sh`)

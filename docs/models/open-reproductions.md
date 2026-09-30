@@ -16,7 +16,7 @@ Checked 2026-09-30. No weights were downloaded and nothing was run; every comman
 | GLiNER2.5-Decide | DeBERTa-v3-large | 340M | Apache-2.0 | partial (multi-label) | unlimited / not stated | [gliner-decide.md](gliner-decide.md) |
 | [JevK5](#jevk5) | Qwen3.5-4B (also 2B, 9B) | 4.2B | Apache-2.0 | partial | any (knockout) / 8,192 | `llama-server` (Metal) |
 | [Jev-Style](#jev-style) | Qwen3.5-2B / 0.8B | ~2B / 0.75B | Apache-2.0 | yes | 26 / 25,600 tested | `pip install "jev-style[mlx]"` |
-| [decider](#decider) | Qwen3.5 Base | 0.8B–35B-A3B | Apache-2.0 | yes | 2–255 / 32k | `decider-ai[gguf]`, Metal build |
+| [decider](#decider) | Qwen3.5 Base; Gemma-4-12B-it (12b) | 0.8B–35B-A3B | Apache-2.0 | yes | 2–255 / 32k | `pip install decider-ai` (MPS, dense models) or `decider-ai[gguf]`, Metal build |
 | [Tiny-Jev](#tiny-jev) | Qwen3-0.6B | 596M | Apache-2.0 | partial | not stated / 4,096 per question | transformers `.to("mps")` |
 | [OpenThai-SystemOne](#openthai-systemone) | Qwen3.5-0.8B-Base | 753M | Apache-2.0 | yes | 255 / 64k | `pip install openthai-systemone` (MPS) |
 | [AgentJev](#agentjev-06b) | Qwen3-0.6B | 598M | Apache-2.0 | partial | not stated / 2,048 | Python server; Mac not documented |
@@ -31,7 +31,7 @@ Checked 2026-09-30. No weights were downloaded and nothing was run; every comman
 | Bonsai-Llama-Jev | Bonsai-2-27B (GGUF Q2_64, ~7 GB) | 27B | MIT code; Apache-2.0 weights (PrismML) | yes | [bonsai-llama-jev.md](bonsai-llama-jev.md) | llama.cpp fork |
 | Liquid d1 | — | — | commercial API | — | — | hosted: [liquid-d1.md](liquid-d1.md) |
 
-Backbone not stated or unclear: NeoHorse-Jev-4B, Intern-Decision-4B, `surogate/rune-26b-a4b` ([Other](#other)).
+Backbone not stated or unclear: NeoHorse-Jev-4B ([Other](#other)). Intern-Decision-4B (Qwen3.5-4B) and `surogate/rune-26b-a4b` (gemma-4-26B-A4B-it) are also under [Other](#other).
 
 Ranking for this Mac (documented Apple Silicon path, no CUDA needed, published accuracy):
 
@@ -49,13 +49,13 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 
 ### Laya
 
-- **Repos:** `convaiinnovations/laya` (English root; `multilingual/`, `typed-decisions/` subfolders); ONNX `receptron/laya-onnx` (fp32, `laya.onnx` + 1.69 GB `.data`), `killkli/open-jev-laya-multilingual-onnx` (third-party, fp32 + fp16 647 MB, 271 downloads). npm `@receptron/laya` 0.1.2 (MIT, 660 stars); PyPI `laya` (`github.com/NandhaKishorM/laya`). Author: Convai Innovations; Node port by receptron. Downloads 0 (no root `config.json`), 4,626 likes.
+- **Repos:** `convaiinnovations/laya` (English root; `multilingual/`, `typed-decisions/` subfolders); ONNX `receptron/laya-onnx` (fp32, `laya.onnx` + 1.69 GB `.data`), `killkli/open-jev-laya-multilingual-onnx` (third-party, fp32 + fp16 647 MB, 271 downloads). npm `@receptron/laya` 0.1.2 (MIT, 661 stars); PyPI `laya` (`github.com/NandhaKishorM/laya`). Author: Convai Innovations; Node port by receptron. Downloads 0 (no root `config.json`), 4,635 likes.
 - **Schema:** `laya-serve` exposes `POST /v1/systemone` "on the same … request and response shape as TypeSafe Jev"; npm output matches `RLAgent.system_one` to four decimals. Options share `head_max_len` (192 en / 256 ml); Banking77 (77 options) scores 0.425. Input 512 (en); multilingual 1,024 default, `max_len=8192`.
 - **Benchmarks (card):** typed-decisions (2,000): `laya` 0.362, `laya-multilingual` 0.342, `laya-typed-decisions` 0.766, Jev 1.13.0 0.727. AG News 0.950; DAIR Emotion 0.595; ECE 0.081 after temperature refit. DI 6.04. Fastino fast-decisions (Laya Router) 46.6%. JEV-27B card six-group mean: 58.24.
 - **Known issues:** `noul` can follow its `false:`/`true:` labels instead of the state (#156); `act_probability` "carries no usable signal yet" (#185); over-confident until temperatures are refit. `typed-decisions` warns that its `choice:11+` temperatures are clamped and uncalibrated. On LlamaIndex's PDF tasks (budgets raised to 2,048/512) it scored 24.0–70.7%, below Jev and Qwen3.5-4B on all five ([experiment 03](../../experiments/03-jev-vs-open-document-tasks/)).
 - **Fine-tuning:** `notebooks/laya_finetune_typed_decisions_2xT4_kaggle.ipynb` (RLCD, 4 epochs over ~30k questions, 4–5 h on 2×T4).
 - **Mac:** `pip install laya`; `from laya import Router; router = Router()` (downloads on first use; `preload=True` loads all three). CLI `--device cuda|cpu|mps`; 8 English tickets one-by-one 2,624 ms (MPS). Node 22: `npm install @receptron/laya`; `const laya = await Laya.load()`; ~1.7 GB fp32 to `~/.cache/receptron-laya`; ~140 ms for three questions on Apple Silicon CPU once warm.
-- **Other Apple runtimes (all-about-jev):** `aac6fef/laya-mlx` (unverified; 843 MB fp16, 63/63 argmax matches vs MPS fp32) via `mizorewww/laya-mlx` (`pip install laya-mlx`, 6,467 stars); `mizorewww/laya-coreml` (Neural Engine); `afshinm/laya-mps` (~32 ms median, ~2.1 GiB, M5 Pro, 260/260 matches across memory profiles); `lkarlslund/laya.cpp` (macOS arm64 Core ML; `brew install cmake ninja icu4c nlohmann-json`); `ollaya-dev/ollaya` (Ollama-style daemon on 11435 serving Laya, decider 2B/0.8B, Kev 0.8B as ONNX with `/v1/systemone`; quoted install is a CUDA Docker image); `chaoliangUNSW/MacJev-322M-4K-Laya` (4K context, no details).
+- **Other Apple runtimes (all-about-jev):** `aac6fef/laya-mlx` (unverified; 843 MB fp16, 63/63 argmax matches vs MPS fp32) via `mizorewww/laya-mlx` (`pip install laya-mlx`, 6,654 stars); `mizorewww/laya-coreml` (Neural Engine); `afshinm/laya-mps` (~32 ms median, ~2.1 GiB, M5 Pro, 260/260 matches across memory profiles); `lkarlslund/laya.cpp` (macOS arm64 Core ML; `brew install cmake ninja icu4c nlohmann-json`); `ollaya-dev/ollaya` (Ollama-style daemon on 11435 serving Laya, decider 2B/0.8B, Kev 0.8B as ONNX with `/v1/systemone`; quoted install is a CUDA Docker image); `chaoliangUNSW/MacJev-322M-4K-Laya` (4K context, no details).
 
 ### open-jev-deberta-v3-large
 
@@ -80,7 +80,7 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 
 ### JevK5
 
-- **Repos:** `alibiserikbay/JevK5` (4B, 8.4 GB bf16; 8,047 downloads), `-9B`, `-2B`, `-Lite`, `-GGUF` (Q8_0 4.48 GB, Q5_K_M 3.07 GB, Q4_K_M 2.71 GB; 7,582). Runtime `github.com/allebee/jevk5`. Answer read from next-token log-probs of option letters.
+- **Repos:** `alibiserikbay/JevK5` (4B, 8.4 GB bf16; 8,047 downloads), `-9B`, `-2B`, `-Lite` (DeBERTa-v3-large, 434M), `-GGUF` (Q8_0 4.48 GB, Q5_K_M 3.07 GB, Q4_K_M 2.71 GB; 7,582). Runtime `github.com/allebee/jevk5`. Answer read from next-token log-probs of option letters.
 - **Schema:** `decide(state, {"type", "instructions", "criteria"})`. Runtime 0.3.0 answers > 16 options with a second `knockout_temperature` pass; the stdlib client handles ≤ 16. Multi-label not documented.
 - **Benchmarks:** JevBench v1.4 #2 of 76 (62.04; Jev 63.29) per card; v1.4.2 leaderboard lists v0.2.0 at 62.04 (#5). DI 38.81. Fastino fast-decisions 57.6%. Card JevBench public (231), v0.3 4B bf16: easy 1.000, standard 0.944, hard 0.784.
 - **Training:** 17,408 teacher questions (incl. 14,138 written by GPT-6 Luna via OpenAI's API, "generated under OpenAI's terms") + 30,052 public train-split items; no training command in card.
@@ -97,11 +97,11 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 
 ### decider
 
-- **Repos:** `Mapika/decider-0.8b` (752M; 12,860 downloads), `-2b` (v11, 1,881,825,088; 255,088, most in this survey), `-4b` (v2.1, 4,205,751,296; 18,425), `-4b-GGUF` (Q4_K_M 2.7 GB, Q8_0 4.5 GB, BF16 8.4 GB; 1,227), `-35b-a3b` (34.7B, 3B active), `-35b-a3b-nvfp4`, `-2b-vision`. Code `github.com/Mapika/decider`, package `decider-ai`. Readout: option-letter logits over options ÷ fitted temperature.
+- **Repos:** `Mapika/decider-0.8b` (752M; 12,860 downloads), `-2b` (v11, 1,881,825,088; 255,088, most in this survey), `-4b` (v2.1, 4,205,751,296; 18,425), `-4b-GGUF` (Q4_K_M 2.7 GB, Q8_0 4.5 GB, BF16 8.4 GB; 1,227), `-35b-a3b` (34.7B, 3B active), `-35b-a3b-nvfp4`, `-2b-vision`, `-12b` (v2: Gemma-4-12B-it + merged rank-32 LoRA, 11,959,730,224; 46), `-2b-GGUF`; stock-model readouts `decider-chat-gemma4-31b`, `decider-chat-qwen3.6-27b`. Code `github.com/Mapika/decider`, package `decider-ai`. Readout: option-letter logits over options ÷ fitted temperature.
 - **Schema:** `d.system_one(state, questions)` and `decider.serve` (`POST /v1/systemone`); "the official `typesafe-sdk` works against it unchanged with `TYPESAFE_BASE_URL`". 2–255 options (> 10 use one label token each); CLINC 151-way 0.88 vs 0.98 with 10 sampled. Input "up to 32k tokens with the questions".
-- **Benchmarks:** DI: 4b 40.70, 2b (FP8) 28.97, 35b-a3b (NVFP4) 47.11. JevBench v1.4.2: 4b v2 64.13 (#3, above Jev 63.29). decider-2b regression set 0.802 in-task / 0.752 held-out; JevBench hard 0.577.
+- **Benchmarks:** DI: 4b 40.70, 2b (FP8) 28.97, 35b-a3b (NVFP4) 47.11. JevBench v1.5.2 (99 ranked systems, per README): 4b v2 71.3 (#7; Jev 1.13.0 72.1, #3). decider-2b regression set 0.802 in-task / 0.752 held-out; JevBench hard 0.577.
 - **Fine-tuning:** `scripts/train.sh full` reproduces the supervised stages; v11 added rank-64 LoRA.
-- **Mac:** `pip install "decider-ai[gguf]"` with `CMAKE_ARGS="-DGGML_METAL=on"`; `Decider("Mapika/decider-4b-GGUF", gguf_file="decider-4b-v2.1-Q4_K_M.gguf").decide(state, [{"question", "options"}])` from `decider.infer`. Plain `llama-cli`/`llama-server`/Ollama/LM Studio give a text model; answers must come from option-letter logits. CPU and Metal builds were not run over the regression set. decider-2b needs `flash-linear-attention` (Triton) for speed ("several times slower" without); `decider/mps_ops.py` and `mps_moe.py` exist (MPS unverified); third-party MLX conversions (`SirSahOl/decider-2b-chat-mlx-*`, `midium-ai/decider-2b-dwq-4bit`) are not author-documented.
+- **Mac:** `pip install "decider-ai[gguf]"` with `CMAKE_ARGS="-DGGML_METAL=on"`; `Decider("Mapika/decider-4b-GGUF", gguf_file="decider-4b-v2.1-Q4_K_M.gguf").decide(state, [{"question", "options"}])` from `decider.infer`. Plain `llama-cli`/`llama-server`/Ollama/LM Studio give a text model; answers must come from option-letter logits. CPU and Metal builds were not run over the regression set. decider-2b needs `flash-linear-attention` (Triton) for speed ("several times slower" without, decider-2b card). The README documents MPS for the dense models (0.8B, 2B, 2B vision; merged 2026-09-22): `Decider("Mapika/decider-2b")` picks CUDA, else MPS (float16), else CPU; M1 Pro median 133 ms per request; MASSIVE Scenario accuracy 0.7553 vs 0.756 bf16. `pip install "decider-ai[metal]"` adds an optional MLX/Metal kernel; third-party MLX conversions (`SirSahOl/decider-2b-chat-mlx-*`, `midium-ai/decider-2b-dwq-4bit`) are not author-documented.
 
 ### Tiny-Jev
 
@@ -168,8 +168,8 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 ### Others
 
 - `TokenRhythm/NeoHorse-Jev-4B`: ~4B + pointer head, multimodal; partial schema; vLLM/SGLang scripts with `CUDA_VISIBLE_DEVICES=0`; DI 36.75; six-group mean 77.70 (own); 2,202 downloads.
-- `internlm/Intern-Decision-4B`: 4.5B; schema yes; `pip install -r requirements.txt`, `DecisionEngine(device="cuda")`; 1–16 questions, ≤ 62 options; DI 37.81; no fine-tuning.
-- `surogate/rune-26b-a4b-GGUF`: 25.8B; DI 57.44 (highest open entrant); 134-byte README, files are safetensors, not GGUF.
+- `internlm/Intern-Decision-4B`: Qwen3.5-4B (`base_model`), 4.5B; schema yes; `pip install -r requirements.txt`, `DecisionEngine(device="cuda")`; 1–16 questions, ≤ 62 options; DI 37.81; no fine-tuning.
+- `surogate/rune-26b-a4b-GGUF`: gemma-4-26B-A4B-it (`base_model`), 25.8B; DI 57.44 (highest open entrant); gated (automatic approval), so the card is not readable without accepting; files are 11 safetensors shards, not GGUF.
 - `openjev/openjev` (OpenJev 27B, all-about-jev): CC-BY-NC-4.0; 16.5 GB Q4_K_M GGUF; lists MLX/MPS hardware; 10,000-question set 84.0% vs Jev 85.4%.
 - Further DI entrants: `frontier-infra/jebadiah-27b` 54.67; `caiovicentino1/Eikos-27B-FP8` (MIT) 53.13; `kirp/jpt-9b` / `jpt-4b` (CC-BY-NC-4.0) 46.89 / 43.04; `llm-semantic-router/Decision-1.0-*` (Lux-9B) 43.49; `michaljach/jet` 42.60; `juspay/xor` (35B-A3B) 41.48; `HopitAI/hopper-g` (licence "other") 40.77; `bespokelabs/Bespoke-Nimble-9B-v2` 39.57; `togethercomputer/Tev1-4B-experimental` (no licence metadata) 29.24; `wayfind/metask-jev-4b-policy-mix` 26.89; `Hanno-Labs/bosun-v3.1-*` (custom code) 20.10 / 14.32; `moganai/lavoir` (CC-BY-NC-4.0) 8.69; `monotykamary/LFM2.5-2.6B-RLCD` 6.76.
 - Jev-Mem (paper, no weights): Yi Li, Bingzhe Li, Dongming Jiang (UT Dallas), arXiv 2609.23986; code `github.com/libingzheren/Jev-Mem` (MIT), Space `libingzheren/Jev-Mem`. Hosted Jev by default, or Laya locally (`pip install '.[laya]'`; `'.[mlx]'` on Apple Silicon); `noul`/`choice`/scores for memory decisions. LoCoMo (GPT-4o-mini answerer): judge 0.777 vs 0.700 (MAGMA); build 158 s vs 1,044 s (Nemori); query 0.93 s vs 1.47 s.
@@ -185,8 +185,8 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 
 | Low-trust repo | Flag |
 |---|---|
-| `surogate/rune-26b-a4b-GGUF` | no model card; files are safetensors |
-| `VTXAI/VTX-JEV-1` | 51 downloads; 6 days old; custom code; param count mismatch |
+| `surogate/rune-26b-a4b-GGUF` | gated; card not public; files are safetensors |
+| `VTXAI/VTX-JEV-1` | 51 downloads; created 2026-09-24; custom code; param count mismatch (card 12.66M, safetensors 7.13M) |
 | `AlexWortega/openjev` | custom loader; 107 GB mixed repo; download counter 0 |
 | `ZefanCai/Open-Jev-*` | download counter 0; loader not documented |
 | `DoccyHealth/Solomon` | MLX package pinned to an older release, experimental |

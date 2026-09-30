@@ -28,17 +28,18 @@ Backbone families and sizes are compared in [model-classes.md](model-classes.md)
 
 ## Qwen-based decoders
 
-Qwen3.5 mixes Gated DeltaNet (linear attention) and attention layers. The Kev README states "The DeltaNet kernels have no MPS implementation"; the decider card requires `flash-linear-attention` (Triton, CUDA). Qwen3 is attention-only.
+Qwen3.5 mixes Gated DeltaNet (linear attention) and attention layers. The Kev-4B card states "The DeltaNet kernels have no MPS implementation"; the Kev README says its Mac training path "works but is slow for Qwen3.5 bases". The decider-2b card lists `flash-linear-attention` (Triton) as a requirement ("several times slower" without it). Qwen3 is attention-only.
 
 | Model (backbone) | Method | Data format | Hardware | Mac feasibility |
 |---|---|---|---|---|
-| [Kev](models/kev.md#fine-tuning) (Qwen3.5-0.8B/4B/9B-Base) | LoRA r16 on attention, MLP and DeltaNet projections + pointer head; `--init_from` a released checkpoint | JSONL, one API request per line with `label` per question (`choice`: option name; `noul`: `true`/`false`; `score`: level index from 0) | `--batch 1 --accum 8` bf16 fits 0.8B on a 4 GB GPU; Modal skill, ~$1 per Kev-4B run on H100 | documented: one job at a time; DeltaNet falls back to reference code |
-| decider (Mapika; Qwen3.5) | earlier stages: full fine-tune, CE on ~95 public datasets, ≤10 options per example. v11: LoRA r64, α128, merged; lr 1e-4, 1,676 steps × 65,536 tokens, 42,749 rows; replay rows via KL(p_v10 ‖ p_model) | registry and generators in `Mapika/decider` (`decider/data/mixture.py`) | CUDA; `scripts/train.sh full` | no Mac path |
+| [Kev](models/kev.md#fine-tuning) (Qwen3.5-0.8B/4B/9B-Base) | LoRA r16 on attention, MLP and DeltaNet projections + pointer head; `--init_from` a released checkpoint | JSONL, one API request per line with `label` per question (`choice`: option name; `noul`: `true`/`false`; `score`: level index from 0) | `--batch 1 --accum 8` bf16 fits 0.8B on a 4 GB GPU; Modal skill, ~$1 per Kev-4B run on H100 | documented: one job at a time; "slow for Qwen3.5 bases" (README) |
+| decider (Mapika; Qwen3.5) | earlier stages: full fine-tune, CE on ~95 public datasets, ≤10 options per example. v11: LoRA r64, α128, merged; lr 1e-4, 1,676 steps × 65,536 tokens, 42,749 rows; replay rows via KL(p_v10 ‖ p_model) | registry and generators in `Mapika/decider` (`decider/data/mixture.py`) | CUDA; `scripts/train.sh full` | MPS inference documented for dense models; training on Mac n/d |
 | autotrust JEV-9B / 27B | LoRA + 24-slot linear head on a frozen base; 27B 108.9M trained parameters, 9B 40.2M | `SargeDev/jev-distill-corpus-v3` (655k+ rows, mostly Jev 1.13 distributions), KL loss | 27B ≈9.2 B200-hours; 9B ≈3 | no Mac path; training code not in cards |
 | AutoJev-27B | full-weight SFT, 73,000 examples, 286 updates | corpus not bundled | one H200 | no Mac path |
 | Jev-Style v1 (Qwen3.5-2B) | LoRA r16 on all linear layers, log-score loss, custom chunk-parallel DeltaNet forward | n/d | n/d | MLX inference documented (`mlx-lm==0.31.3`, patched `GatedDeltaNet.__call__`) |
 | JevK5 v0.3 | teacher questions kept only when two independent answers agree + public train-split replay | n/d | n/d | n/d |
 | [Tev1](models/tev1.md) (Qwen3.5-4B) | LoRA r8, 1 epoch, lr 5e-5 | 37,840 examples from 8 sources; builders in `togethercomputer/tev1` | Together fine-tuning, ~$17, ~25 min | n/d |
+| AgentJev (Qwen3-0.6B) | supervised + RLCD on executed coding pairs | n/d | n/d | n/d |
 | [CLM-8B](models/clm-8b.md#fine-tuning) (Qwen3-8B, frozen) | heads only; InfoNCE or soft CE | (state, action) traces, or `LocalLLaMA/typed-decisions` | CUDA (`--gpu`); hardware and time n/d | n/d |
 
 ## Other backbones
@@ -48,7 +49,6 @@ Qwen3.5 mixes Gated DeltaNet (linear attention) and attention layers. The Kev RE
 | Winnow-E4B / 12B (Gemma 4) | LoRA r32, α64, merged in FP32, then GGUF | n/d | n/d | n/d |
 | LFM2.5-2.6B-RLCD (LFM2.5) | full fine-tune | in repo (not reviewed) | Modal (`lfm25_pcd_modal.py`) | n/d |
 | VTX-JEV-1 (7M embedding model) | full fine-tune, then LF4 4-bit quantization | 655,806 rows, 2 epochs; `training/` in the repo | timings on T4 | n/d |
-| AgentJev (backbone n/d) | supervised + RLCD on executed coding pairs | n/d | n/d | n/d |
 
 Liquid AI documents SFT/DPO for LFM2 with TRL + PEFT (QLoRA, then merge). `notnotsamuel/LFM2.5-350M-RLCD` scores 1.38 and LFM2.5-2.6B-RLCD 6.76 on DI 0.2.1.
 
@@ -98,7 +98,7 @@ Map each `choice` to a task with `labels` = option keys, each `noul` to a two-la
 
 ## Sources
 
-- READMEs: `github.com/jaredpalmer/kev`, `github.com/NandhaKishorM/laya`, `github.com/fastino-ai/GLiNER2`, `github.com/togethercomputer/tev1`, `github.com/Contrastive-LM/CLM`.
+- READMEs: `github.com/jaredpalmer/kev` (plus the `jaredpalmer/kev-4b` card), `github.com/Mapika/decider`, `github.com/NandhaKishorM/laya`, `github.com/fastino-ai/GLiNER2`, `github.com/togethercomputer/tev1`, `github.com/Contrastive-LM/CLM`.
 - Model cards: `convaiinnovations/laya`, `Mapika/decider-2b`, `autotrust/JEV-27B`, `com-kotobalabs/open-jev-deberta-v3-large`, `VTXAI/VTX-JEV-1`, `denis-pplx/autojev-27b`, `EldanRing/Winnow-E4B`, `chaoliangUNSW/Jev-Style-Qwen3.5-2B-Decision-GGUF`, `chaoliangUNSW/Jev-Style-2B-Decision-v3-MLX`, `alibiserikbay/JevK5`, `aimeigaoshou/agent-jev`, `interfaze-ai/lev`, `monotykamary/LFM2.5-2.6B-RLCD` (metadata only).
 - Datasets: `huggingface.co/datasets/fastino/fast-decisions`.
 - `huggingface.co/docs/huggingface_hub/guides/jobs` (flavors, prices, timeout).

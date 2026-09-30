@@ -13,8 +13,8 @@ Checked 2026-09-30. Nothing was run locally; no weights were downloaded.
 
 ## Overview
 
-- Code: [`Contrastive-LM/CLM`](https://github.com/Contrastive-LM/CLM) (created 2026-09-23, last push 2026-09-24, 2,591 stars). Weights: [`Contrastive-LM/CLM-v0.1-8B`](https://huggingface.co/Contrastive-LM/CLM-v0.1-8B) (last modified 2026-09-24, 2,392 downloads, commit `e939398d`; `config.json`: `encoder_pooling: last-token`, `embedding_dim: 4096`). Also on HF: `deepswe-clm-heads-8k`, datasets `CLM-v0.1-Pretrain-Nemotron`, `deepswe-clm-train-embeddings-8k`.
-- PyPI [`contrastive-lm`](https://pypi.org/project/contrastive-lm/) 0.1.0 (2026-09-24), Python ≥ 3.10, hard dependencies `torch>=2.1`, `vllm>=0.6`. Announced 2026-09-23 ([MarkTechPost](https://www.marktechpost.com/2026/09/23/contrastive-lm-releases-clm-8b-an-open-system-one-model-that-scores-agent-actions-up-to-9x-faster-than-jev/)); `/v1/models` reports `release_date: 2026-09-19`. [Notion blog](https://contrastive-lm.notion.site) did not render. Multimodal CLM-35B announced for "early October" (HF card).
+- Code: [`Contrastive-LM/CLM`](https://github.com/Contrastive-LM/CLM) (created 2026-09-23, last push 2026-09-24, 2,598 stars). Weights: [`Contrastive-LM/CLM-v0.1-8B`](https://huggingface.co/Contrastive-LM/CLM-v0.1-8B) (last modified 2026-09-24, 2,392 downloads, commit `e939398d`; `config.json`: `encoder_pooling: last-token`, `embedding_dim: 4096`). Also on HF: `deepswe-clm-heads-8k` (282 downloads), datasets `CLM-v0.1-Pretrain-Nemotron`, `deepswe-clm-train-embeddings-8k`.
+- PyPI [`contrastive-lm`](https://pypi.org/project/contrastive-lm/) 0.1.0 (2026-09-24), Python ≥ 3.10, dependencies `numpy`, `requests`, `torch>=2.1`, `fastapi`, `uvicorn`, `vllm>=0.6`; extra `hf` adds `huggingface_hub`. Announced 2026-09-23 ([MarkTechPost](https://www.marktechpost.com/2026/09/23/contrastive-lm-releases-clm-8b-an-open-system-one-model-that-scores-agent-actions-up-to-9x-faster-than-jev/)); `/v1/models` reports `release_date: 2026-09-19`. [Notion blog](https://contrastive-lm.notion.site) did not render. Multimodal CLM-35B announced for "early October" (HF card).
 - Focus: agent actions (computer use, games, tool calling) and best-of-N verification. Typed questions reuse the same ranking primitive.
 - Training: bidirectional InfoNCE over a B × B similarity matrix. Pre-training on ~60M Nemotron DQA pairs; mid-training on ~30M hard negatives generated with Gemini 2.5 Flash-Lite; post-training on ~1M agent trajectories (Agent Data Protocol, Endless-Terminals, LiteCoder-Terminal-SFT) with 40% Nemotron replay.
 - Inference: one encoder pass per new text, one dot product per cached candidate. No fitted temperature ships; `clm-raw` is an ablation (cosine in raw encoder space).
@@ -68,6 +68,7 @@ Vendor, zero-shot, one RTX 4090 (README figures, MarkTechPost table):
 - Mid-training ablation, ~100K held-out questions (1 gold, 10 hard negatives): pre-training 52.1% top-1; + mid-training 69.2%; hard negatives from the start peak at 62.4%.
 - Vector cache, RTX 4090, server p50, 3 → 50 actions: new state each call 28.6 → 28.0 / 28.8 → 28.1 ms; revisited states (20 rooms) 1.7 → 0.6 / 2.0 → 0.7 ms.
 - No vendor calibration metric (ECE, Brier).
+- Jev Decision Index 0.2.1 (balanced skill, 2026-09-28): CLM-v0.1-8B 7.40; Jev 1.13.0 57.91.
 
 Independent: [local-jev-bench](https://github.com/tak-bro/local-jev-bench), M3 Max 36 GB, vllm-metal:
 
@@ -141,6 +142,7 @@ uv run clm-serve --host 127.0.0.1 --port 8700 --emb-url http://127.0.0.1:8090/v1
 - [GitHub: Contrastive-LM/CLM](https://github.com/Contrastive-LM/CLM) (README; `src/clm/schema.py`, `src/clm/heads.py`, `train/finetune.py`, `serve_qwen3_8b.sh`, `docs/FINETUNING.md`)
 - [HF: Contrastive-LM/CLM-v0.1-8B](https://huggingface.co/Contrastive-LM/CLM-v0.1-8B) (card, `config.json`) and [HF API](https://huggingface.co/api/models/Contrastive-LM/CLM-v0.1-8B)
 - [PyPI: contrastive-lm](https://pypi.org/project/contrastive-lm/)
+- [Jev Decision Index `data/index.json`](https://huggingface.co/spaces/multimodalart/jev-decision-index) (0.2.1, generated 2026-09-28)
 - [MarkTechPost, 2026-09-23](https://www.marktechpost.com/2026/09/23/contrastive-lm-releases-clm-8b-an-open-system-one-model-that-scores-agent-actions-up-to-9x-faster-than-jev/)
 - [Contrastive-LM blog (Notion)](https://contrastive-lm.notion.site)
 - [GitHub: tak-bro/local-jev-bench](https://github.com/tak-bro/local-jev-bench) (README, `scripts/serve-embed.sh`, `scripts/serve-clm.sh`, `pyproject.toml`)

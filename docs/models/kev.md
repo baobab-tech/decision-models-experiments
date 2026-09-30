@@ -13,11 +13,11 @@ Checked 2026-09-30. Nothing was run locally; no weights were downloaded.
 
 ## Overview
 
-- Code: [`jaredpalmer/kev`](https://github.com/jaredpalmer/kev) (created 2026-09-17, last push 2026-09-30, 8,035 stars). Weights: HF collection [`jaredpalmer/kev`](https://huggingface.co/collections/jaredpalmer/kev-6aad9d0ea49f2589665e07cd) and GitHub release `kev-family` with SHA-256 checksums. Browser demo: [HF Space `jaredpalmer/kev`](https://huggingface.co/spaces/jaredpalmer/kev) (Kev-4B, Kev-0.8B). [HN 49783999](https://news.ycombinator.com/item?id=49783999): 462 points, about 2026-09-21.
+- Code: [`jaredpalmer/kev`](https://github.com/jaredpalmer/kev) (created 2026-09-17, last push 2026-09-30, 8,041 stars). Weights: HF collection [`jaredpalmer/kev`](https://huggingface.co/collections/jaredpalmer/kev-6aad9d0ea49f2589665e07cd) and GitHub release `kev-family` with SHA-256 checksums. Browser demo: [HF Space `jaredpalmer/kev`](https://huggingface.co/spaces/jaredpalmer/kev) (Kev-4B, Kev-0.8B). [HN 49783999](https://news.ycombinator.com/item?id=49783999): 462 points, about 2026-09-21.
 - Input is serialised as `<state> …` then, per question, `<q> instructions <opt> … </opt> … <decide>`. The pointer head scores each `</opt>` hidden state against the `<decide>` hidden state; a softmax gives the probabilities. Design source: Archer Hume, ["Jev's Architecture Unmasked"](https://archerhume.com/posts/jevs-architecture-unmasked).
 - Qwen3.5/3.8 Gated DeltaNet layers ignore attention masks, so each question runs as its own row over a cached state. On attention-only bases (Qwen3) one masked sequence gives identical probabilities. Joint vs separate questions agree within 4e-6 (fp32).
 - Training: cross-entropy on the correct answer; adapter and head trained together; base frozen (0.8B–9B). The README states no Jev outputs were used.
-- Calibration: one temperature per checkpoint, fitted on its in-distribution dev set, applied at load; it never changes the argmax. 27B 1.38 (v1) / 1.32 (v2 card), 9B 2.30, 4B 2.41, 0.8B 2.35. `KEV_TEMPERATURE=1.0` returns raw probabilities. `python -m kev.calibrate` fits a workload temperature (Kev-4B card: WANLI ECE 0.166 → 0.052, T 3.91); `scripts/calibrate_checkpoint.py` gives an out-of-fold estimate.
+- Calibration: one temperature per checkpoint, applied at load; it never changes the argmax. 9B 2.30, 4B 2.41, 0.8B 2.35, fitted on their in-distribution dev sets; Kev-27B 1.32, fitted on held-out datasets it never trained on (`v1-lora`: 1.38). `KEV_TEMPERATURE=1.0` returns raw probabilities. `python -m kev.calibrate` fits a workload temperature (Kev-4B card: WANLI ECE 0.166 → 0.052, T 3.91); `scripts/calibrate_checkpoint.py` gives an out-of-fold estimate.
 
 ## Schema
 
@@ -57,14 +57,15 @@ Author's numbers; cells are development / test. "New sources" = `transfer-v4`, 7
 | Kev-0.8B | 0.648 / 0.697 | 0.827 / 0.838 | 0.481 / 0.416 | Any Apple Silicon Mac, L4 |
 | Kev-4B | 0.817 / 0.838 | 0.873 / 0.865 | 0.269 / 0.242 | 32 GB Mac, L40S, H100 |
 | Kev-9B | 0.822 / 0.852 | 0.872 / 0.874 | 0.286 / 0.237 | 32 GB Mac, L40S, H100 |
-| Kev-27B (v1) | 0.848 / 0.896 | 0.866 / 0.870 | 0.236 / 0.164 | B200, H200, H100 80 GB |
+| Kev-27B (v2) | 0.851 / 0.889 | 0.865 / 0.866 | 0.225 / 0.156 | B200, H200, H100 80 GB |
 | Jev (hosted) | 0.857 / – | 0.845 / – | 0.211 / – | TypeSafe API |
 
 - Kev-27B v2 (card): transfer-v4 test 0.8887, served Brier 0.154 (v1 0.8963 / 0.160). Breadth index, 14 held-out datasets: v2 52.3, v1 50.2, Jev 54.0, AutoJev-27B 50.0. CUAD long contracts: v2 0.874 vs v1 0.890 (ECE 0.053 vs 0.007).
 - Calibration on new sources (Kev-9B): ECE 0.106 → 0.042 with the temperature; confident errors (wrong at p ≥ 0.9) 8.7% → 4.0% (Jev 3.7%). Coverage at 5% error: Kev 0.45–0.57, Jev 0.70.
-- Knowledge: MMLU Kev-9B 0.74, Kev-27B 0.84, Jev 0.90; MMLU-Pro Kev-9B 0.52, Jev 0.84.
+- Knowledge: MMLU Kev-9B 0.74, Kev-27B 0.90, Jev 0.90; MMLU-Pro Kev-9B 0.52, Kev-27B 0.675, Jev 0.840.
+- Jev Decision Index 0.2.1 (balanced skill, 2026-09-28): Kev-9B 38.48, Kev-4B 34.64, Kev-0.8B 14.60; Jev 1.13.0 57.91.
 - External suites, Kev-9B vs Jev: SemIf 144 decisions 0.917 vs 0.965; WANLI-256 0.703 vs 0.758; TypeSafe-102 agreement / distance 0.809 / 0.226 vs 0.891 / 0.125 (89 rows within 8,192 tokens). Unknowable records answered at ≥ 0.9 confidence: 0% vs 9%. `KEV_DATE_FACTS=1` on deadline questions: 0.80 → 0.90 (Jev 0.93).
-- Serving latency (README, median of 20, new text / same text again): 6 questions short text: 0.8B (L4) 22.7 / 16.1 ms, 4B (H100) 18.1 / 12.9, 9B (H100) 24.0 / 16.6, 27B (H100) 75.0 / 52.0. 5 questions on 2,200 tokens: 108.6 / 32.3, 89.4 / 22.5, 88.5 / 26.4, 277.5 / 79.3 ms. Req/s at 64 clients: 62.8, 100.8, 79.5, 28.9.
+- Serving latency (README, median of 20, new text / same text again): 6 questions short text: 0.8B (L4) 22.7 / 16.1 ms, 4B (H100) 18.1 / 12.9, 9B (H100) 24.0 / 16.6, 27B (H100, measured on v1) 75.0 / 52.0, 27B v2 (H200) 67.2 / 50.0. 5 questions on 2,200 tokens: 108.6 / 32.3, 89.4 / 22.5, 88.5 / 26.4, 277.5 / 79.3 ms. Req/s at 64 clients: 62.8, 100.8, 79.5, 28.9.
 - Apple M5 32 GB, MLX, 5 questions on ~270 tokens: Kev-0.8B 149 ms new / 28 ms cached; Kev-4B 721 / 136 ms.
 
 Independent: [local-jev-bench](https://github.com/tak-bro/local-jev-bench), M3 Max 36 GB, MLX, 2026-09-30:
@@ -91,23 +92,23 @@ Minimal example: the `curl` request under [Schema](#schema), or with the SDK: `T
 
 - First run downloads the adapter and Qwen base into the HF cache; pre-fetch with `hf download jaredpalmer/kev-4b` and `hf download Qwen/Qwen3.5-4B-Base` (standard `hf` usage, not in the README). `--run` also takes a local directory or a Hub revision (`jaredpalmer/kev-4b@qwen3`).
 - Macs serve in bf16: probabilities differ from fp32 by up to about 0.05; the top answer changes on about one question in 300. `KEV_DTYPE=fp32` gives the exact path. Memory: Kev-4B server 2.7 GB RSS after startup on M3 Max (local-jev-bench). Kev-9B needs about 17 GB GPU memory (README, CUDA).
-- The Kev-4B card (older than the README's MLX section) says DeltaNet has no MPS implementation and recommends `kev-4b@qwen3` on Apple Silicon; the card note appears stale (unverified). No Ollama path. Playground: `cd playground && npm install && npm run dev -- -p 3001` (Node 20.9+).
+- The Kev-4B card says DeltaNet has no MPS implementation and recommends `kev-4b@qwen3` on Apple Silicon; the README says `uv sync --extra serve` installs MLX on Apple Silicon and the server uses it automatically. No Ollama path. Playground: `cd playground && npm install && npm run dev -- -p 3001` (Node 20.9+).
 
 | Repo | Base | Library | Last modified | Downloads | Commit |
 |---|---|---|---|---:|---|
 | [`kev-0.8b`](https://huggingface.co/jaredpalmer/kev-0.8b) | Qwen3.5-0.8B-Base | peft | 2026-09-24 | 9,814 | `9a45d25e` |
 | [`kev-4b`](https://huggingface.co/jaredpalmer/kev-4b) | Qwen3.5-4B-Base | peft | 2026-09-24 | 13,170 | `139fdd94` |
 | [`kev-9b`](https://huggingface.co/jaredpalmer/kev-9b) | Qwen3.5-9B-Base | peft | 2026-09-21 | 3,162 | `2629c06a` |
-| [`kev-27b`](https://huggingface.co/jaredpalmer/kev-27b) | Qwen3.8-27B | transformers | 2026-09-30 | 518 | `28be62e9` |
+| [`kev-27b`](https://huggingface.co/jaredpalmer/kev-27b) | Qwen3.8-27B | transformers | 2026-09-30 | 518 | `0d7f9b49` |
 
 - Adapter repos hold `adapter_model.safetensors`, `head.pt` (pointer head + temperature), tokenizer, `provenance.json`, `training_config.json`, `train.log`.
-- Kev-27B `main` is v2 (2026-09-30): full-weight SFT of Qwen3.8-27B (revision `1d4bf0f2`) on a private 145,840-record corpus, blended 0.85 × SFT + 0.15 × v1. v1 (LoRA, T 1.38) is at tag `v1-lora`; the GitHub README still describes v1. Older versions are Hub tags (`kev-4b@qwen3`, `@v7-base`, `@night2-du-release`, `@r8-documents-release`). Qwen3 generation: `kev-0.6b`, `kev-4b@qwen3`, `kev-8b`. Prototype: `kev-0.5b` (Qwen2.5-0.5B).
+- Kev-27B `main` is v2 (2026-09-30): full-weight SFT of Qwen3.8-27B (revision `1d4bf0f2`) on a private 145,840-record corpus, blended 0.85 × SFT + 0.15 × v1. v1 (LoRA, T 1.38) is at tag `v1-lora`. Latest commit `0d7f9b49` (2026-09-30) changed only the card; weights unchanged since `28be62e9`. Older versions are Hub tags (`kev-4b@qwen3`, `@v7-base`, `@night2-du-release`, `@r8-documents-release`). Qwen3 generation: `kev-0.6b`, `kev-4b@qwen3`, `kev-8b`. Prototype: `kev-0.5b` (Qwen2.5-0.5B).
 
 ## Scaling limits
 
 - **Options:** Choice 1–255, Score 1–255. Each option adds `<opt> … </opt>` tokens to its row. Rows pack into a 16,384-token budget per forward pass (cached state counted once per question); memory does not grow with question count. No accuracy or latency curve for 10 → 100+ options is published; latency is expected to grow with option tokens (inference, unverified). Above 255: cascade Choice questions.
 - **Multi-label:** none. Use one `noul` per label; questions are isolated. 100 Nouls cost 100 short rows plus one state pass on hybrid bases (inference from the README).
-- **Input length:** trained on states ≤ 384 tokens (≤ 1,024 with one question). Serving accepts states ≤ 65,536 tokens plus 8,192 per question; the earlier 8,192-token context rejected 13 of 102 TypeSafe-102 documents. Kev-9B: 0.92 correct inside 384 tokens, 0.75–0.79 beyond. Kev-27B v1 on questions buried in 1k–6k tokens: 0.833 vs Kev-9B 0.556. No Mac latency at ~2,000 tokens is published.
+- **Input length:** 0.8B–9B trained on states ≤ 384 tokens (≤ 1,024 with one question); Kev-27B v2 on states ≤ 32,768. Serving accepts states ≤ 65,536 tokens plus 8,192 per question. TypeSafe-102 was scored under an 8,192-token context, which rejected 13 of 102 documents. Kev-9B: 0.92 correct inside 384 tokens, 0.75–0.79 beyond. Kev-27B v1 on questions buried in 1k–6k tokens: 0.833 vs Kev-9B 0.556. No Mac latency at ~2,000 tokens is published.
 
 ## Fine-tuning
 
@@ -128,14 +129,14 @@ uv run python -m kev.benchmark --run runs/mine --data heldout.jsonl --out runs/m
 ## Data governance
 
 - **Self-host / air-gap:** yes. Weights on HF and in the GitHub release with SHA-256 checksums. Once base and adapter are cached, `kev.serve` makes no documented outbound calls. `HF_HUB_OFFLINE=1` operation is not documented (unverified).
-- **Licences:** code, adapters, heads Apache-2.0; bases Qwen3.5-0.8B/4B/9B-Base and Qwen3.8-27B Apache-2.0 (HF metadata). Training datasets keep their own licences (per card: BANKING77, BoolQ, AG News, MultiNLI, SST-5, Yelp Review Full, TREC, DBpedia-14, Amazon Reviews, IMDB; about 35 sources for Kev-27B); not reviewed here. The TypeSafe SDK's licence is not documented in the README.
+- **Licences:** code, adapters, heads Apache-2.0; bases Qwen3.5-0.8B/4B/9B-Base and Qwen3.8-27B Apache-2.0 (HF metadata). Training datasets keep their own licences (per card: BANKING77, BoolQ, AG News, MultiNLI, SST-5, Yelp Review Full, TREC, DBpedia-14, Amazon Reviews, IMDB; about 35 sources for Kev-27B); not reviewed here. The TypeSafe SDK (`typesafe-sdk` 0.7.2) is MIT (PyPI).
 - **Hosted options:** HF Space: input goes to Hugging Face; region, retention and logging not documented publicly as of 2026-09-30; send only public or synthetic data. Modal (`kev_serve.py`): the user's own Modal account on an L40S; region, retention and DPA follow the user's Modal contract; scales to zero, about 35 s cold start. No vendor API; no training on inputs unless the user trains.
 - **Provenance and trust:** single maintainer, built with Devin. Kev-27B starts from Qwen's post-trained release (training data unknown to the author); v2 trained on a private corpus (`sft-v2-r22`, 145,840 records). `head.pt` files are PyTorch pickles; verify release checksums. `kev.jev` benchmark tooling calls Jev through Vercel AI Gateway; the server does not use it.
 
 ## Caveats
 
 - Kev-27B `main` changed to v2 on 2026-09-30; pin a revision. v2 was chosen after its test partitions had been read for a previous round (card: weakens the confirmation).
-- Kev-4B card's "no MLX path" note conflicts with the README. Calibration is one in-distribution temperature; coverage at 5% error is below Jev.
+- The Kev-4B card's "no MPS implementation" note conflicts with the README's MLX path. Calibration is one in-distribution temperature; coverage at 5% error is below Jev.
 - Option order changes 8–10% of answers on BANKING77-20. Accuracy drops beyond 384 tokens for 0.8B–9B. Knowledge-heavy questions trail Jev.
 
 ## Sources
@@ -147,4 +148,5 @@ uv run python -m kev.benchmark --run runs/mine --data heldout.jsonl --out runs/m
 - [GitHub: tak-bro/local-jev-bench](https://github.com/tak-bro/local-jev-bench) (MIT; results 2026-09-30, M3 Max 36 GB)
 - [Archer Hume, Jev's Architecture Unmasked](https://archerhume.com/posts/jevs-architecture-unmasked)
 - Qwen base licences: [Qwen3.5-4B-Base](https://huggingface.co/Qwen/Qwen3.5-4B-Base), [Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B)
+- [Jev Decision Index `data/index.json`](https://huggingface.co/spaces/multimodalart/jev-decision-index) (0.2.1, generated 2026-09-28); [PyPI: typesafe-sdk](https://pypi.org/project/typesafe-sdk/)
 - [TypeSafe API docs](https://docs.typesafe.ai/api)

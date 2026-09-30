@@ -71,7 +71,7 @@ make status   # model, calibration on/off, endpoint URLs
 
 Call it with the payload above (`curl http://localhost:54100/v1/systemone -H "Content-Type: application/json" -d @request.json`) or with `TypeSafeClient(base_url="http://localhost:54100")`.
 
-- `make configure-*` targets are NVIDIA-only; Macs use the default build. Metal support is assumed from llama.cpp (unverified in this repo).
+- `make configure-*` targets are NVIDIA-only; Macs use the default build. The PrismML card lists ternary kernels for llama.cpp on CUDA and Metal; the fork's Metal build is not documented in this repo.
 - `.env` (from `.env.example`): `PORT`; `BONSAI_API_KEY` (require a key); `BONSAI_CTX` (context); `BONSAI_NP` (parallel slots, default 4, context split across them); `BONSAI_NGL` (`99` all layers on GPU, `0` CPU only); `BONSAI_CALIBRATION` (path or `off`); `BONSAI_GGUF` / `BONSAI_MMPROJ` (other model and its image projector).
 - Plain chat needs `"chat_template_kwargs": {"enable_thinking": false}`; `/v1/systemone` does not.
 
@@ -98,7 +98,7 @@ Call it with the payload above (`curl http://localhost:54100/v1/systemone -H "Co
 
 - All benchmark numbers come from the author's own benchmark, not reproduced independently.
 - Nothing is published on 100+ options or on `/v1/systemone` Metal performance.
-- Provenance: PrismML (`prism-ml` on HF) publishes the weights; `base_model` is `Qwen/Qwen3.8-27B`, "architecture unchanged", quantised to ternary g128 (1.72 bits/weight; PQ2_0 file 7.21 GB) ([`prism-ml/Ternary-Bonsai-2-27B-gguf`](https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf) card, checked 2026-09-30). The all-about-jev attribution and the Reddit "Qwen3.8-27B" description are both correct.
+- Provenance: PrismML (`prism-ml` on HF) publishes the weights; `base_model` is `Qwen/Qwen3.8-27B`, "architecture unchanged", quantised to ternary g128 (1.72 bits/weight; PQ2_0 file 7.21 GB, PTQ1_0 5.95 GB) ([`prism-ml/Ternary-Bonsai-2-27B-gguf`](https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf) card, checked 2026-09-30).
 
 ## Sources
 
