@@ -37,9 +37,9 @@ Backbone is assigned by keyword from `base_model` (the `scripts/build_landscape.
 | Gemma 4B–31B | letter logits (Winnow), fine-tune | 39.9–57.4 | 0.058–0.168 | 45–121 ms | Winnow served at 8,192 | — | LoRA | Apache or Gemma | local |
 | Other open | mixed | LFM2.5-2.6B-RLCD 6.8 | 0.255 | 39 ms | — | — | per model | 23 of 29 Apache/MIT | local |
 | Training-free wrappers | next-token logits over labels | 55.7–57.3 (inference techniques) | 0.047–0.113 | 108–373 ms | base model context | AnyJev 2–26 | none needed; AnyJev L1/L2 fit 100–500 labels | base model's | local |
-| Hosted APIs | undisclosed | Jev 57.91; d1 58.9, Tev1 29.24 (secondary) | Jev 0.074 | Jev 524 ms (HTTPS) | Jev 64K; d1 32K; Decider 1 4,096; Solar 512K | Jev 255; Solar 26; Tev1 24; Decider 1 10 | none (Tev1 weights open) | proprietary | vendor cloud, US for Jev and d1 |
+| Hosted APIs | undisclosed | Jev 57.91; Tev1 29.24; d1 58.9 (press only, not on the board) | Jev 0.074 | Jev 524 ms (HTTPS) | Jev 64K; d1 32K; Decider 1 4,096; Solar 512K | Jev 255; Solar 26; Tev1 24; Decider 1 10 | none (Tev1 weights open) | proprietary | vendor cloud, US for Jev and d1 |
 
-DI rows: [benchmarks.md](benchmarks-leaderboards.md#decision-index-021). "Inference techniques" = `Decider chat · Gemma-4-31B` (57.33) and `simple-jev · Qwen3.8-27B` (55.74), both logit readouts with no released weights. d1 and Tev1 DI figures are secondary ([liquid-d1.md](models/liquid-d1.md#benchmarks), [tev1.md](models/tev1.md#benchmarks)) (unverified).
+DI rows: [benchmarks.md](benchmarks-leaderboards.md#decision-index-021). "Inference techniques" = `Decider chat · Gemma-4-31B` (57.33) and `simple-jev · Qwen3.8-27B` (55.74), both logit readouts with no released weights. Tev1's 29.24 is on the board. d1's 58.9 comes from press reports only; the DI Space data (generated 2026-09-28, checked 2026-09-30) has no d1 row ([liquid-d1.md](models/liquid-d1.md#benchmarks)) (unverified).
 
 ## BERT-family encoders
 
@@ -58,7 +58,7 @@ DI rows: [benchmarks.md](benchmarks-leaderboards.md#decision-index-021). "Infere
 - **How it works.** LoRA + pointer head on a frozen base (Kev, JEV), full or LoRA fine-tune read at option-letter logits (decider, JevK5, AutoJev), or frozen encoder + contrastive heads (CLM-8B) ([fine-tuning.md](fine-tuning.md#architectures-and-what-gets-trained)).
 - **0.5–4B.** DI 29.0 (Decider 2B) to 43.0 (JPT-4B). JevBench v1.4.2.2 top four are Qwen3.5-4B derivatives: Imajev-4B 67.37, Plumb-4B 65.84, decider-4b v2 64.13, above Jev 63.29 ([benchmarks.md](benchmarks.md#jevbench)); JevBench weights speed and cost as axes. Imajev's base is inferred from its Qwen3.5-4B reference price.
 - **7–14B.** DI JPT-9B 46.89, Kev 9B 38.48. CLM-8B scores 7.40 on DI and 20% on BANKING77-20 in an independent Mac run; its strength is cached action scoring (0.6 ms revisited states) ([clm-8b.md](models/clm-8b.md#benchmarks)).
-- **20–35B.** DI AutoJev-27B 56.40, Jebadiah 54.67, Eikos 53.13, Decider 35B-A3B 47.11, Solomon 36.43. JEV-27B: six-benchmark mean 84.07 vs Jev 83.85 (AutoTrust's runs). Bonsai-2-27B (ternary, Qwen3.8-27B per its release thread) is in the wrapper section.
+- **20–35B.** DI AutoJev-27B 56.40, Jebadiah 54.67, Eikos 53.13, Decider 35B-A3B 47.11, Solomon 36.43. JEV-27B: six-benchmark mean 84.07 vs Jev 83.85 (AutoTrust's runs). Bonsai-2-27B (PrismML ternary quant of Qwen3.8-27B) is in the wrapper section.
 - **Size effects.** Long input: Kev-27B 0.833 vs Kev-9B 0.556 on questions buried in 1k–6k tokens. Knowledge: MMLU-Pro Kev-9B 0.52 vs Jev 0.84 ([kev.md](models/kev.md#benchmarks)). Kev-9B accuracy falls from 0.92 (≤384 tokens) to 0.75–0.79 on longer documents.
 - **Many options.** decider on CLINC 151-way: 0.88 with all labels vs 0.98 with 10 sampled.
 - **On an M5 Max.** Kev-0.8B 149 ms new / 28 ms cached, Kev-4B 721 / 136 ms (M5 32 GB, MLX, 5 questions, ~270 tokens). Kev-9B first-call p50 297–546 ms on M3 Max. JevK5 GGUF ~0.6 s per decision on M1 Pro. Qwen3.5 Gated DeltaNet layers have no MPS kernels. 27B bf16 (~54 GB) fits in 128 GB, but JEV-27B, AutoJev-27B and Kev-27B document no Mac path; OpenJev 27B ships a 16.5 GB Q4_K_M GGUF.
@@ -94,10 +94,10 @@ DI rows: [benchmarks.md](benchmarks-leaderboards.md#decision-index-021). "Infere
 | API | Options | Context | Price per 1M input | Fine-tune | Notes |
 |---|---|---|---|---|---|
 | [Jev 1.13](models/jev.md) | 255 | 64K | $0.042 | no | DI 57.91; ECE 0.032–0.096 on classification (AI/ML API) |
-| [d1](models/liquid-d1.md) | ≥2, max n/d | 32K | free tier; paid n/d | no | DI 58.9 (secondary); policy permits training on inputs |
+| [d1](models/liquid-d1.md) | ≥2, max n/d | 32K | free tier; paid n/d | no | DI 58.9 (press only, not on the board; unverified); policy permits training on inputs |
 | [Decider 1](models/decider-1.md) | 10 | 4,096 | $0.03 | no | typed-decisions 0.768 (vendor) |
 | [Solar Decide](models/solar-decide.md) | 26 | 512K | $0.10 | no | 35B-A3B MoE; beta |
-| [Tev1](models/tev1.md) | 24, one question | 2,048 or 33K (conflicting) | $0.042 | open Qwen3.5-4B weights | returns a letter, no distribution |
+| [Tev1](models/tev1.md) | 24, one question | 32,768 (Together serverless) | $0.042 | open Qwen3.5-4B weights | returns a letter, no distribution |
 
 - Span-01 answers Noul questions only ([span-01.md](models/span-01.md)). OpenAI Decisions is undocumented ([openai-decisions-api.md](models/openai-decisions-api.md)).
 - Jev and d1 process in the US; retention, DPA and EU terms are in [data-governance.md](data-governance.md).
@@ -120,7 +120,7 @@ DI rows: [benchmarks.md](benchmarks-leaderboards.md#decision-index-021). "Infere
 
 ## Open questions for experiments
 
-Mapped to [experiments.md](experiments.md). None has a published answer as of 2026-09-30.
+Mapped to [experiments](../experiments/README.md). None has a published answer as of 2026-09-30.
 
 | Class | Question | Experiment |
 |---|---|---|

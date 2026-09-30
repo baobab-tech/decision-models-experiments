@@ -15,14 +15,15 @@ A public Baobab Tech repo (`decision-models-experiments`): a getting-started gui
 - [docs/models/](docs/models/): one file per model or model family. Each file has a `## Data governance` section: self-hosting, fine-tuning, processing location and EU option, retention, training on inputs, DPA, licence.
 - [docs/benchmarks.md](docs/benchmarks.md), [docs/fine-tuning.md](docs/fine-tuning.md): published evals and fine-tuning options.
 - [docs/data-governance.md](docs/data-governance.md): governance comparison across models. The details live in the `## Data governance` section of each model doc.
-- [docs/experiments.md](docs/experiments.md): experiment list and status.
-- `experiments/<nn>-<slug>/`: code and results for one experiment.
+- [experiments/README.md](experiments/README.md): experiment index and status.
+- [experiments/common/](experiments/common/README.md): shared datasets, metrics, run-metadata conventions and code. Anything used by two or more experiments goes here.
+- `experiments/<nn>-<slug>/`: plan, code and results for one experiment.
 
 ## How we work
 
-1. **The maintainer picks the experiments.** Don't start an experiment, download model weights, or scaffold experiment code unless the maintainer asks for that specific experiment. You may propose experiments by adding them to `docs/experiments.md` with status `proposed`.
+1. **The maintainer picks the experiments.** Don't start an experiment, download model weights, or scaffold experiment code unless the maintainer asks for that specific experiment. You may propose experiments by adding a row to `experiments/README.md` with status `proposed`.
 2. **Write the plan first.** Each experiment starts as a written plan in `experiments/<nn>-<slug>/README.md`: question, models, datasets, baselines, metrics, and the result that would change a decision. The code comes after the plan.
-3. **Results go in the docs.** When an experiment finishes, write the results and conclusions in its README. Update its status in `docs/experiments.md`, and update model docs if a finding changes them.
+3. **Results go in the docs.** When an experiment finishes, write the results and conclusions in its README. Update its status in `experiments/README.md`, and update model docs if a finding changes them.
 4. **Cite sources.** Model docs cover a fast-moving field (most releases date from September 2026). Link every claim to a primary source, and mark anything you couldn't check as `(unverified)`. Record the date you checked it.
 5. **Record data governance.** Each experiment README states which models ran where: local, vendor API, or gateway, and in which region. Send only public or synthetic data to API-only models, unless the maintainer approves otherwise. When a model's hosting, retention or licence terms change, update that model doc's `## Data governance` section and the comparison in `docs/data-governance.md`.
 6. **Make runs reproducible.** Pin dependencies. Record hardware, model revision (HF commit hash or API model version), seeds, and dataset version with every result.

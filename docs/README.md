@@ -13,7 +13,7 @@ Research checked 2026-09-30. Models in this field changed weekly in September 20
 | [fine-tuning.md](fine-tuning.md) | Which models can be fine-tuned, how, and on what hardware |
 | [data-governance.md](data-governance.md) | Self-hosting, fine-tuning rights, EU processing, retention and DPA for each deployment option |
 | [landscape.md](landscape.md) | All 255 models in Han Xiao's [All about Jev](https://hanxiao.io/all-about-jev/) dataset (generated) |
-| [experiments.md](experiments.md) | Proposed and completed experiments |
+| [../experiments/](../experiments/README.md) | Experiment index, plans and results |
 
 ## Model docs by backbone
 
@@ -32,5 +32,5 @@ Research checked 2026-09-30. Models in this field changed weekly in September 20
 | Qwen3.5-4B | [Tev1](models/tev1.md) (Together AI) | Public; licence pending | GGUF via llama.cpp |
 | Qwen (various) | [JevK5, Jev-Style, decider, autotrust JEV and others](models/open-reproductions.md#qwen-based) | Mostly Apache-2.0 | Mostly |
 | Gemma | [Winnow, Jev-Omni](models/open-reproductions.md#gemma-based) | See doc | See doc |
-| Bonsai-2-27B | [Bonsai-Llama-Jev](models/bonsai-llama-jev.md) (kyr0) | MIT code; weight licence unverified | Yes (llama.cpp) |
+| Qwen3.8-27B (Ternary Bonsai 2, PrismML) | [Bonsai-Llama-Jev](models/bonsai-llama-jev.md) (kyr0) | MIT code; Apache-2.0 weights | Yes (llama.cpp) |
 | Any open LLM | [AnyJev](models/anyjev.md) (Nokia) | Apache-2.0 library | HF backend (MPS unverified) |
