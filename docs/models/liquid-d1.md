@@ -54,7 +54,8 @@ Same wire format as Jev; see [concepts.md](../concepts.md#request-and-response-s
 
 - Per KuCoin, d1 leads on artistic judgment, language understanding and retrieval classification; Jev leads on tool usage and knowledge reasoning (by 8 points).
 - [AlphaSignal](https://alphasignal.ai/news/liquid-ai-s-d1-makes-decisions-without-generating-a-single-token) says the index covers 132,422 requests over 37 benchmarks and ranks d1 first, with Jev 1.13 "near 74.4". This conflicts with 57.9 (unverified).
-- Liquid publishes no benchmark, accuracy or latency numbers. The leaderboard page itself was not fetched.
+- d1 is not on the Decision Index board. The [DI Space](https://huggingface.co/spaces/multimodalart/jev-decision-index) data files (`index-v0.2.1.json`, 70 entrants plus Jev, generated 2026-09-28T00:39Z; `index-v2.json`, 2026-09-27) have no d1 or Liquid-hosted row (checked 2026-09-30). The Space was last updated 2026-09-28, before d1's 2026-09-29 release. [Liquid's launch thread](https://threadreaderapp.com/thread/2105003472332693869.html) claims d1 is "the first model to outperform Jev" on the index without giving a score. 58.9 appears only in press reports (unverified).
+- Liquid publishes no benchmark, accuracy or latency numbers.
 
 ## Running it
 

@@ -41,19 +41,23 @@ Choice and Score are not supported.
 
 ## Benchmarks
 
-Respan's internal behaviour benchmark (launch post), overall F1: Span-01 84.3, GPT-6 Luna 81.5, Jev 1.13.0 71.5.
+The [launch post](https://www.respan.ai/blog/introducing-span-1) (2026-09-24, checked 2026-09-30) reports two benchmarks; both F1 figures come from it.
 
-| Domain | Span-01 | Jev | Sonnet 5 |
-|---|---|---|---|
-| Jailbreak and prompt injection | 0.779 | 0.752 | 0.709 |
-| Safety and refusals | 0.803 | 0.751 | 0.785 |
-| Privacy and secrets | 1.000 | 0.948 | 0.901 |
-| Hallucination and grounding | 0.796 | 0.673 | 0.756 |
-| Agent/tool reliability | 0.845 | 0.691 | 0.677 |
-| Task following | 0.702 | 0.671 | 0.621 |
-| Response quality | 0.771 | 0.691 | 0.722 |
+- **Behavior benchmark**, nine models, overall F1: Span-01 84.3, GPT-6 Luna 81.5, Jev 1.13.0 71.5. "Overall is the unweighted mean of English and multilingual F1." Span-01 Lite is said to beat Jev and Sonnet 5; its score is not printed in the page text.
+- **Production behavior benchmark**, seven domains, overall F1: Span-01 0.806, GPT-6 Sol 0.885, Sonnet 5 0.719, Jev 0.716. How the overall is aggregated from the domains is not stated. Per-domain scores:
 
-- systemonemodels.org reports Span-01 0.806 (vs Respan's 0.843), Lite 0.761, Jev 0.716, Sonnet 5 0.719, GPT-6 Sol 0.885.
+| Domain | Span-01 | Jev | Sonnet 5 | GPT-6 Sol |
+|---|---|---|---|---|
+| Jailbreak and prompt injection | 0.779 | 0.752 | 0.709 | 0.878 |
+| Safety and refusals | 0.803 | 0.751 | 0.785 | 0.911 |
+| Privacy and secrets | 1.000 | 0.948 | 0.901 | 0.935 |
+| Hallucination and grounding | 0.796 | 0.673 | 0.756 | 0.903 |
+| Agent/tool reliability | 0.845 | 0.691 | 0.677 | 0.861 |
+| Task following | 0.702 | 0.671 | 0.621 | 0.821 |
+| Response quality | 0.771 | 0.691 | 0.722 | 0.956 |
+| Overall | 0.806 | 0.716 | 0.719 | 0.885 |
+
+- systemonemodels.org repeats both figures and adds Lite 0.761 (unverified; not in the launch post text).
 - zero-shot-ie-bench (sentiment/topic): Span-01 85.4%, Lite 79.2%, Jev 93.8% (systemonemodels.org).
 - No calibration metric published.
 
@@ -97,7 +101,7 @@ The OpenRouter call shape for Span-01 is not documented.
 ## Caveats
 
 - Not documented: model size, context length, span-size limit, Lite daily cap, Pro rate limits, training on inputs.
-- Two F1 figures circulate for Span-01 (0.843 vs 0.806).
+- Span-01's 84.3 (behavior benchmark) and 0.806 (production behavior benchmark) are different Respan benchmarks, both vendor-run on Respan data.
 - The only external result is on sentiment/topic, outside Span-01's target domain.
 - Organisation enablement may be needed before calls succeed (systemonemodels.org, unverified).
 

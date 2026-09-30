@@ -28,7 +28,7 @@ Checked 2026-09-30. No weights were downloaded and nothing was run; every comman
 | [Winnow](#winnow) | gemma-4-E4B-it / 12B-it | ~8B / 12B | Apache-2.0 | yes | not stated / 64K tested | `winnow-inference --profile apple-silicon` |
 | [JEV-Gemma4](#autotrust-jev) | gemma-4-26B-A4B-it | 25.8B (4B active) | Apache-2.0 | partial | 2–16 / 1,024 | none in card |
 | [VTX-JEV-1](#vtx-jev-1) | vtx-embed-7M | 12.66M (card) | Apache-2.0 | partial | 255 / not stated | `inference.py` on CPU |
-| Bonsai-Llama-Jev | Bonsai-2-27B (GGUF Q2_64, ~7 GB) | 27B | MIT code; weights unverified | yes | [bonsai-llama-jev.md](bonsai-llama-jev.md) | llama.cpp fork |
+| Bonsai-Llama-Jev | Bonsai-2-27B (GGUF Q2_64, ~7 GB) | 27B | MIT code; Apache-2.0 weights (PrismML) | yes | [bonsai-llama-jev.md](bonsai-llama-jev.md) | llama.cpp fork |
 | Liquid d1 | — | — | commercial API | — | — | hosted: [liquid-d1.md](liquid-d1.md) |
 
 Backbone not stated or unclear: NeoHorse-Jev-4B, Intern-Decision-4B, `surogate/rune-26b-a4b` ([Other](#other)).

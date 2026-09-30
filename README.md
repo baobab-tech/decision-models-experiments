@@ -1,69 +1,121 @@
 # Getting started with decision models
 
-Guides, run instructions and open experiments for System One decision models (Jev, GLiNER2.5-Decide, Liquid d1, and open Hugging Face models), from [Baobab Tech](https://github.com/baobab-tech).
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docs checked](https://img.shields.io/badge/docs%20checked-2026--09--30-informational)](docs/README.md)
+[![Status](https://img.shields.io/badge/status-research%20phase-lightgrey)](experiments/README.md)
 
-A decision model takes a piece of text (the *state*) and a set of typed questions, and returns a calibrated probability for every answer in one forward pass. It generates no text. Question types:
+Guides, run instructions and open experiments for **System One decision models**: Jev, Liquid d1, GLiNER2.5-Decide, Kev, Laya and 250+ open models on Hugging Face. Maintained by [Baobab Tech](https://github.com/baobab-tech).
 
-- **Choice**: pick one option from a list.
-- **Score**: pick a level on a 2–10 scale.
-- **Noul**: yes / no.
+## What a decision model does
 
-We test when these models can replace an LLM or a fine-tuned classifier in real pipelines, and publish the results, code and notes as we go.
+You send a piece of text (the `state`) and typed questions. You get back a probability for every possible answer, from one forward pass with no generated text.
 
-## Models under study
+```json
+{
+  "state": "My payouts have failed for three days, please help today.",
+  "questions": {
+    "department": {"type": "choice", "instructions": "Which team handles this?",
+                   "criteria": {"billing": "Payments", "technical": "Bugs"}},
+    "urgent":     {"type": "noul",   "instructions": "The message is time-sensitive"},
+    "frustration":{"type": "score",  "instructions": "How frustrated?",
+                   "criteria": ["Calm", "Frustrated", "Furious"]}
+  }
+}
+```
 
-| Model | Vendor | Weights | Self-host / fine-tune | Notes |
+```json
+{"answers": {
+  "department":  {"choice": "technical", "probabilities": {"billing": 0.07, "technical": 0.93}},
+  "urgent":      {"noul": 0.99},
+  "frustration": {"score": 1.01, "probabilities": {"0": 0.01, "1": 0.96, "2": 0.03}}
+}}
+```
+
+| Type | Answers |
+|---|---|
+| **Choice** | one of up to 255 options |
+| **Score** | a level on a 2–10 point scale |
+| **Noul** | yes / no, as a probability |
+
+The same request works against Jev, Liquid d1, Kev, Bonsai-Llama-Jev, Decider 1 and Solar Decide. More in [concepts](docs/concepts.md).
+
+## Start here
+
+1. [Concepts](docs/concepts.md): the format, calibration, and how many-label classification works.
+2. [Quickstart](docs/quickstart.md): run a model on a Mac or through an API, with one client for every compatible endpoint.
+3. [Model classes](docs/model-classes.md): how a 300M BERT encoder, a 4B Qwen head and a 27B model differ.
+4. [Benchmarks](docs/benchmarks.md): Decision Index, JevBench, typed-decision-bench, S1Bench.
+5. [Data governance](docs/data-governance.md): who can self-host, fine-tune, or process in the EU.
+
+## Models
+
+| Model | Backbone | Weights | Runs locally | Doc |
 |---|---|---|---|---|
-| Jev | TypeSafe AI | API only | No / No | Early access since 2026-09-15; 64k context; see [docs/models/jev.md](docs/models/jev.md) |
-| GLiNER2.5-Decide | Fastino | Open, Apache 2.0 | Yes / Yes | 340M-parameter DeBERTa-v3 encoder; runs on CPU |
-| d1 | Liquid AI | API only | No / No | Released 2026-09-29; billed for input tokens only |
-| Bonsai-Llama-Jev | kyr0 (community) | Open, MIT code | Yes / calibration only | llama.cpp server on Bonsai-2-27B; see [docs/models/bonsai-llama-jev.md](docs/models/bonsai-llama-jev.md) |
-| Open Jev-style models | Various (Hugging Face) | Open | Yes / varies by model | See [docs/models/open-reproductions.md](docs/models/open-reproductions.md); 255 community models are catalogued in [docs/landscape.md](docs/landscape.md) |
+| Jev (TypeSafe AI) | closed | API only | no | [jev](docs/models/jev.md) |
+| Liquid d1 | closed | API only | no | [liquid-d1](docs/models/liquid-d1.md) |
+| Decider 1 (meraGPT), Solar Decide (Upstage), Span-01 (Respan), OpenAI Decisions | closed | API only | no | [models/](docs/models/) |
+| GLiNER2.5-Decide (Fastino) | DeBERTa-v3, 340M | Apache-2.0 | yes, CPU | [gliner-decide](docs/models/gliner-decide.md) |
+| Laya and other BERT-family encoders | ModernBERT / mmBERT / DeBERTa | Apache-2.0 | yes | [open models](docs/models/open-reproductions.md#bert-family-encoders) |
+| Kev (0.8B–27B) | Qwen3.5 / Qwen3.8 | Apache-2.0 | 0.8B–9B via MLX | [kev](docs/models/kev.md) |
+| JevK5, Jev-Style, decider and other Qwen models | Qwen | mostly Apache-2.0 | mostly | [open models](docs/models/open-reproductions.md#qwen-based) |
+| CLM-8B (Contrastive-LM) | Qwen3-8B | Apache-2.0 | via vllm-metal | [clm-8b](docs/models/clm-8b.md) |
+| Tev1 (Together AI) | Qwen3.5-4B | public, licence pending | GGUF | [tev1](docs/models/tev1.md) |
+| Bonsai-Llama-Jev | Qwen3.8-27B, ternary (PrismML Bonsai 2) | MIT code, Apache-2.0 weights | yes, llama.cpp | [bonsai-llama-jev](docs/models/bonsai-llama-jev.md) |
+| AnyJev (Nokia) | any open LLM | Apache-2.0 | yes | [anyjev](docs/models/anyjev.md) |
 
-API-only models process your text on the vendor's cloud. Where the data goes, how long it is kept, whether the vendor trains on it, and whether it can be processed in the EU are covered in the "Data governance" section of each model doc. [docs/data-governance.md](docs/data-governance.md) has the side-by-side comparison.
+All 255 models in Han Xiao's [All about Jev](https://hanxiao.io/all-about-jev/) dataset are in [landscape](docs/landscape.md), grouped by backbone and size.
 
-## Questions we plan to test
+## Findings so far
 
-1. **Many-option classification.** Do decision models hold up with 10+ options, 100+ tags (e.g. news topics), or document-type labels, on inputs of ~100 and ~2,000 tokens? Baselines: embeddings + kNN, fine-tuned classifiers, and LLMs.
-2. **Fine-tuning.** Which models can be fine-tuned, how, and when fine-tuning beats zero-shot.
+These come from published sources; we haven't run anything yet.
 
-Each experiment gets a written plan before any code runs. Status is tracked in [docs/experiments.md](docs/experiments.md).
+- Jev tops the Decision Index 0.2.1 at 57.91. Every BERT-family encoder scores below 12 ([benchmarks](docs/benchmarks.md#reading-the-leaderboards-across-models)).
+- On JevBench, which also scores speed and cost, 4B–12B open models rank alongside Jev ([leaderboards](docs/benchmarks-leaderboards.md)).
+- Choice is capped at 255 options on Jev and Kev, and at 26 on AnyJev. No vendor publishes accuracy for 100+ options ([experiment 01](experiments/01-many-option-classification/)).
+- Multi-label tagging means one Noul per label on every Jev-compatible API. Only GLiNER2.5-Decide has a native multi-label mode.
+- Jev and d1 process data in the US and cannot be fine-tuned. Open models can run and train on your own hardware ([data governance](docs/data-governance.md)).
 
-## Repository layout
+## Experiments
+
+| # | Experiment | Status |
+|---|---|---|
+| 01 | [Many-option classification](experiments/01-many-option-classification/): 10–200+ labels, tags, document types; ~100 vs ~2,000-token inputs | proposed |
+| 02 | [Fine-tuning](experiments/02-fine-tuning/): which models, how, and how many labels it takes to beat zero-shot | proposed |
+
+Each experiment starts as a written plan. Results, code and run metadata are published in its folder ([index](experiments/README.md)).
+
+<details>
+<summary>Repository layout</summary>
 
 ```
 docs/
-  README.md            index and model comparison
-  concepts.md          System One models, typed questions, calibration
-  landscape.md         all 255 models in the all-about-jev dataset (generated)
-  quickstart.md        fastest way to run each model (Mac or API)
-  model-classes.md     models by backbone family and size
-  benchmarks.md        Decision Index, JevBench, typed-decision-bench and others
+  README.md                   docs index
+  concepts.md                 format, calibration, many-label classification
+  quickstart.md               run each model locally or via API
+  model-classes.md            models by backbone family and size
+  benchmarks.md               benchmarks and cross-benchmark table
   benchmarks-leaderboards.md  full leaderboard tables
-  fine-tuning.md       fine-tuning options across models
-  data-governance.md   cross-model governance matrix (details live in each model doc)
-  experiments.md       planned and completed experiments
-  models/              one file per model or model family
-experiments/           one folder per experiment (added as we run them)
-scripts/               doc generators (e.g. build_landscape.py)
-data/                  external datasets; raw files gitignored, fetch steps in each README
+  fine-tuning.md              fine-tuning options by backbone
+  data-governance.md          governance comparison across models
+  landscape.md                all 255 dataset models (generated)
+  models/                     one doc per model or family
+experiments/
+  README.md                   index and status
+  common/                     shared datasets, metrics, conventions, code
+  <nn>-<slug>/                one folder per experiment
+scripts/                      doc generators
+data/                         external datasets (raw files gitignored)
 ```
 
-## Running the models
-
-Open-weight models run locally; this work uses an Apple Silicon Mac (M5 Max, 128 GB). The API models need a key from the vendor or from Vercel AI Gateway. Setup steps for each model are in [docs/quickstart.md](docs/quickstart.md).
-
-## Status
-
-Research phase. The docs reflect sources checked on 2026-09-30. No experiments have run yet.
+</details>
 
 ## Contributing
 
-Issues and pull requests are welcome, especially corrections to the model docs and new open decision models to add.
+Issues and pull requests are welcome, especially corrections to the model docs (with a source link) and new open decision models. Contributor and agent conventions are in [AGENTS.md](AGENTS.md).
 
 ## Credits
 
-- [docs/landscape.md](docs/landscape.md) is generated from [All about Jev](https://hanxiao.io/all-about-jev/), a dataset compiled and curated by Han Xiao ([announcement](https://www.linkedin.com/feed/update/urn:li:ugcPost:7508930228493348865/)).
+[docs/landscape.md](docs/landscape.md) is generated from [All about Jev](https://hanxiao.io/all-about-jev/), a dataset compiled and curated by Han Xiao ([announcement](https://www.linkedin.com/feed/update/urn:li:ugcPost:7508930228493348865/)).
 
 ## License
 

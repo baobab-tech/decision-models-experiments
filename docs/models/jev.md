@@ -131,7 +131,7 @@ Not legal advice.
 
 Via Vercel AI Gateway (`typesafe-ai/jev`):
 
-- The [ZDR page](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr) lists TypeSafe as ZDR and no-prompt-training compliant. The [`/v1/models`](https://ai-gateway.vercel.sh/v1/models) entry (fetched 2026-09-30) reports `"zdr": "none"`, `"no_training": "all"` and no `regions` field. The ZDR flag conflicts with the ZDR page (unverified which is current).
+- No ZDR as of 2026-09-30. The gateway routes `typesafe-ai/jev` through one provider, `digitalocean`, with `"has_zdr": false` and `"has_no_training": true` ([`/v1/models/typesafe-ai/jev/endpoints`](https://ai-gateway.vercel.sh/v1/models/typesafe-ai/jev/endpoints)); [`/v1/models`](https://ai-gateway.vercel.sh/v1/models) matches with `"zdr": "none"`, `"no_training": "all"` and no `regions` field. The [ZDR page](https://vercel.com/docs/ai-gateway/security-and-compliance/zdr) (updated 2026-09-22) lists TypeSafe AI as a ZDR provider, and the [2026-09-16 changelog](https://vercel.com/changelog/typesafe-ai-jev-now-available-on-ai-gateway) says Jev supports ZDR, but TypeSafe is not the serving provider. Per the ZDR page, a `zeroDataRetention: true` request fails with `no_providers_available` when no ZDR provider serves the model (not tested).
 - Without `regions`, EU pinning via `inferenceRegion` is unavailable ([Regional Inference](https://vercel.com/docs/ai-gateway/security-and-compliance/regional-inference)).
 
 ## Caveats

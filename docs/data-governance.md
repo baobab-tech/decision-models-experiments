@@ -18,7 +18,7 @@ Status as of 2026-09-30, from vendor privacy policies, terms, DPAs, trust pages 
 | [Kev](models/kev.md#data-governance) | Yes (Apache-2.0) | Yes, LoRA + head, local or Modal | Yes, on your EU infra; HF Space region n/d | No | Your control; HF Space n/d | Not needed (Modal: your contract) | Your infra's |
 | [CLM-8B](models/clm-8b.md#data-governance) | Yes (Apache-2.0) | Yes, heads only | Yes, on your EU infra | No | Your control | Not needed | Your infra's |
 | [AnyJev](models/anyjev.md#data-governance) | Yes (Apache-2.0; base-model licence applies) | No weight updates; calibration and heads fit locally | Yes, on your EU infra | No | Your control; exported artifacts can contain labelled states | Not needed | Your infra's |
-| [Bonsai-Llama-Jev](models/bonsai-llama-jev.md#data-governance) | Yes (MIT code; weights licence n/d) | n/d; can serve another GGUF | Yes, on your EU infra | No | Your control | Not needed | Your infra's |
+| [Bonsai-Llama-Jev](models/bonsai-llama-jev.md#data-governance) | Yes (MIT code; Apache-2.0 weights) | n/d; can serve another GGUF | Yes, on your EU infra | No | Your control | Not needed | Your infra's |
 | [Together AI Tev1](models/tev1.md#data-governance) | Yes (public weights; licence being finalized) | Yes (MIT recipe; Together fine-tuning) | Together dedicated endpoints in EU (via sales), or local weights | No, without opt-in | ZDR off by default; enable in org settings | SCCs; DPA unverified | SOC 2 Type II |
 | [meraGPT Decider 1](models/decider-1.md#data-governance) | No | n/d | n/d; may process in the US | No | Request text in memory only; billing records kept | No DPA; SCCs | n/d |
 | [Upstage Solar Decide](models/solar-decide.md#data-governance) | On-prem for Solar Decide n/d | n/d | n/d; US subprocessors | Paid: no. Free tier: may be used | Sync n/d; async 30 days; ZDR endpoint via OpenRouter | No DPA; Korea PIPA | SOC 2, HIPAA, ISO 27001/27701 (unverified) |
@@ -33,7 +33,7 @@ Status as of 2026-09-30, from vendor privacy policies, terms, DPAs, trust pages 
    - sign the vendor's DPA and confirm the transfer mechanism (TypeSafe publishes one with EU SCCs; Liquid's is not public);
    - confirm retention in writing (Jev: request enterprise ZDR; d1: no ZDR documented);
    - confirm training use (Jev: no; Liquid's policy permits it and asks users not to submit personal data).
-4. **Through Vercel AI Gateway.** Gateway-side ZDR, no-training, and `inferenceRegion` controls only act on providers that support them. `liquid/d1` supports none of the three as of 2026-09-30; a request that sets ZDR or an EU region should fail rather than route (unverified for d1).
+4. **Through Vercel AI Gateway.** Gateway-side ZDR, no-training, and `inferenceRegion` controls only act on providers that support them. `liquid/d1` supports none of the three as of 2026-09-30; a request that sets ZDR or an EU region should fail rather than route (unverified for d1). `typesafe-ai/jev` is served only by `digitalocean` with no-training but no ZDR and no EU region ([endpoints API](https://ai-gateway.vercel.sh/v1/models/typesafe-ai/jev/endpoints), 2026-09-30), although the ZDR page lists TypeSafe AI as a ZDR provider.
 5. **Fastino hosted API.** Set `store: false` or team ZDR and opt out of platform training (enterprise). No DPA is offered, and prompts may reach upstream providers (OpenAI, Anthropic are listed subprocessors), so avoid personal data until a DPA exists.
 6. **Non-personal, non-confidential data.** Any option works; pick on accuracy, latency and cost.
 

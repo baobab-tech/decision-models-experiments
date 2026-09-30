@@ -4,9 +4,9 @@
 |---|---|
 | Author | Aron Homberg ([kyr0](https://github.com/kyr0)) |
 | Type | Open typed-decision server: llama.cpp fork that reads answer-label logits from a causal LM |
-| Backbone | Bonsai-2-27B (thinking model); provenance unconfirmed (see Caveats) |
+| Backbone | PrismML Ternary-Bonsai-2-27B ([`prism-ml/Ternary-Bonsai-2-27B-gguf`](https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf)), a ternary quant of `Qwen/Qwen3.8-27B` (thinking model) |
 | Size | GGUF Q2_64, ~7 GB weights, ~10 GB VRAM at 64k context |
-| Licence | MIT (code); weight licence not stated in the README (unverified) |
+| Licence | MIT (code); Apache-2.0 (weights, PrismML; base Qwen3.8-27B also Apache-2.0) |
 | Run it via | `make setup && make start` → `http://localhost:54100/v1/systemone` |
 
 Checked 2026-09-30 against the `prism` branch (last push 2026-09-25, 2 stars).
@@ -91,17 +91,18 @@ Call it with the payload above (`curl http://localhost:54100/v1/systemone -H "Co
 
 - Runs locally. After `make setup`, requests stay on the machine unless external services are configured.
 - No auth by default; set `BONSAI_API_KEY` before exposing the port.
-- Code is MIT. The Bonsai-2-27B weight licence is not in the README; check the model's source repo before commercial use (unverified).
+- Code is MIT. `make setup` runs `scripts/download_models.sh`, which by default fetches [`prism-ml/Ternary-Bonsai-2-27B-gguf`](https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf) (revision `b072e1d`, checked 2026-09-30). The card and `NOTICE.txt` give Apache-2.0 and "built from Qwen3.8-27B"; the NOTICE asks for attribution ("Created using Bonsai by Prism ML") on public redistribution.
 - Single author, 2 stars as of 2026-09-30. Read the build and download scripts before running `make setup`.
 
 ## Caveats
 
 - All benchmark numbers come from the author's own benchmark, not reproduced independently.
 - Nothing is published on 100+ options or on `/v1/systemone` Metal performance.
-- The all-about-jev dataset attributes Ternary Bonsai 2 27B to PrismML (unverified).
+- Provenance: PrismML (`prism-ml` on HF) publishes the weights; `base_model` is `Qwen/Qwen3.8-27B`, "architecture unchanged", quantised to ternary g128 (1.72 bits/weight; PQ2_0 file 7.21 GB) ([`prism-ml/Ternary-Bonsai-2-27B-gguf`](https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf) card, checked 2026-09-30). The all-about-jev attribution and the Reddit "Qwen3.8-27B" description are both correct.
 
 ## Sources
 
 - [kyr0/Bonsai-Llama-Jev](https://github.com/kyr0/Bonsai-Llama-Jev) (README, `prism` branch, fetched 2026-09-30), [method write-up](https://kyr0.github.io/Bonsai-Llama-Jev/)
 - [typed-decision-bench](https://kyr0.github.io/typed-decision-bench/), [repo](https://github.com/kyr0/typed-decision-bench), [CALIBRATION.md](https://github.com/kyr0/typed-decision-bench/blob/main/CALIBRATION.md)
+- [`prism-ml/Ternary-Bonsai-2-27B-gguf`](https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf) (card, `NOTICE.txt`, revision `b072e1d`), [`scripts/download_models.sh`](https://github.com/kyr0/Bonsai-Llama-Jev/blob/prism/scripts/download_models.sh)
 - [r/LocalLLaMA release thread](https://www.reddit.com/r/LocalLLaMA/comments/1wo6x7e/i_turned_qwen3827b_q2_64_llamacpp_into_a_fully)

@@ -47,7 +47,7 @@ A TypeSafe adapter must assign letters A–X to `criteria` keys and map the lett
 | Together main development set | 880/1,000 (88.0%) | model card |
 | Together policy-transfer set (synthetic) | 300/300 | model card |
 | Valid single-letter outputs | 1,300/1,300 | model card |
-| Decision Index 0.2.1 | 29.24 (Jev 57.91) | systemonemodels.org (unverified) |
+| Decision Index 0.2.1 | 29.24 (Jev 57.91) | [DI Space `data/index-v0.2.1.json`](https://huggingface.co/spaces/multimodalart/jev-decision-index), generated 2026-09-28, checked 2026-09-30 |
 
 Together says the development sets informed development and are "not an independent benchmark".
 
@@ -57,14 +57,14 @@ Together says the development sets informed development and are "not an independ
 - **GGUF on a Mac:** `llama-server -hf bartowski/togethercomputer_Tev1-4B-experimental-GGUF:Q4_K_M` (2.80 GB, community quant) serves an OpenAI-compatible API on `localhost:8080`. Disable thinking to get a single letter.
 - **Transformers:** `togethercomputer/Tev1-4B-experimental`, BF16, about 9.3 GB. MPS support is not documented (unverified).
 - **vLLM:** `vllm serve "togethercomputer/Tev1-4B-experimental"` (Linux GPUs).
-- Price: $0.042 per 1M input tokens (systemonemodels.org); Respan's catalogue lists $0.04 input, $0.00 output. Tev1 is not on together.ai/pricing.
+- Price: $0.042 per 1M input tokens, output free ([Together serverless models](https://docs.together.ai/docs/serverless-models), checked 2026-09-30). Tev1 is not on together.ai/pricing.
 
 ## Scaling limits
 
 - **Options:** 24 per question (letters A–X).
 - **Questions per call:** one.
 - **Multi-label:** not supported; one yes/no call per label.
-- **Context:** conflicting: 2,048 tokens (systemonemodels.org) vs 33K (Respan catalogue).
+- **Context:** 32,768 tokens on Together serverless ([serverless models](https://docs.together.ai/docs/serverless-models), checked 2026-09-30). The checkpoint's `max_position_embeddings` is 262,144 ([config.json](https://huggingface.co/togethercomputer/Tev1-4B-experimental/blob/main/config.json)). The 2,048 figure is the training sequence length ([repo README](https://github.com/togethercomputer/tev1), [TRAINING.md](https://github.com/togethercomputer/tev1/blob/main/docs/TRAINING.md)).
 - **100+ options:** needs a tournament or hierarchy (e.g. 5 calls of ≤24 options, then a final call); each call re-sends the state.
 
 ## Data governance
@@ -73,7 +73,7 @@ Together says the development sets informed development and are "not an independ
 |---|---|---|
 | Self-host | Yes: public weights; weights licence not finalised | [HF model card](https://huggingface.co/togethercomputer/Tev1-4B-experimental) |
 | Fine-tuning | Yes: MIT recipe; Together fine-tuning lists Qwen3.5-4B SFT at $0.34 / 1M tokens | [togethercomputer/tev1](https://github.com/togethercomputer/tev1), [Together pricing](https://www.together.ai/pricing) |
-| Processing location | Together serverless; region not stated for Tev1 | [Together ZDR docs](https://docs.together.ai/docs/zero-data-retention) |
+| Processing location | Together serverless; region not stated for Tev1 | [Together serverless models](https://docs.together.ai/docs/serverless-models), [Together ZDR docs](https://docs.together.ai/docs/zero-data-retention) |
 | EU processing option | Dedicated endpoints in EU regions (contact sales); or local weights | [Together ZDR docs](https://docs.together.ai/docs/zero-data-retention) |
 | Retention / ZDR | ZDR "is not enabled by default"; enable in Organization Settings > Privacy. Metadata and billing data kept | [Together ZDR docs](https://docs.together.ai/docs/zero-data-retention) |
 | Training on inputs | No, without "explicit opt-in and consent" | [Together privacy policy](https://www.together.ai/privacy) |
@@ -83,7 +83,7 @@ Together says the development sets informed development and are "not an independ
 ## Caveats
 
 - No licence yet for commercial use of the fine-tuned weights.
-- Serverless vs dedicated is unresolved: the blog says serverless, the repo README says deploy an endpoint first.
+- Tev1 runs on Together serverless ([blog](https://www.together.ai/blog/how-to-train-your-own-jev); [serverless models](https://docs.together.ai/docs/serverless-models), checked 2026-09-30). The repo's deploy-an-endpoint step applies to your own fine-tune: "The training script does not provision inference hosting" ([TRAINING.md](https://github.com/togethercomputer/tev1/blob/main/docs/TRAINING.md)).
 - No held-out evaluation, calibration or rate-limit figures from Together.
 - Community fine-tunes exist (`lighteternal/biodecision-tev1-4b`).
 
@@ -96,4 +96,4 @@ Together says the development sets informed development and are "not an independ
 - [systemonemodels.org: Tev1](https://systemonemodels.org/models/tev1/)
 - [Respan catalogue: Tev1 4B experimental](https://www.respan.ai/models/together_ai/together/Tev1-4B-experimental)
 - [HF Space: Jev Decision Index](https://huggingface.co/spaces/multimodalart/jev-decision-index)
-- Together: [pricing](https://www.together.ai/pricing), [ZDR docs](https://docs.together.ai/docs/zero-data-retention), [privacy policy](https://www.together.ai/privacy), [SOC 2 blog](https://www.together.ai/blog/soc-2-compliance)
+- Together: [serverless models](https://docs.together.ai/docs/serverless-models), [pricing](https://www.together.ai/pricing), [ZDR docs](https://docs.together.ai/docs/zero-data-retention), [privacy policy](https://www.together.ai/privacy), [SOC 2 blog](https://www.together.ai/blog/soc-2-compliance)

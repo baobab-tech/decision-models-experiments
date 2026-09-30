@@ -78,7 +78,7 @@ Repo [`kyr0/typed-decision-bench`](https://github.com/kyr0/typed-decision-bench)
 | Run | Backbone | Soft acc. | Hard acc. | ECE-15 | p50 ms | p95 ms | VRAM (8k KV) | Precision |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | Jev 1.13.0 | closed | 88.08% | 93.41% | 0.084 | 716.4 | 778.8 | hosted | — |
-| Bonsai 2 27B, calibrated (kyr0) | Qwen3.8-27B ternary (unverified) | 76.46% | 83.30% | 0.130 | 170.9 | 448.0 | 9.0 GB | Q2_64 |
+| Bonsai 2 27B, calibrated (kyr0) | Qwen3.8-27B ternary (PrismML) | 76.46% | 83.30% | 0.130 | 170.9 | 448.0 | 9.0 GB | Q2_64 |
 | Bonsai 2 27B, calibration init (kyr0) | same | 76.29% | 83.30% | 0.134 | 165.0 | 362.0 | 9.0 GB | Q2_64 |
 | openjev-qwen3.5-4b (fastjev) | Qwen3.5-4B | 74.13% | 79.12% | 0.143 | 1,066.1 | 1,478.9 | 12.6 GB | BF16 |
 | Winzling-Spark-X2.5-4B (kyr0) | not stated | 70.97% | 71.42% | 0.249 | 1,056.6 | 1,783.5 | 9.6 GB | BF16 |
@@ -180,7 +180,7 @@ One row per model on at least two benchmarks. Scores are not comparable across c
 | reflex 27B ¹ | 27.8B | Qwen3.8-27B | large | 52.16 | 13.2 | — | — | — | — |
 | decider-35b-a3b | 36.0B | Qwen3.5-35B-A3B | large | 47.11 | 27.5 | — | — | — | — |
 | djev | 25.8B | DiffusionGemma 26B-A4B | large | 40.28 | 64.2 | — | — | — | — |
-| Bonsai 2 27B ² | ~27B | Qwen3.8-27B ternary (unverified) | large | — | 15.8 | 76.5 | — | — | — |
+| Bonsai 2 27B ² | ~27B | Qwen3.8-27B ternary (PrismML) | large | — | 15.8 | 76.5 | — | — | — |
 | Winnow-12B Q8 | 12.0B | Gemma 4 12B | mid | 50.02 | 73.2 | — | — | — | — |
 | Jev-Omni | 12.0B | Gemma 4 12B | mid | 40.53 | 71.5 | — | — | — | — |
 | Bespoke Nimble 9B ¹ | 9.7B | Qwen3.5-9B | mid | 39.57 | 31.8 | — | — | — | 0.748 |

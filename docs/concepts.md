@@ -73,7 +73,7 @@ Answer objects are from [Choice, Score and Noul](https://systemonemodels.org/gui
 | [CLM-8B](models/clm-8b.md) | Contrastive-LM | Choice, Score, Noul | TypeSafe requests replay through the CLM client | released | Apache-2.0 |
 | [Laya](models/open-reproductions.md#laya) | Convai Innovations | Choice, Score, Noul | TypeSafe-shaped (`laya-serve`) | released | Apache-2.0 |
 | [AnyJev](models/anyjev.md) | Nokia | choice, boolean, score | own Python API | released | Apache-2.0 library |
-| [Bonsai-Llama-Jev](models/bonsai-llama-jev.md) | Aron Homberg | Choice, Score, Noul | local `/v1/systemone` server | released | MIT code; weights licence n/d |
+| [Bonsai-Llama-Jev](models/bonsai-llama-jev.md) | Aron Homberg | Choice, Score, Noul | local `/v1/systemone` server | released | MIT code; Apache-2.0 weights |
 
 ## Calibration
 
