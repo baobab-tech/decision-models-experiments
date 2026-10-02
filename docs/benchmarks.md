@@ -240,6 +240,7 @@ One row per model documented in [models/](models/). "Claim" is the vendor's or a
 | Respan Span-01 ([doc](models/span-01.md)) | behavior F1 84.3 vs Jev 71.5; production F1 0.806 vs Jev 0.716 | vendor | own | zero-shot-ie-bench 85.4% vs Jev 93.8% | — |
 | Together Tev1-4B ([doc](models/tev1.md)) | 880/1,000 (88.0%) on Together's development set, "not an independent benchmark" | vendor | own | DI 29.24 at 69% coverage | — |
 | Fastino GLiDE ([doc](models/glide.md)) | DI 0.2.1 64.81 vs Jev 57.91; ahead on 31 of 38 benchmarks | vendor | public (DI), own run; board submissions paused | none (checked 2026-10-02) | — |
+| ModernJEV-Decide-Preview ([doc](models/modernjev-decide.md)) | tool selection 62.18% vs 22.88% frequency baseline (542 cases); next action 73.40% (1,158) | author | own (AgentToolDecisions-180K test split) | none | — |
 | GLiNER2.5-Decide ([doc](models/gliner-decide.md)) | fast-decisions 60.2% vs JevK5 57.6% | vendor | own (Fastino) | DI 11.21 | — |
 | Bonsai-Llama-Jev ([doc](models/bonsai-llama-jev.md)) | kyr0 soft accuracy 76.46% vs Jev 88.08% | author | own (kyr0) | JB "Bev / Bonsai 27B" 15.8 (unverified match) | — |
 | Kev ([doc](models/kev.md)) | Kev-4B transfer-v4 0.817 dev / 0.838 test; Kev-9B 0.822 / 0.852 | author | own | local-jev-bench Kev-4B 81.4% (534/656); DI Kev-4B 34.64, Kev-9B 38.48 | +0.3 pp (Kev-4B dev) |

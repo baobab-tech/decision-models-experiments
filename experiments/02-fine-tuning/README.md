@@ -11,6 +11,7 @@ Which decision models can we fine-tune, and how? How many labelled examples does
 - Jev and d1 cannot be fine-tuned. They can only be used as teachers to generate labels.
 - GLiNER2.5-Decide supports full and LoRA fine-tuning. Training runs on CUDA or CPU only, so on this Mac it trains on CPU.
 - Kev, the Qwen-based heads and the Laya family can be fine-tuned. Recipes and hardware needs are in [fine-tuning.md](../../docs/fine-tuning.md).
+- A published cost reference: [ModernJEV-Decide-Preview](../../docs/models/modernjev-decide.md#fine-tuning) trained ModernBERT-base on 60,000 agent decisions in 129.8 min on one A100 (about $5.41 on HF Jobs). It reached 62.18% on 542 tool-selection test cases vs a 22.88% frequency baseline, and fell below the majority baseline on an untrained task family.
 
 ## Variables
 

@@ -7,6 +7,7 @@ Survey date: 2026-09-30. Research only: no training was run and no weights were 
 | Readout | Trained parts | Examples |
 |---|---|---|
 | Encoder + option-marker head (softmax within each question) | full encoder + head | Laya, open-jev-deberta-v3-large, Julia-1, VTX-JEV-1 |
+| Cross-encoder, one scalar score per (state, option) pair | full encoder + head | ModernJEV-Decide-Preview |
 | GLiNER2 span/classification heads | encoder + task heads, or LoRA on both | GLiNER2.5-Decide |
 | Decoder + option-letter logits, divided by a fitted temperature | full weights or merged LoRA | decider, JevK5, Jev-Style, Winnow, AutoJev-27B, Tev1 |
 | Decoder + LoRA + separate linear/pointer head | LoRA adapter + head; base frozen | Kev, autotrust JEV-9B/27B, pngwn scorer, Tiny-Jev, AgentJev, Solomon |
@@ -22,6 +23,7 @@ Backbone families and sizes are compared in [model-classes.md](model-classes.md)
 | GLiNER2.5-Decide (DeBERTa-v3-large, 340M) | full, or LoRA (`use_lora=True, lora_r=8, lora_alpha=16.0, lora_targets=["encoder", "all_task_heads"]`; adapters ~2–10 MB, 2–3× faster). Hosted: Fastino API fine-tuning | GLiNER2 JSONL; `true_label` is a list (multi-label allowed) | n/d | MPS training n/d |
 | Laya (ModernBERT-large 421M; mmBERT-base 322M) | full encoder + head; RLCD (proper-scoring-rule rewards, GRPO-style), per-type temperatures fitted after | built by the notebook from typed-decision cases; teacher distributions or gold labels | Kaggle 2×T4, "roughly 4-5 hours for 4 epochs over ~30k questions"; browser-agent example on one 16 GB GPU | inference on MPS documented; training on MPS n/d |
 | open-jev-deberta-v3-large (DeBERTa-v3-large) | full fine-tune, CE + Brier, question augmentation p=0.7 | corpus builder in `kotoba-lang/typed-decisions` (banking77, SST-5, BoolQ) | one H100, 1 epoch, 18,000 states, 229 s (~$0.25) | n/d |
+| [ModernJEV-Decide-Preview](models/modernjev-decide.md#fine-tuning) (ModernBERT-base, 150M) | full encoder + scalar head; softmax CE over candidate scores, gold + up to 3 negatives | `MaziyarPanahi/AgentToolDecisions-180K` (60,000 of 171,056 train rows) | one A100 80GB on HF Jobs: 129.8 min training ≈ $5.41, full job ≈ $6.58 (runtime estimate); a 6,000-row replay ran from one HuggingChat ML Intern message | CPU inference documented; training n/d |
 
 - GLiNER2: `pip install gliner2[train]`, then `ExtractorTrainer(AutoExtractor.from_pretrained("fastino/gliner2-base-v1"), TrainingConfig(output_dir="./output", num_epochs=10)).train(train_data="train.jsonl")`. Starting from `fastino/GLiNER2.5-Decide` with this trainer is not shown (unverified).
 - Laya notebook: `notebooks/laya_finetune_typed_decisions_2xT4_kaggle.ipynb` in `NandhaKishorM/laya`; uses gradient checkpointing (`model.head_checkpointing = True`). README: "The notebook's calibration samples come from its training items; evaluate on separate held-out data before claiming an improvement." Browser-agent example: `docs/finetune_browser_agent.md`, weights at `cklxx/laya-browser`.
