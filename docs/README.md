@@ -10,7 +10,7 @@ Research checked 2026-09-30. Models in this field changed weekly in September 20
 | [quickstart.md](quickstart.md) | Fastest way to run each model locally or via API; one client for all Jev-compatible endpoints |
 | [model-classes.md](model-classes.md) | Model classes by backbone family (BERT encoders, Qwen, Gemma, other, wrappers, hosted) and size |
 | [benchmarks.md](benchmarks.md) | Decision Index, JevBench, both typed-decision-benches, S1Bench, Fastino fast-decisions; cross-benchmark table. Full tables in [benchmarks-leaderboards.md](benchmarks-leaderboards.md) |
-| [fine-tuning.md](fine-tuning.md) | Which models can be fine-tuned, how, and on what hardware |
+| [fine-tuning.md](fine-tuning.md) | Which models can be fine-tuned, how, and on what hardware; small open models with training code; training on Hugging Face Jobs |
 | [data-governance.md](data-governance.md) | Self-hosting, fine-tuning rights, EU processing, retention and DPA for each deployment option |
 | [scan-2026-10-02.md](scan-2026-10-02.md) | New releases (Clef, pplx-decider, Strands Decider, GLiDE and others) and the most-downloaded and most-liked decision repos, 2026-10-02 |
 | [landscape.md](landscape.md) | All 255 models in Han Xiao's [All about Jev](https://hanxiao.io/all-about-jev/) dataset (generated) |
@@ -35,6 +35,10 @@ Research checked 2026-09-30. Models in this field changed weekly in September 20
 | ModernBERT-large | [Von](models/von.md) (wfzyx) | Apache-2.0 | Yes (MPS) |
 | ModernBERT-base | [openJev Verdict](models/rlcd-modernbert.md) (heman10x) | Apache-2.0 | Yes (CPU, ONNX) |
 | ModernBERT-base | [ModernJEV-Decide-Preview](models/modernjev-decide.md) (Maziyar Panahi) | Apache-2.0 | Yes (CPU) |
+| mmBERT-base | [Decision-Jef](models/decision-jef.md) (BarraHome) | MIT | Yes (CPU) |
+| Ettin cross-encoder | [bekko](models/bekko.md) (17M–395M) | No licence assigned | Yes (CPU, ONNX) |
+| XLM-R-base | [Yway](models/yway.md) (Burmese) | Other (MIT + CC BY-SA + Gemma terms) | CPU |
+| GLiFormer-large (DeBERTa) | [jeff](models/jeff.md) (Logan Markewich; server, no own weights) | MIT code, Apache-2.0 weights | Yes (MPS) |
 | BERT-family (other) | [open-jev-deberta, Julia-1 and others](models/open-reproductions.md#bert-family-encoders) | Apache-2.0 | Yes |
 | Qwen3.5 / Gemma 4 | [decider](models/decider.md) (Mapika; unrelated to Decider 1) | Apache-2.0 | Yes (MPS, GGUF) |
 | Qwen3.5 | [JevK5](models/jevk5.md) (alibiserikbay) | Apache-2.0 | GGUF via llama.cpp Metal |
@@ -43,6 +47,10 @@ Research checked 2026-09-30. Models in this field changed weekly in September 20
 | Qwen3.5 / Qwen3.8 | [Kev](models/kev.md) (0.8B–27B) | Apache-2.0 | 0.8B–9B via MLX |
 | Qwen3-8B | [CLM-8B](models/clm-8b.md) (Contrastive-LM) | Apache-2.0 | Via vllm-metal (third-party recipe) |
 | Qwen3.5-4B | [Tev1](models/tev1.md) (Together AI) | Public; licence pending | GGUF via llama.cpp |
+| Qwen2.5-0.5B | [systemone-lite](models/systemone-lite.md) | Apache-2.0 | Yes (MPS) |
+| Qwen3-0.6B | [mini-Jev](models/mini-jev.md) | Apache-2.0 | No (CUDA) |
+| BitNet b1.58 2B | [bit-jev](models/bit-jev.md) | None granted | CPU build, untested |
+| LFM2.5 / Qwen / Gemma E2B | [Small "RLCD" LMs](models/rlcd-small-lms.md) (mostly untrained scoring engines) | LFM Open License / Apache-2.0 | Mostly (MPS, MLX) |
 | Qwen (various) | [Jev-Style, OpenThai-SystemOne and others](models/open-reproductions.md#qwen-based) | Mostly Apache-2.0 | Mostly |
 | Gemma-4-12B | [Jev-Omni](models/jev-omni.md) (akhilaaa3) | Apache-2.0 (Gemma 4 terms) | MLX 4-bit (community) |
 | Gemma-4-12B, unmodified | [Cygnet](models/cygnet.md) (blockbrain; recipe, no new weights) | MIT shim; Gemma 4 | Yes (Ollaya, GGUF Metal) |

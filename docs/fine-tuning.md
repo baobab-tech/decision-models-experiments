@@ -49,10 +49,10 @@ Qwen3.5 mixes Gated DeltaNet (linear attention) and attention layers. The Kev-4B
 | Model (backbone) | Method | Data format | Hardware | Mac feasibility |
 |---|---|---|---|---|
 | Winnow-E4B / 12B (Gemma 4) | LoRA r32, α64, merged in FP32, then GGUF | n/d | n/d | n/d |
-| LFM2.5-2.6B-RLCD (LFM2.5) | full fine-tune | in repo (not reviewed) | Modal (`lfm25_pcd_modal.py`) | n/d |
+| LFM2.5-2.6B-RLCD (LFM2.5) | none: unchanged `LiquidAI/LFM2.5-2.6B` weights behind a scoring engine (card) | — | Modal (`lfm25_pcd_modal.py`), inference only | n/d |
 | VTX-JEV-1 (7M embedding model) | full fine-tune, then LF4 4-bit quantization | 655,806 rows, 2 epochs; `training/` in the repo | timings on T4 | n/d |
 
-Liquid AI documents SFT/DPO for LFM2 with TRL + PEFT (QLoRA, then merge). `notnotsamuel/LFM2.5-350M-RLCD` scores 1.38 and LFM2.5-2.6B-RLCD 6.76 on DI 0.2.1.
+Liquid AI documents SFT/DPO for LFM2 with TRL + PEFT (QLoRA, then merge). `notnotsamuel/LFM2.5-350M-RLCD` scores 1.38 and LFM2.5-2.6B-RLCD 6.76 on DI 0.2.1; neither was trained ([rlcd-small-lms.md](models/rlcd-small-lms.md)). The LFM Open License v1.0 allows commercial use only below $10M annual revenue.
 
 ## Converting a Jev-shaped request to GLiNER2 rows
 
@@ -76,6 +76,37 @@ Map each `choice` to a task with `labels` = option keys, each `noul` to a two-la
 | `a100-large` | 1× A100 80 GB | 2.50 | 27B LoRA |
 | `h200` | 1× H200 141 GB | 5.00 | AutoJev-27B full SFT |
 | `rtx-pro-6000` | 1× RTX PRO 6000 96 GB | 2.75 | Decision Index evaluation GPU |
+
+## Small open models you can fine-tune (≤ 2.5B)
+
+Checked 2026-10-02. "Code" = public training code for this model. Times and costs are the authors'; HF Jobs flavors are estimates. Commercial = weights and training-data terms allow commercial use without a further check.
+
+| Model | Params | Weights licence | Code | Author's training run | Trains on Mac | HF Jobs (estimate) | Commercial |
+|---|---:|---|---|---|---|---|---|
+| [bekko](models/bekko.md) | 17M / 68M / 395M | none assigned | yes (MIT) | RTX 5090: 2.1 h / 5.6 h / 25.3 h | no (CUDA + FA2) | `l4x1`; 400M on `a100-large` ≈ $45–65 | no: no weight licence; some data non-commercial |
+| [ModernJEV-Decide-Preview](models/modernjev-decide.md) | 150M | Apache-2.0 | yes | A100 80 GB: 129.8 min ≈ $5.41 | n/d | `a100-large` (used) | check data: mixed CC BY 4.0 / Apache / MIT |
+| [openJev Verdict](models/rlcd-modernbert.md) | 151M | Apache-2.0 | yes | Apple MPS: 646 s | yes (default `--device mps`) | not needed | check data: Banking77 CC BY 4.0 |
+| [Yway](models/yway.md) (Burmese) | 293M | other (MIT + CC BY-SA 4.0 + Gemma terms) | no (uses Laya's loop) | H200 MIG slice: 4.97 h | n/d | `l40sx1` ≈ $9 | check terms |
+| [Decision-Jef](models/decision-jef.md) | 307M | MIT | no | n/d | no (CPU only) | — | data licence unreviewed by author |
+| [GLiNER2.5-Decide](models/gliner-decide.md) | 340M | Apache-2.0 | yes (`gliner2[train]`) | n/d | CPU only | `a10g-small` | yes |
+| [Von](models/von.md) | 395M | Apache-2.0 | yes | continue-train ~1 h on A10G; new trunk ~1 h on 4×A10G (~$12) | n/d | `a10g-small` / `a10g-largex4` | check data |
+| [Laya](models/laya.md) | 322M / 421M | Apache-2.0 | yes (notebook, MPS script) | 2×T4: 4–5 h | yes (MPS script, no timing) | `a10g-largex2` | check data |
+| [open-jev-deberta](models/open-reproductions.md#open-jev-deberta-v3-large) | 434M | Apache-2.0 | yes | H100: 229 s | n/d | `a10g-small` | check data |
+| [systemone-lite](models/systemone-lite.md) | 494M | Apache-2.0 (code MIT) | yes | Colab T4: 8–10 h | no (CUDA or CPU) | `t4-small` ≈ $2.40–3.20 | data includes WikiText-2 (CC BY-SA) |
+| [jeff](models/jeff.md) (GLiFormer-large) | 576M | Apache-2.0 (code MIT) | framework only (`train_model`) | n/d | untested | `l4x1` / `a10g-small` | yes |
+| [qwen3-0.6b-rlcd-decision](models/rlcd-small-lms.md) | 0.6B | Apache-2.0 | yes (MIT) | RTX 4080 16 GB: ~1.3 h | no (CUDA hard-coded) | `l4x1` ≈ $2 | no without review: Yelp and AG News data |
+| [mini-Jev](models/mini-jev.md) | 0.6B + 3.2M adapter/head | Apache-2.0 | v1 only | GH200 (v1) | no | `l4x1` | check data (part CC BY 4.0) |
+| [Kev](models/kev.md) 0.5B / 0.6B / 0.8B | 0.5–0.8B | Apache-2.0 | yes | Kev-4B: 15 min on H100 | slow (no DeltaNet MPS kernels) | `a10g-large` | yes |
+| [decider-0.8b](models/decider.md) | 0.75B | Apache-2.0 | yes (`train.sh`) | 2B full run: 5.3 h on GH200 | no | `a10g-large` / `l40sx1` | check data |
+| [Intern-Decision-0.8B](models/intern-decision.md) | 0.85B | Apache-2.0 | yes (XTuner) | 4 GPUs, Linux CUDA | no | `a10g-largex4` | check data |
+| [Strands Decider](models/strands-decider.md) | 1.9B | Apache-2.0 | yes (`recipe.sh`) | RTX 3090: ~11 h; 8×H100: 1 h 10 min | no | `l40sx1` | some sources tagged `unknown` / `other` |
+| [JevK5-2B](models/jevk5.md) | 1.88B | Apache-2.0 | yes (`lora.py`) | n/d | n/d | `a10g-large` | data includes GPT-6 Luna outputs |
+| [bit-jev](models/bit-jev.md) | ~2.4B (1.58-bit) | none granted | yes | 24–32 GB cards: 4–7 h | partial, untested | `l40sx1` ≈ $7–13 | no: no weight licence; Yelp data |
+
+- **Trains on a Mac today:** openJev Verdict (646 s on MPS) and Laya (MPS script). Everything else needs CUDA, so use HF Jobs or another GPU.
+- **Cheapest published full runs:** open-jev-deberta (229 s on H100), Verdict (646 s on MPS), qwen3-0.6b-rlcd-decision (~1.3 h on a 16 GB card), ModernJEV ($5.41).
+- **Not trained despite the name:** `notnotsamuel/LFM2.5-350M-RLCD`, `monotykamary/LFM2.5-2.6B-RLCD`, `harshatheg/Qwen-2.5-1B-RLCD` and `larkooo/gemma-e2b-rlcd` run unchanged base weights ([rlcd-small-lms.md](models/rlcd-small-lms.md)).
+- **Weights without a licence:** bekko and bit-jev. Do not build on them until the authors add one.
 
 ## Training on Hugging Face Jobs
 
