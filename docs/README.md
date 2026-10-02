@@ -21,6 +21,7 @@ Research checked 2026-09-30. Models in this field changed weekly in September 20
 |---|---|---|---|
 | Closed | [Jev](models/jev.md) (TypeSafe AI) | API only | No |
 | Closed | [Liquid d1](models/liquid-d1.md) | API only | No |
+| Closed | [GLiDE](models/glide.md) (Fastino) | API only | No |
 | Closed | [Decider 1](models/decider-1.md) (meraGPT) | API only | No |
 | Closed | [Solar Decide](models/solar-decide.md) (Upstage) | API only | No |
 | Closed | [Span-01](models/span-01.md) (Respan) | API only | No |

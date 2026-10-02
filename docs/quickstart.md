@@ -101,6 +101,7 @@ Answers come from the `jevk5` client, not from plain chat. See [open-reproductio
 |---|---|---|
 | [Jev](models/jev.md) | `POST https://api.typesafe.ai/v1/systemone` | `TYPESAFE_API_KEY` |
 | [Liquid d1](models/liquid-d1.md) | `POST https://api.liquid.ai/decisions/v1/systemone`, or Vercel AI Gateway `liquid/d1` | `LIQUID_API_KEY` / `AI_GATEWAY_API_KEY` |
+| [GLiDE](models/glide.md) | `POST https://api.fastino.ai/v1/systemone`, model `fastino/GLiDE`, header `X-API-Key` | `FASTINO_API_KEY` |
 | [Decider 1](models/decider-1.md) | `POST https://meragpt.com/v1/systemone` | see doc |
 | [Solar Decide](models/solar-decide.md) | `POST https://api.upstage.ai/v1/systemone` (beta) | see doc |
 | [Span-01](models/span-01.md) | `POST https://api.respan.ai/api/v1/scores` (own format) | see doc |

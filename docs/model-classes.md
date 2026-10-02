@@ -37,7 +37,7 @@ Backbone is assigned by keyword from `base_model` (the `scripts/build_landscape.
 | Gemma 4B–31B | letter logits (Winnow), fine-tune | 39.9–57.4 | 0.058–0.168 | 45–121 ms | Winnow served at 8,192 | — | LoRA | Apache or Gemma | local |
 | Other open | mixed | 1.4–6.8 (4 entrants) | 0.157–0.568 | 21–39 ms | — | — | per model | 23 of 29 Apache/MIT | local |
 | Training-free wrappers | next-token logits over labels | 55.7–57.3 (inference techniques) | 0.047–0.113 | 108–373 ms | base model context | AnyJev 2–26 | none needed; AnyJev L1/L2 fit 100–500 labels | base model's | local |
-| Hosted APIs | undisclosed | Jev 57.91; Tev1 29.24; d1 58.9 (Liquid's own run, not on the board) | Jev 0.074 | Jev 524 ms (HTTPS) | Jev 64K; d1 32K; Decider 1 4,096; Solar 512K | Jev 255; Solar 26; Tev1 24; Decider 1 10 | none (Tev1 weights open) | proprietary | vendor cloud, US for Jev and d1 |
+| Hosted APIs | undisclosed | Jev 57.91; Tev1 29.24; d1 58.9, GLiDE 64.81 (vendors' own runs, not on the board) | Jev 0.074 | Jev 524 ms (HTTPS) | Jev 64K; d1 32K; GLiDE 40K; Decider 1 4,096; Solar 512K | Jev 255; GLiDE 255; Solar 26; Tev1 24; Decider 1 10 | none (Tev1 weights open) | proprietary | vendor cloud, US for Jev and d1 |
 
 DI rows: [benchmarks.md](benchmarks-leaderboards.md#decision-index-021). "Inference techniques" = `Decider chat · Gemma-4-31B` (57.33) and `simple-jev · Qwen3.8-27B` (55.74), both logit readouts with no released weights. Open-model rows exclude inference techniques; ranges come from the DI Space `data/index.json` (generated 2026-09-28T00:39Z, checked 2026-09-30). Tev1's 29.24 is on the board. Liquid AI reports d1 at 58.9 and Jev at 57.9 from its own run of the suite ([KuCoin/BlockBeats](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), 2026-09-29); the board data predates d1's 2026-09-29 release and has no d1 row ([liquid-d1.md](models/liquid-d1.md#benchmarks)).
 
@@ -96,6 +96,7 @@ DI rows: [benchmarks.md](benchmarks-leaderboards.md#decision-index-021). "Infere
 |---|---|---|---|---|---|
 | [Jev 1.13](models/jev.md) | 255 | 64K | $0.042 | no | DI 57.91; ECE 0.032–0.096 on classification (AI/ML API) |
 | [d1](models/liquid-d1.md) | ≥2, max n/d | 32K | free tier; paid n/d | no | DI 58.9 (Liquid's own run, not on the board); policy permits training on inputs |
+| [GLiDE](models/glide.md) | 255 | 40K per question | $0.30 | no | DI 0.2.1 64.81 (Fastino's own run, not on the board); reasons further when unsure |
 | [Decider 1](models/decider-1.md) | 10 | 4,096 | $0.03 | no | typed-decisions 0.768 (vendor) |
 | [Solar Decide](models/solar-decide.md) | 26 | 512K | $0.10 | no | 35B-A3B MoE; beta |
 | [Tev1](models/tev1.md) | 24, one question | 32,768 (Together serverless) | $0.042 | open Qwen3.5-4B weights | returns a letter, no distribution |

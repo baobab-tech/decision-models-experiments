@@ -145,7 +145,7 @@ Balanced raw accuracy in 0.1: Jev 59.51, Jevfire 55.74. Source: `data/index-v0.1
 | 9 | Decider chat · Qwen3.6-27B | Qwen3.6-27B | 51.35 | 0.021 | 83.6 |
 | 10 | Winnow-12B (Q8_0) | gemma-4-12B | 50.02 | 0.168 | 72.5 |
 
-Jev has the top score among the 71 board rows. Liquid reports d1 at 58.9 against Jev 57.9 on 0.2.1 from its own run of the suite; d1 has no board row ([vendor-reported results](benchmarks-leaderboards.md#vendor-reported-results-on-the-same-suite)). Other self-reported 0.2.1 scores, not on the board: Darwin-27B-JEV 61.17 ([PR #15](https://github.com/apolinario/decision-index/pull/15)); `autotrust/JEV-Gemma4-26B-A4B` 58.05 (card); Eikos-27B author rerun 55.46 (AaJ).
+Jev has the top score among the 71 board rows. Liquid reports d1 at 58.9 against Jev 57.9 on 0.2.1 from its own run of the suite; d1 has no board row ([vendor-reported results](benchmarks-leaderboards.md#vendor-reported-results-on-the-same-suite)). Other self-reported 0.2.1 scores, not on the board: Fastino GLiDE 64.81 ([blog](https://fastino.ai/blog/introducing-glide-the-first-thinking-decision-model), 2026-09-30; [glide.md](models/glide.md)); Darwin-27B-JEV 61.17 ([PR #15](https://github.com/apolinario/decision-index/pull/15)); `autotrust/JEV-Gemma4-26B-A4B` 58.05 (card); Eikos-27B author rerun 55.46 (AaJ).
 
 ## S1Bench
 
@@ -216,7 +216,7 @@ One row per model on at least two benchmarks. Scores are not comparable across c
 
 Observations (sources as in the sections above):
 
-- **No independent board ranks d1 against Jev on the Decision Index.** Jev's 57.91 is the top board row; Liquid's own run puts d1 at 58.9 and Jev at 57.9. On LocalLLaMA typed-decisions, whose card lists meraGPT Decider 1 first (meraGPT's submission says its team built the benchmark), d1 scores 0.742 and Jev 0.727.
+- **No independent board ranks d1 against Jev on the Decision Index.** Jev's 57.91 is the top board row; Liquid's own run puts d1 at 58.9 and Jev at 57.9. Fastino's own run puts GLiDE at 64.81 (2026-09-30), also off the board. On LocalLLaMA typed-decisions, whose card lists meraGPT Decider 1 first (meraGPT's submission says its team built the benchmark), d1 scores 0.742 and Jev 0.727.
 - **Accuracy rises with size on accuracy-only boards.** On DI 0.2.1, the twelve best open entrants are all 12B or larger; the best 4B (JPT-4B) scores 43.04, the best sub-1B decoder (JPT-0.8B) 19.22, and every encoder and GLiNER model scores below 12. kyr0 orders the same way: Jev 88.1, 27B 76.5, 4B 71.0–74.1, ~400M encoders 46.7–48.6.
 - **JevBench's composite reverses that order for 27B models.** AutoJev-27B and Eikos-27B reach JB Intelligence 72.8 and 75.1 (Jev 72.0) but score 19.5 and 18.5: their estimated $0.23–0.24 per 1,000 decisions puts the Cost axis at 29.4 and 28.7, under the 50 gate. AutoJev-27B is 4th on DI (Jev included) and 52nd on JB. 4B rebuilds hold 10 of JB's top 15 places, with Intelligence 49.9–62.1 and Cost 57.7–64.5.
 - **Calibration does not track size.** DI's five lowest ECEs are Jebadiah 27B 0.014, Xor 35B-A3B 0.015, AutoJev-27B 0.018, Decider chat · Qwen3.6-27B 0.021 and Decider 35B-A3B 0.023; Intern-Decision-0.8B has 0.025, JevK5 4B 0.027 and Winnow-12B 0.168. Three of DI's four highest are under 500M: LFM2.5-350M-RLCD 0.568, Julia-1 (mmBERT-small) 0.420, GLiNER 2.5 base 0.367; the fourth is openvons Qwen3-4B, 0.371. On kyr0: Von 1.1 0.372, Laya 0.278.
@@ -239,6 +239,7 @@ One row per model documented in [models/](models/). "Claim" is the vendor's or a
 | Upstage Solar Decide ([doc](models/solar-decide.md)) | none published | — | — | zero-shot-ie-bench 95.8% vs Jev 93.8% (48 questions) | — |
 | Respan Span-01 ([doc](models/span-01.md)) | behavior F1 84.3 vs Jev 71.5; production F1 0.806 vs Jev 0.716 | vendor | own | zero-shot-ie-bench 85.4% vs Jev 93.8% | — |
 | Together Tev1-4B ([doc](models/tev1.md)) | 880/1,000 (88.0%) on Together's development set, "not an independent benchmark" | vendor | own | DI 29.24 at 69% coverage | — |
+| Fastino GLiDE ([doc](models/glide.md)) | DI 0.2.1 64.81 vs Jev 57.91; ahead on 31 of 38 benchmarks | vendor | public (DI), own run; board submissions paused | none (checked 2026-10-02) | — |
 | GLiNER2.5-Decide ([doc](models/gliner-decide.md)) | fast-decisions 60.2% vs JevK5 57.6% | vendor | own (Fastino) | DI 11.21 | — |
 | Bonsai-Llama-Jev ([doc](models/bonsai-llama-jev.md)) | kyr0 soft accuracy 76.46% vs Jev 88.08% | author | own (kyr0) | JB "Bev / Bonsai 27B" 15.8 (unverified match) | — |
 | Kev ([doc](models/kev.md)) | Kev-4B transfer-v4 0.817 dev / 0.838 test; Kev-9B 0.822 / 0.852 | author | own | local-jev-bench Kev-4B 81.4% (534/656); DI Kev-4B 34.64, Kev-9B 38.48 | +0.3 pp (Kev-4B dev) |

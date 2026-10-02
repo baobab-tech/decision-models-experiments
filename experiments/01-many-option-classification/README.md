@@ -11,6 +11,7 @@ Are decision models worth using for classification with 10+ options, 100+ tags, 
 | Model | Max options per Choice | Multi-label | Input length |
 |---|---|---|---|
 | [Jev](../../docs/models/jev.md#scaling-limits) | 255 (docs: reliable to ~240) | one Noul per label | 64k per request |
+| [GLiDE](../../docs/models/glide.md#scaling-limits) | 255 | one Noul per label | 40k per question |
 | [Liquid d1](../../docs/models/liquid-d1.md#scaling-limits) | not published (≥2) | one Noul per label | 32k |
 | [GLiNER2.5-Decide](../../docs/models/gliner-decide.md#scaling-limits) | no cap in code | native (`multi_label`) | chunks of 384 words for long text |
 | [Kev](../../docs/models/kev.md#scaling-limits) | 255 | one Noul per label | trained on states ≤384 tokens; served up to 65k |

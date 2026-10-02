@@ -63,6 +63,7 @@ Answer objects are from [Choice, Score and Noul](https://systemonemodels.org/gui
 |---|---|---|---|---|---|
 | [Jev 1.13](models/jev.md) | TypeSafe AI | Choice, Score, Noul | `POST https://api.typesafe.ai/v1/systemone` (reference) | early access | closed |
 | [d1](models/liquid-d1.md) | Liquid AI | Choice, Score, Noul | `POST https://api.liquid.ai/decisions/v1/systemone`, model `d1:free`; TypeSafe-compatible | released 2026-09-29 | closed |
+| [GLiDE](models/glide.md) | Fastino | Choice, Score, Noul | `POST https://api.fastino.ai/v1/systemone`, model `fastino/GLiDE`; same structure, not a drop-in (auth header, Score fields); 255 options, 40K tokens per question | released 2026-09-30 | closed |
 | [Decider 1](models/decider-1.md) | meraGPT | Choice, Score, Noul | `POST https://meragpt.com/v1/systemone`; TypeSafe-compatible, 10 options, 4,096-token context | GA | closed |
 | [Solar Decide](models/solar-decide.md) | Upstage | Choice, Score, Noul | `POST https://api.upstage.ai/v1/systemone`; also OpenRouter `upstage/solar-decide`; 26 options, 512K context | beta | closed |
 | [Tev1](models/tev1.md) | Together AI | Choice only (one letter, no distribution) | Together chat completions, model `together/Tev1-4B-experimental`; not TypeSafe-compatible | early access | public, ungated HF weights (licence "being finalized"); community GGUF |
@@ -178,7 +179,7 @@ No published study covers 100+ multi-label tags, Choice vs many-Noul formulation
 | 2026-09-24 | Fastino GLiNER2.5-Decide; Respan Span-01 |
 | 2026-09-26 | Decision Index 0.2.1 |
 | 2026-09-29 | Liquid AI d1; OpenAI Decisions API (limited preview) |
-| 2026-09-30 | Kev-27B `main` becomes v2 |
+| 2026-09-30 | Kev-27B `main` becomes v2; Fastino GLiDE (blog; press release 2026-10-01) |
 
 ## Glossary
 

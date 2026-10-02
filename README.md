@@ -4,7 +4,7 @@
 [![Docs checked](https://img.shields.io/badge/docs%20checked-2026--09--30-informational)](docs/README.md)
 [![Status](https://img.shields.io/badge/status-research%20phase-lightgrey)](experiments/README.md)
 
-Guides, run instructions and open experiments for **System One decision models**: Jev, Liquid d1, GLiNER2.5-Decide, Kev, Laya and 250+ open models on Hugging Face.
+Guides, run instructions and open experiments for **System One decision models**: Jev, Liquid d1, GLiDE, GLiNER2.5-Decide, Kev, Laya and 250+ open models on Hugging Face.
 
 This repo is maintained by [Baobab Tech](https://github.com/baobab-tech). Baobab Tech is not affiliated with any model, vendor, benchmark or dataset listed here. Each model, name, benchmark and dataset belongs to its authors, and each doc links to the original source. What this repo adds is the docs, experiment plans and results.
 
@@ -55,6 +55,7 @@ The same request works against Jev, Liquid d1, Kev, Laya (`laya-serve`), Bonsai-
 |---|---|---|---|---|
 | Jev (TypeSafe AI) | closed | API only | no | [jev](docs/models/jev.md) |
 | Liquid d1 | closed | API only | no | [liquid-d1](docs/models/liquid-d1.md) |
+| GLiDE (Fastino) | closed | API only | no | [glide](docs/models/glide.md) |
 | Decider 1 (meraGPT), Solar Decide (Upstage), Span-01 (Respan), OpenAI Decisions | closed | API only | no | [models/](docs/models/) |
 | GLiNER2.5-Decide (Fastino) | DeBERTa-v3-large, 340M per card | Apache-2.0 | yes, CPU | [gliner-decide](docs/models/gliner-decide.md) |
 | Laya and other BERT-family encoders | ModernBERT / mmBERT / DeBERTa | Apache-2.0 | yes | [open models](docs/models/open-reproductions.md#bert-family-encoders) |
