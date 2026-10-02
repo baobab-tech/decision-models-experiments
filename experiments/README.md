@@ -4,8 +4,8 @@ The maintainer picks which experiment runs next; see [AGENTS.md](../AGENTS.md).
 
 | # | Experiment | Status | Question |
 |---|---|---|---|
-| 01 | [Many-option classification](01-many-option-classification/) | proposed | Can zero-shot decision models classify and tag EvalExplorer evaluation reports (3–250 labels, ~50-token excerpts and ~2,000-token first pages) as well as LLMs or fine-tuned small LLMs? |
-| 02 | [Fine-tuning decision models](02-fine-tuning/) | proposed | Does a fine-tuned decision model match fine-tuned small LLMs (~84) on the same EvalExplorer task, and with how many labels? |
+| 01 | [Many-option classification](01-many-option-classification/) | proposed | Can zero-shot decision models classify and tag international development evaluation reports (3–250 labels, ~50-token excerpts and ~2,000-token first pages) as well as LLMs or fine-tuned small LLMs? |
+| 02 | [Fine-tuning decision models](02-fine-tuning/) | proposed | Does a fine-tuned decision model match fine-tuned small LLMs (~84) on the same evaluation-docs task, and with how many labels? |
 | 03 | [Jev vs open models on document tasks](03-jev-vs-open-document-tasks/) | done (LlamaIndex) | How do Jev, Qwen3.5-4B, Laya, jeff and specialised tools compare on language, orientation, classification, splitting and parse triage of PDFs? |
 
 Statuses: `proposed` → `planned` (plan approved) → `running` → `done`.

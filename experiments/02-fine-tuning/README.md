@@ -4,11 +4,11 @@
 
 ## Question
 
-Does fine-tuning an open decision model on EvalExplorer labels match the fine-tuned small LLMs (`mean_field_score` ~84), and how many labelled examples does it take to beat its own zero-shot score from 01?
+Does fine-tuning an open decision model on the evaluation-docs labels match the fine-tuned small LLMs (`mean_field_score` ~84), and how many labelled examples does it take to beat its own zero-shot score from 01?
 
 ## What we already know
 
-- EvalExplorer's earlier runs fine-tuned generative LLMs and GLiNER2.5 on this exact task ([results](https://huggingface.co/datasets/baobabtech/evalexplorer-classify-experiments)):
+- Earlier Baobab Tech runs fine-tuned generative LLMs and GLiNER2.5 on this exact task (results in `baobabtech/evalexplorer-classify-experiments`, private):
 
   | Model | Size | Zero-shot | After fine-tuning | Seconds per doc |
   |---|---|---:|---:|---:|
@@ -51,7 +51,7 @@ Does fine-tuning an open decision model on EvalExplorer labels match the fine-tu
 ## Data governance
 
 - Train on this Mac where possible.
-- HF Jobs does not document its region, so treat it as non-EU. Using it for this private data needs maintainer approval.
+- HF Jobs does not document its region; the data is public, and the maintainer approved using it (2026-10-02).
 - Record where each run trained.
 
 ## What would change a decision

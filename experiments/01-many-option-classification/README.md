@@ -8,7 +8,7 @@ Can zero-shot decision models classify and tag international development evaluat
 
 ## Data
 
-[EvalExplorer](https://www.evalexplorer.ai) evaluation reports, from `baobabtech/evalexplorer-data` (private). The rows we use are in the private copy [`baobabtech/decision-models-evalexplorer`](https://huggingface.co/datasets/baobabtech/decision-models-evalexplorer); see [common/datasets.md](../common/datasets.md). Test splits only, split by document.
+1,420 public international development evaluation reports with LLM-pipeline labels: [`baobabtech/decision-models-evaluation-docs`](https://huggingface.co/datasets/baobabtech/decision-models-evaluation-docs) (public); see [common/datasets.md](../common/datasets.md). Test splits only, split by document.
 
 | Task | Input | n | Field | Labels | Type |
 |---|---|---:|---|---:|---|
@@ -22,7 +22,7 @@ Can zero-shot decision models classify and tag international development evaluat
 | | | | `methods` (methodology only) | 24 | multi |
 | | | | `countries` | 121 seen; ~250 ISO codes | multi |
 
-- Labels come from the EvalExplorer pipeline's LLMs (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) and are treated as gold. 36 document labels were corrected by hand.
+- Labels come from an ingestion pipeline's LLMs (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) and are treated as gold. 36 document labels were corrected by hand.
 - Option counts come from the real taxonomy. `countries` is the 100+ case: ask over the 54 or 121 codes seen, and over all ~250 ISO codes.
 
 ## Models
@@ -45,7 +45,7 @@ Can zero-shot decision models classify and tag international development evaluat
 
 ## Baselines
 
-- **Earlier EvalExplorer runs on the same test split and metric** (not re-run; [results](https://huggingface.co/datasets/baobabtech/evalexplorer-classify-experiments)):
+- **Earlier Baobab Tech classifier runs on the same test split and metric** (not re-run; results in `baobabtech/evalexplorer-classify-experiments`, private):
 
   | Model | Zero-shot | After SFT |
   |---|---:|---:|
@@ -81,7 +81,7 @@ From [common/metrics.md](../common/metrics.md):
   - d1: US. Liquid may use inputs to improve its models.
   - GLiDE: US.
   - DeepSeek-V4.1-Flash: the region depends on the provider. Pin one provider and record it.
-- The reports are published documents, but the dataset is private, and AGENTS.md needs maintainer approval before non-public data goes to API models.
+- The reports and dataset are public; the maintainer approved sending them to these APIs (2026-10-02).
 
 ## What would change a decision
 

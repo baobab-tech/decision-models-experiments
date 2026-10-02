@@ -2,10 +2,10 @@
 # requires-python = ">=3.11"
 # dependencies = ["datasets>=3", "pandas", "pyarrow", "pycountry", "huggingface_hub"]
 # ///
-"""Build the private dataset copy used by experiments 01 and 02.
+"""Build baobabtech/decision-models-evaluation-docs, the public dataset used by experiments 01 and 02.
 
-Source: baobabtech/evalexplorer-data (private), pinned by --revision.
-Taxonomy: label names and definitions from a local eval-explorer checkout.
+Source: baobabtech/evalexplorer-data (private), pinned by REVISION.
+Taxonomy: label names and definitions from a local checkout of the labelling pipeline (github.com/baobab-tech/eval-explorer).
 
 Configs pushed to --target:
   documents  first pages (as the classify_codes config truncated them) + gold labels, train/validation/test
@@ -15,8 +15,8 @@ Configs pushed to --target:
              occurs in the documents / excerpts gold labels (the label sets the experiments ask over)
 
 Usage:
-  uv run experiments/common/build_evalexplorer_dataset.py --eval-explorer ~/DEV/eval-explorer           # build only
-  uv run experiments/common/build_evalexplorer_dataset.py --eval-explorer ~/DEV/eval-explorer --push    # build and push (private)
+  uv run experiments/common/build_evaluation_docs_dataset.py --eval-explorer ~/DEV/eval-explorer           # build only
+  uv run experiments/common/build_evaluation_docs_dataset.py --eval-explorer ~/DEV/eval-explorer --push    # build and push (public)
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from datasets import Dataset, DatasetDict, load_dataset
 
 SOURCE = "baobabtech/evalexplorer-data"
 REVISION = "3543e3e66a7708a13bd45ed2bc6e16dda4b9807a"  # checked 2026-10-02
-TARGET = "baobabtech/decision-models-evalexplorer"
+TARGET = "baobabtech/decision-models-evaluation-docs"
 SPLITS = ("train", "validation", "test")
 SAMPLE = {"findings": 300, "recommendations": 150, "methodology": 150}
 SEED = 0
@@ -157,9 +157,9 @@ def main() -> None:
     print("excerpts:", {k: len(v) for k, v in exc.items()}, "eval_sample:", sum(exc["test"]["eval_sample"]))
 
     if args.push:
-        docs.push_to_hub(TARGET, config_name="documents", data_dir="documents", private=True)
-        exc.push_to_hub(TARGET, config_name="excerpts", data_dir="excerpts", private=True)
-        DatasetDict({"train": tax}).push_to_hub(TARGET, config_name="taxonomy", data_dir="taxonomy", private=True)
+        docs.push_to_hub(TARGET, config_name="documents", data_dir="documents", private=False)
+        exc.push_to_hub(TARGET, config_name="excerpts", data_dir="excerpts", private=False)
+        DatasetDict({"train": tax}).push_to_hub(TARGET, config_name="taxonomy", data_dir="taxonomy", private=False)
 
 
 if __name__ == "__main__":

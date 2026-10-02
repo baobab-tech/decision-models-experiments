@@ -1,23 +1,23 @@
 # Datasets
 
-## In use: EvalExplorer
+## In use: evaluation docs
 
 Used by experiments 01 and 02.
 
 | | |
 |---|---|
-| Source | `baobabtech/evalexplorer-data` (private): 1,420 international development evaluation reports from about 40 organisations, converted with Docling, plus labels from the EvalExplorer ingestion pipeline |
-| Copy for this repo | [`baobabtech/decision-models-evalexplorer`](https://huggingface.co/datasets/baobabtech/decision-models-evalexplorer) (private): configs `documents`, `excerpts` (with the fixed 600-excerpt `eval_sample`) and `taxonomy` (labels, definitions, country→region). Built by [`build_evalexplorer_dataset.py`](build_evalexplorer_dataset.py) from source revision `3543e3e` |
+| Source | 1,420 international development evaluation reports from about 40 organisations, converted with Docling, plus labels from an LLM ingestion pipeline. Built from `baobabtech/evalexplorer-data` (private) |
+| Dataset | [`baobabtech/decision-models-evaluation-docs`](https://huggingface.co/datasets/baobabtech/decision-models-evaluation-docs) (public): configs `documents`, `excerpts` (with the fixed 600-excerpt `eval_sample`) and `taxonomy` (labels, definitions, country→region). Built by [`build_evaluation_docs_dataset.py`](build_evaluation_docs_dataset.py) from source revision `3543e3e` |
 | Splits | By document, 80/10/10 (1,148 / 138 / 134), identical across configs |
 | Labels | LLM output (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) treated as gold; 36 document labels corrected by hand |
-| Licence | Card says `other`: "check the rights of the underlying reports before redistributing". Opening the copy needs a rights review: release labels, IDs and source URLs, or the text too |
-| Version | Record the HF commit of `evalexplorer-data` and of the copy |
+| Licence | Reports are publicly published by their organisations, which keep their rights; the dataset card says `other` |
+| Version | Record the HF commit of `decision-models-evaluation-docs` |
 
 ## Candidates, not in use
 
 Public datasets kept for later experiments. Licences are as stated by the source; unconfirmed entries are marked (unverified).
 
-| Dataset | Labels | Type | Typical length | Licence | Source | Used for |
+| Dataset | Labels | Type | Typical length | Licence | Reports are publicly published by their organisations, which keep their rights; the dataset card says `other` |
 |---|---:|---|---|---|---|---|
 | BANKING77 | 77 | single | ~12 words | CC-BY-4.0 (HF card, checked 2026-09-30; mirrors `legacy-datasets/banking77` CC-BY-4.0, `mteb/banking77` card says MIT) | [HF `PolyAI/banking77`](https://huggingface.co/datasets/PolyAI/banking77) | many-class intent; AnyJev and CLM-8B report on it |
 | CLINC150 | 150 + out-of-scope | single | ~9 words | CC-BY-3.0 (repo LICENSE and HF `clinc/clinc_oos` card, checked 2026-09-30) | [clinc/oos-eval](https://github.com/clinc/oos-eval) | abstention on out-of-scope |
