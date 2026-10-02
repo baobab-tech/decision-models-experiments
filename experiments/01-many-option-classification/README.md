@@ -8,7 +8,7 @@ Can zero-shot decision models classify and tag international development evaluat
 
 ## Data
 
-[EvalExplorer](https://www.evalexplorer.ai) evaluation reports, from `baobabtech/evalexplorer-data` (private). The rows we use are copied into a new private dataset for this repo; see [common/datasets.md](../common/datasets.md). Test splits only, split by document.
+[EvalExplorer](https://www.evalexplorer.ai) evaluation reports, from `baobabtech/evalexplorer-data` (private). The rows we use are in the private copy [`baobabtech/decision-models-evalexplorer`](https://huggingface.co/datasets/baobabtech/decision-models-evalexplorer); see [common/datasets.md](../common/datasets.md). Test splits only, split by document.
 
 | Task | Input | n | Field | Labels | Type |
 |---|---|---:|---|---:|---|
@@ -17,7 +17,7 @@ Can zero-shot decision models classify and tag international development evaluat
 | | | | `temporality` | 3 | single |
 | | | | `themes` | 18 | multi, 1–4 |
 | | | | `countries` | 54 seen; ~250 ISO codes | multi |
-| **B. Excerpt tagging** | Finding, recommendation or methodology excerpt: median 34 words, p90 107 | 600 sampled (seed 0) | `themes` | 22 | multi, median 2 |
+| **B. Excerpt tagging** | Finding, recommendation or methodology excerpt: median 34 words, p90 107 | 600: `eval_sample` (300 findings, 150 recommendations, 150 methodology) | `themes` | 22 | multi, median 2 |
 | | | | `regions` | 17 | multi |
 | | | | `methods` (methodology only) | 24 | multi |
 | | | | `countries` | 121 seen; ~250 ISO codes | multi |

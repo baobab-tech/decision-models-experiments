@@ -7,7 +7,7 @@ Used by experiments 01 and 02.
 | | |
 |---|---|
 | Source | `baobabtech/evalexplorer-data` (private): 1,420 international development evaluation reports from about 40 organisations, converted with Docling, plus labels from the EvalExplorer ingestion pipeline |
-| Copy for this repo | New private dataset under `baobabtech`, holding only the rows and columns 01 and 02 use: `classify_codes` documents and an excerpt sample. Not created yet |
+| Copy for this repo | [`baobabtech/decision-models-evalexplorer`](https://huggingface.co/datasets/baobabtech/decision-models-evalexplorer) (private): configs `documents`, `excerpts` (with the fixed 600-excerpt `eval_sample`) and `taxonomy` (labels, definitions, country→region). Built by [`build_evalexplorer_dataset.py`](build_evalexplorer_dataset.py) from source revision `3543e3e` |
 | Splits | By document, 80/10/10 (1,148 / 138 / 134), identical across configs |
 | Labels | LLM output (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) treated as gold; 36 document labels corrected by hand |
 | Licence | Card says `other`: "check the rights of the underlying reports before redistributing". Opening the copy needs a rights review: release labels, IDs and source URLs, or the text too |
