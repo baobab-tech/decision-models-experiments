@@ -115,7 +115,7 @@ It used the `typed-decisions` checkpoint with `max_len=2048` and `head_max_len=5
 | Triage, Choice(2) | 48 | 52.1% | 85.4% | 95.8% |
 
 - Laya ranked below Jev and Qwen3.5-4B on all five tasks.
-- Laya had the lowest p50 latency of the three models on every task: 0.09–0.20 s.
+- Laya had the lowest p50 latency of the three models on four tasks and tied Jev on classify (0.14 s); range 0.09–0.20 s.
 - Split F1 0.586 (Jev 0.947).
 - On classify at confidence ≥ 0.9, Laya kept 4.2% of pages at 75.0% accuracy; Jev kept 45.8% at 81.8%.
 - Laya's confidence on the first 10 wrong orientation answers was 0.003–0.034.
