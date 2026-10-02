@@ -44,6 +44,25 @@ Can zero-shot decision models classify and tag international development evaluat
 - `countries`: flat Choice/Noul over all codes vs staged (region first, then countries within it).
 - Label names only vs names with one-line definitions (the `definitions` prompt variant from the classify experiments).
 
+## Null answers
+
+`evaluation_approach`, `evaluation_type` and `temporality` can be `null`. A Choice always returns one of its options, so `null` comes from one of two methods, and we test both:
+
+1. **Threshold:** the field is `null` when the top option's probability is below a threshold *t*.
+2. **Gate:** a Noul asks whether the report states the field (e.g. "The report states its evaluation approach"). The field is `null` when the Noul is below a threshold *g*; otherwise the Choice answer is used.
+
+Calibrating the thresholds:
+
+- *t* and *g* are fitted per model and per field on the validation split (138 documents), then frozen for the test split.
+- The objective is field accuracy with `null` counted as its own class.
+- Grid: 0.05 to 0.95 in steps of 0.05. Ties go to the higher threshold, which gives fewer `null`s.
+- Reported for each field:
+  - the fitted threshold
+  - the `null` precision and recall on test
+  - the accuracy curve across thresholds on validation, so we can see whether a plateau or a sharp peak drove the choice
+- 138 validation documents give a coarse fit, especially for rare `null`s, so the 95% bootstrap interval of the test accuracy is reported. If the interval is wide, the fit is repeated with 5-fold cross-validation over train + validation.
+- A third run with no `null` handling, where the Choice is always taken, shows what each method adds.
+
 ## Baselines
 
 - **Earlier Baobab Tech classifier runs on the same test split and metric** (not re-run; results in `baobabtech/evalexplorer-classify-experiments`, private):
