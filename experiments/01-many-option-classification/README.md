@@ -22,6 +22,7 @@ Can zero-shot decision models classify and tag international development evaluat
 | | | | `methods` (methodology only) | 24 | multi |
 | | | | `countries` | 121 seen; ~250 ISO codes | multi |
 
+- Gold labels are being regenerated with GLM (2026-10-02). The dataset is rebuilt from the relabelled source revision before any run, and earlier baselines are re-scored from their saved predictions against the new gold.
 - Labels come from an ingestion pipeline's LLMs (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) and are treated as gold. 36 document labels were corrected by hand.
 - Option counts come from the real taxonomy. `countries` is the 100+ case: ask over the 54 or 121 codes seen, and over all ~250 ISO codes.
 
