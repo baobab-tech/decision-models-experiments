@@ -4,6 +4,7 @@ Checked 2026-09-30. No weights were downloaded and nothing was run; every comman
 
 - Jev's request shape (one `state`, named `choice` / `score` / `noul` questions) is in [../concepts.md](../concepts.md#typed-question-format). **Schema:** "yes" = accepts that shape or a documented `POST /v1/systemone`; "partial" = same three primitives through its own call shape.
 - Downloads = HF API `downloads` (rolling 30 days, read 2026-09-30); repos without a root `config.json` report 0. "DI" = balanced-skill score on Jev Decision Index 0.2.1 (Jev 1.13.0 = 57.91; [../benchmarks.md](../benchmarks.md)).
+- **Own docs (checked 2026-10-02):** [Laya](laya.md), [JevK5](jevk5.md), [decider](decider.md), [autotrust JEV / GEV](autotrust-jev.md), [pplx-decider (= AutoJev-27B)](pplx-decider.md), [Jev-Omni](jev-omni.md), [Intern-Decision](intern-decision.md), [Von](von.md), [openJev Verdict](rlcd-modernbert.md), [Cygnet](cygnet.md), [Clef](clef.md), [Strands Decider](strands-decider.md), [ModernJEV-Decide-Preview](modernjev-decide.md). Where a section below and an own doc disagree, the own doc is newer.
 - The long tail (255 models in Han Xiao's all-about-jev dataset) is in [../landscape.md](../landscape.md). Entries marked "(all-about-jev)" come from that dataset and were not checked.
 
 ## Comparison
@@ -14,14 +15,14 @@ Checked 2026-09-30. No weights were downloaded and nothing was run; every comman
 | [open-jev-deberta](#open-jev-deberta-v3-large) | DeBERTa-v3-large | 434M | Apache-2.0 | partial | 255 / 512 | Python CPU fp32; Transformers.js (ONNX) |
 | [Julia-1](#julia-1) | mmBERT-small | 144M | Apache-2.0 | yes | 2–20 / 8,192 | `pip install -e`, `device="cpu"` |
 | GLiNER2.5-Decide | DeBERTa-v3-large | 340M | Apache-2.0 | partial (multi-label) | unlimited / not stated | [gliner-decide.md](gliner-decide.md) |
-| [JevK5](#jevk5) | Qwen3.5-4B (also 2B, 9B) | 4.2B | Apache-2.0 | partial | any (knockout) / 8,192 | `llama-server` (Metal) |
+| [JevK5](jevk5.md) | Qwen3.5-4B (also 2B, 9B) | 4.2B | Apache-2.0 | yes (`jevk5-serve`) | any (knockout) / 16,384 | `llama-server` (Metal) |
 | [Jev-Style](#jev-style) | Qwen3.5-2B / 0.8B | ~2B / 0.75B | Apache-2.0 | yes | 26 / 25,600 tested | `pip install "jev-style[mlx]"` |
 | [decider](#decider) | Qwen3.5 Base; Gemma-4-12B-it (12b) | 0.8B–35B-A3B | Apache-2.0 | yes | 2–255 / 32k | `pip install decider-ai` (MPS, dense models) or `decider-ai[gguf]`, Metal build |
 | [Tiny-Jev](#tiny-jev) | Qwen3-0.6B | 596M | Apache-2.0 | partial | not stated / 4,096 per question | transformers `.to("mps")` |
 | [OpenThai-SystemOne](#openthai-systemone) | Qwen3.5-0.8B-Base | 753M | Apache-2.0 | yes | 255 / 64k | `pip install openthai-systemone` (MPS) |
 | [AgentJev](#agentjev-06b) | Qwen3-0.6B | 598M | Apache-2.0 | partial | not stated / 2,048 | Python server; Mac not documented |
-| [JEV-9B / 27B](#autotrust-jev) | Qwen3.5-9B / Qwen3.8-27B | 9.0B / 26.9B | Apache-2.0 | partial | 2–16 / 1,024 | none in card |
-| [AutoJev-27B](#autojev-27b) | Qwen3.8-27B | 26.1B | Apache-2.0; code MIT | yes | not stated | ~49 GiB GPU; Mac not documented |
+| [JEV-9B / 27B](autotrust-jev.md) | Qwen3.5-9B / Qwen3.8-27B | 9.0B / 26.9B | Apache-2.0 | partial | 2–256 / up to 256K on vLLM (server since 2026-10-01); 2–16 / 1,024 on JEV-9B and the reference server | none in card |
+| [AutoJev-27B = pplx-decider](pplx-decider.md) | Qwen3.8-27B | 26.1B | Apache-2.0; code MIT | yes | not stated | ~49 GiB GPU; Mac not documented |
 | Kev | Qwen3.5 / Qwen3.8 | 0.8B–27B | Apache-2.0 | yes | 255 / 65,536 | MLX, automatic: [kev.md](kev.md) |
 | CLM-8B | Qwen3-8B (frozen encoder) | 8B | Apache-2.0 | yes | no cap found / 2,048 | vllm-metal: [clm-8b.md](clm-8b.md) |
 | AnyJev | any open LLM (Qwen3 in tables) | library | Apache-2.0 | partial | 26 / base model | [anyjev.md](anyjev.md) |
@@ -48,6 +49,8 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 ## BERT-family encoders
 
 ### Laya
+
+Full doc: [laya.md](laya.md), checked 2026-10-02.
 
 - **Repos:** `convaiinnovations/laya` (English root; `multilingual/`, `typed-decisions/` subfolders); ONNX `receptron/laya-onnx` (fp32, `laya.onnx` + 1.69 GB `.data`), `killkli/open-jev-laya-multilingual-onnx` (third-party, fp32 + fp16 647 MB, 271 downloads). npm `@receptron/laya` 0.1.2 (MIT, 661 stars); PyPI `laya` (`github.com/NandhaKishorM/laya`). Author: Convai Innovations; Node port by receptron. Downloads 0 (no root `config.json`), 4,635 likes.
 - **Schema:** `laya-serve` exposes `POST /v1/systemone` "on the same … request and response shape as TypeSafe Jev"; npm output matches `RLAgent.system_one` to four decimals. Options share `head_max_len` (192 en / 256 ml); Banking77 (77 options) scores 0.425. Input 512 (en); multilingual 1,024 default, `max_len=8192`.
@@ -80,6 +83,8 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 
 ### JevK5
 
+Full doc: [jevk5.md](jevk5.md), checked 2026-10-02.
+
 - **Repos:** `alibiserikbay/JevK5` (4B, 8.4 GB bf16; 8,047 downloads), `-9B`, `-2B`, `-Lite` (DeBERTa-v3-large, 434M), `-GGUF` (Q8_0 4.48 GB, Q5_K_M 3.07 GB, Q4_K_M 2.71 GB; 7,582). Runtime `github.com/allebee/jevk5`. Answer read from next-token log-probs of option letters.
 - **Schema:** `decide(state, {"type", "instructions", "criteria"})`. Runtime 0.3.0 answers > 16 options with a second `knockout_temperature` pass; the stdlib client handles ≤ 16. Multi-label not documented.
 - **Benchmarks:** JevBench v1.4 #2 of 76 (62.04; Jev 63.29) per card; v1.4.2 leaderboard lists v0.2.0 at 62.04 (#5). DI 38.81. Fastino fast-decisions 57.6%. Card JevBench public (231), v0.3 4B bf16: easy 1.000, standard 0.944, hard 0.784.
@@ -96,6 +101,8 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 - **Mac:** `pip install "jev-style[mlx]"`; `jev-style serve --release 2b --precision 8bit` (bf16 default; `http://127.0.0.1:8765`), or `JevStyle.from_pretrained("chaoliangUNSW/Jev-Style-2B-Decision-v3-MLX", precision="8bit").decide(state, {"billing": noul(...), "tone": choice(...)})`.
 
 ### decider
+
+Full doc: [decider.md](decider.md), checked 2026-10-02.
 
 - **Repos:** `Mapika/decider-0.8b` (752M; 12,860 downloads), `-2b` (v11, 1,881,825,088; 255,088, most in this survey), `-4b` (v2.1, 4,205,751,296; 18,425), `-4b-GGUF` (Q4_K_M 2.7 GB, Q8_0 4.5 GB, BF16 8.4 GB; 1,227), `-35b-a3b` (34.7B, 3B active), `-35b-a3b-nvfp4`, `-2b-vision`, `-12b` (v2: Gemma-4-12B-it + merged rank-32 LoRA, 11,959,730,224; 46), `-2b-GGUF`; stock-model readouts `decider-chat-gemma4-31b`, `decider-chat-qwen3.6-27b`. Code `github.com/Mapika/decider`, package `decider-ai`. Readout: option-letter logits over options ÷ fitted temperature.
 - **Schema:** `d.system_one(state, questions)` and `decider.serve` (`POST /v1/systemone`); "the official `typesafe-sdk` works against it unchanged with `TYPESAFE_BASE_URL`". 2–255 options (> 10 use one label token each); CLINC 151-way 0.88 vs 0.98 with 10 sampled. Input "up to 32k tokens with the questions".
@@ -123,6 +130,8 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 
 ### autotrust JEV
 
+Full doc: [autotrust-jev.md](autotrust-jev.md), checked 2026-10-02.
+
 - **Repos:** `autotrust/JEV-9B` (8,953,803,264; 813 downloads), `JEV-27B` (26,895,998,464; 438), `JEV-Gemma4-26B-A4B` (25,805,936,206, 4B active; 95; Gemma-based). Third-party GGUF: `mradermacher/JEV-9B-GGUF`, `prithivMLmods/JEV-27B-GGUF`, `prithivMLmods/JEV-9B-GGUF`. Blog: `huggingface.co/blog/autotrust/autotrustjev-27b-fast-calibrated-decisions-and-ful`.
 - **Architecture:** frozen base bit-identical to upstream (System 2); System 1 = LoRA (27B: 108.9M params) + 24-slot fp32 head on the last-token hidden state. Files: base safetensors, `adapter/`, `adapter_vllm/`, `head.safetensors`, `calibration.json`.
 - **Schema:** template `[kind] … [state] … [question] … [options] … [decision]:`; `noul` must be `["false","true"]`, `score` `"0".."5"`, `choice` 2–16. 1,024 tokens at serving (state truncated 60% head / 40% tail) unless raised. No multi-label. Recipe described; no training code.
@@ -130,6 +139,8 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 - **Run:** vLLM (`vllm serve JEV-27B … --enable-lora …`) or transformers + peft with `device_map="cuda"`; no MPS/MLX path. A GGUF from the root weights lacks the System 1 adapter and head (unverified for the third-party repos).
 
 ### AutoJev-27B
+
+Same weight files (identical hashes) as Perplexity's `perplexity-ai/pplx-decider-v1-27b`, released 2026-10-01 with a hosted API. Full doc: [pplx-decider.md](pplx-decider.md). Count it once.
 
 - **Repo:** `denis-pplx/autojev-27b` (26,085,330,160 params; 1,025 downloads); code `github.com/denis-pplx/autojev` (MIT). Full-weight SFT on 73,000 examples, one H200.
 - **Schema:** `POST /v1/systemone` (`choice`/`noul`/`score`, optional images); auth via `AUTOJEV_API_KEY`. DI 56.40 (#3 open entrant); own test set 84.60% vs Jev 82.79%.
@@ -155,7 +166,7 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 ### Other Gemma-based
 
 - JEV-Gemma4-26B-A4B: see [autotrust JEV](#autotrust-jev).
-- `akhilaaa3/Jev-Omni`: Gemma-4-12B, 12.0B, multimodal incl. audio; `state`/`question`/`options`; `pip install -r https://huggingface.co/akhilaaa3/Jev-Omni/resolve/main/requirements.txt`, `load_jev_omni()`; `head.pt`; DI 40.53; 1,132 downloads; Mac not documented.
+- `akhilaaa3/Jev-Omni`: Gemma-4-12B, 12.0B, multimodal incl. audio; `state`/`question`/`options`; `pip install -r https://huggingface.co/akhilaaa3/Jev-Omni/resolve/main/requirements.txt`, `load_jev_omni()`; `head.pt`; DI 40.53; 1,599 downloads (2026-10-02); community MLX 4-bit, GGUF and WebGPU builds. Full doc: [jev-omni.md](jev-omni.md).
 
 ## Other
 
@@ -168,7 +179,7 @@ The 27B models (JEV-27B, AutoJev-27B, Solomon, Jebadiah) fit in 128 GB at bf16, 
 ### Others
 
 - `TokenRhythm/NeoHorse-Jev-4B`: ~4B + pointer head, multimodal; partial schema; vLLM/SGLang scripts with `CUDA_VISIBLE_DEVICES=0`; DI 36.75; six-group mean 77.70 (own); 2,202 downloads.
-- `internlm/Intern-Decision-4B`: Qwen3.5-4B (`base_model`), 4.5B; schema yes; `pip install -r requirements.txt`, `DecisionEngine(device="cuda")`; 1–16 questions, ≤ 62 options; DI 37.81; no fine-tuning.
+- `internlm/Intern-Decision-4B`: Qwen3.5-4B (`base_model`), 4.5B; schema yes; `pip install -r requirements.txt`, `DecisionEngine(device="cuda")`; 1–16 questions, ≤ 62 options; DI 37.81; XTuner training code in the GitHub repo. Full doc: [intern-decision.md](intern-decision.md).
 - `surogate/rune-26b-a4b-GGUF`: gemma-4-26B-A4B-it (`base_model`), 25.8B; DI 57.44 (highest open entrant); gated (automatic approval), so the card is not readable without accepting; files are 11 safetensors shards, not GGUF.
 - `openjev/openjev` (OpenJev 27B, all-about-jev): CC-BY-NC-4.0; 16.5 GB Q4_K_M GGUF; lists MLX/MPS hardware; 10,000-question set 84.0% vs Jev 85.4%.
 - Further DI entrants: `frontier-infra/jebadiah-27b` 54.67; `caiovicentino1/Eikos-27B-FP8` (MIT) 53.13; `kirp/jpt-9b` / `jpt-4b` (CC-BY-NC-4.0) 46.89 / 43.04; `llm-semantic-router/Decision-1.0-*` (Lux-9B) 43.49; `michaljach/jet` 42.60; `juspay/xor` (35B-A3B) 41.48; `HopitAI/hopper-g` (licence "other") 40.77; `bespokelabs/Bespoke-Nimble-9B-v2` 39.57; `togethercomputer/Tev1-4B-experimental` (no licence metadata) 29.24; `wayfind/metask-jev-4b-policy-mix` 26.89; `Hanno-Labs/bosun-v3.1-*` (custom code) 20.10 / 14.32; `moganai/lavoir` (CC-BY-NC-4.0) 8.69; `monotykamary/LFM2.5-2.6B-RLCD` 6.76.

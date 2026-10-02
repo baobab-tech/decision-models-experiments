@@ -15,6 +15,7 @@ Survey date: 2026-09-30. Every score is copied from the linked source; none was 
 
 Repo [`fstandhartinger/jevbench`](https://github.com/fstandhartinger/jevbench) (MIT); live board [benchmarkheaven.com/jev-models](https://benchmarkheaven.com/jev-models); aggregate JSON [`/api/jevbench/v1.5.4`](https://benchmarkheaven.com/api/jevbench/v1.5.4). All read 2026-09-30. The repo README still headlines v1.4.2.2; the live board runs v1.5.4 under the method frozen 2026-09-25 ([`docs/METHOD-v1.5.md`](https://github.com/fstandhartinger/jevbench/blob/main/docs/METHOD-v1.5.md)).
 
+- **Version note (2026-10-02):** the live board is now v1.5.5 with 109 ranked rows; it adds Clef (17.0, #62), Clef-flash (55.1, #25) and Interfaze Lev. Cygnet stays #1 at 73.7, Jev #3 at 72.1. The tables below are v1.5.4 ([clef.md](models/clef.md), [cygnet.md](models/cygnet.md)).
 - **Task:** state plus a bounded rubric in, a typed answer (ideally a distribution over options) out.
 - **Axes (0–100):** Intelligence (chance-corrected accuracy), Calibration (ECE plus fidelity to gold distributions; label-only systems get 0), Speed (100 at 0.1 s, −20 per 10× slower, mean of p50 and p95), Cost (100 at $0.001 per 1,000 decisions, −30 per 10×).
 - **Latency adjustment:** self-hosted and demo endpoints are scored at ×2 + 0.15 s ("an assumption, not a measurement"); production APIs are not adjusted. Latency is measured from a server in Germany.
@@ -145,7 +146,7 @@ Balanced raw accuracy in 0.1: Jev 59.51, Jevfire 55.74. Source: `data/index-v0.1
 | 9 | Decider chat · Qwen3.6-27B | Qwen3.6-27B | 51.35 | 0.021 | 83.6 |
 | 10 | Winnow-12B (Q8_0) | gemma-4-12B | 50.02 | 0.168 | 72.5 |
 
-Jev has the top score among the 71 board rows. Liquid reports d1 at 58.9 against Jev 57.9 on 0.2.1 from its own run of the suite; d1 has no board row ([vendor-reported results](benchmarks-leaderboards.md#vendor-reported-results-on-the-same-suite)). Other self-reported 0.2.1 scores, not on the board: Fastino GLiDE 64.81 ([blog](https://fastino.ai/blog/introducing-glide-the-first-thinking-decision-model), 2026-09-30; [glide.md](models/glide.md)); Darwin-27B-JEV 61.17 ([PR #15](https://github.com/apolinario/decision-index/pull/15)); `autotrust/JEV-Gemma4-26B-A4B` 58.05 (card); Eikos-27B author rerun 55.46 (AaJ).
+Jev has the top score among the 71 board rows. Liquid reports d1 at 58.9 against Jev 57.9 on 0.2.1 from its own run of the suite; d1 has no board row ([vendor-reported results](benchmarks-leaderboards.md#vendor-reported-results-on-the-same-suite)). Other self-reported 0.2.1 scores, not on the board: Cloudflare Clef 61.21 and Clef-flash 57.07 on 36 of 38 benchmarks ([clef.md](models/clef.md)); autotrust GEV-26B-Decide 62.48 with adaptive thinking (misses the board's latency limit), 58.05 System 1 only ([autotrust-jev.md](models/autotrust-jev.md)); Fastino GLiDE 64.81 ([blog](https://fastino.ai/blog/introducing-glide-the-first-thinking-decision-model), 2026-09-30; [glide.md](models/glide.md)); Darwin-27B-JEV 61.17 ([PR #15](https://github.com/apolinario/decision-index/pull/15)); `autotrust/JEV-Gemma4-26B-A4B` 58.05 (card); Eikos-27B author rerun 55.46 (AaJ).
 
 ## S1Bench
 
@@ -179,7 +180,7 @@ One row per model on at least two benchmarks. Scores are not comparable across c
 | Jev 1.13.0 | undisclosed | closed | hosted API | 57.91 | 72.1 | 88.1 | 85 | — | 0.76 |
 | Liquid d1 ³ | undisclosed | closed | hosted API | 58.9 (vendor run) | — | — | — | — | — |
 | Surogate Rune 26B-A4B v3 | 25.8B | Gemma 4 26B-A4B | large | 57.44 | 66.5 | — | — | — | — |
-| AutoJev-27B | 27.8B | Qwen3.8-27B | large | 56.40 | 19.5 | — | — | — | — |
+| AutoJev-27B = [pplx-decider](models/pplx-decider.md) | 27.8B | Qwen3.8-27B | large | 56.40 | 19.5 | — | — | — | — |
 | Eikos-27B | 27.8B | Qwen3.8-27B | large | 53.13 | 18.5 | — | — | — | — |
 | reflex 27B ¹ | 27.8B | Qwen3.8-27B | large | 52.16 | 13.2 | — | — | — | — |
 | decider-35b-a3b | 36.0B | Qwen3.5-35B-A3B | large | 47.11 | 27.5 | — | — | — | 0.774 |
@@ -208,7 +209,7 @@ One row per model on at least two benchmarks. Scores are not comparable across c
 | Laya multilingual | ~307M | mmBERT-base | tiny encoder | — | 0.0 | — | 42 | — | — |
 | Laya router | n/s | not stated | tiny encoder | — | — | — | 45 | 46.6 | — |
 | GLiNER2.5 multi | 287M | GLiNER2 | tiny encoder | 4.26 | 2.7 | — | — | — | — |
-| openJev Verdict | 151M | ModernBERT-base | tiny encoder | 1.87 | 0.0 | — | — | — | — |
+| [openJev Verdict](models/rlcd-modernbert.md) | 151M | ModernBERT-base | tiny encoder | 1.87 | 0.0 | — | — | — | — |
 
 ¹ Versions differ between boards: DI reflex is "FP8, wide choice"; DI Nimble is v2; CLM is v0.1 on DI and `clm-latest` on JB; DI Hopper is (G) 1.2; DI Decider 4B vs JB decider-4b v2 vs S1 v2.1; DI JevK5 vs JB JevK5 v0.2.0 (JB v0.3 scores 71.9); JB Von vs kyr0 Von 1.1.
 ² Same weights, different runtimes (unverified match): JB "Bev / Bonsai 27B" vs kyr0 Bonsai-Llama-Jev; JB SemIf vs kyr0 `openjev-qwen3.5-4b` (fastjev).
@@ -246,17 +247,24 @@ One row per model documented in [models/](models/). "Claim" is the vendor's or a
 | Kev ([doc](models/kev.md)) | Kev-4B transfer-v4 0.817 dev / 0.838 test; Kev-9B 0.822 / 0.852 | author | own | local-jev-bench Kev-4B 81.4% (534/656); DI Kev-4B 34.64, Kev-9B 38.48 | +0.3 pp (Kev-4B dev) |
 | CLM-8B ([doc](models/clm-8b.md)) | BFCL v4 95.2% vs Jev 99.2%, "on par with Jev" | vendor | public (BFCL) | local-jev-bench BANKING77-20 20%; DI 7.40; JB 1.5 | — |
 | AnyJev ([doc](models/anyjev.md)) | Qwen3-8B BANKING77-20: L0 0.803, raw 0.747 | vendor | public (BANKING77) | local-jev-bench 241/300 (80.3%), raw 224/300 (74.7%) | 0.0 pp |
-| Laya ([doc](models/open-reproductions.md#laya)) | typed-decisions 0.766 (`laya-typed-decisions`) vs Jev 0.727 | author | public (typed-decisions) | DI 6.04; kyr0 46.70%; JB 0.0; exp. 03 (`typed-decisions` checkpoint): 24.0–70.7% vs Jev 54.2–100% | — |
+| Laya ([doc](models/laya.md)) | typed-decisions 0.766 (`laya-typed-decisions`) vs Jev 0.727 | author | public (typed-decisions) | DI 6.04; kyr0 46.70%; JB 0.0; exp. 03 (`typed-decisions` checkpoint): 24.0–70.7% vs Jev 54.2–100% | — |
 | open-jev-deberta-v3-large | in-domain 0.854, OOD 0.690 | author | own | JB 0.0 (Intelligence 0.0) | — |
 | Julia-1 | Choice 71.33%, Noul 80.67%, Score 68.88% | author | own | DI 5.54 | — |
-| JevK5 | JevBench v1.4 #2 of 76, 62.04 vs Jev 63.29 | author | public (JB) | JB v1.4.2.2 v0.2.0 62.04 (#5); JB v1.5.4 v0.3 71.9 (#4); DI 38.81; fast-decisions 57.6% | 0.00 |
+| JevK5 ([doc](models/jevk5.md)) | JevBench v1.4 #2 of 76, 62.04 vs Jev 63.29 | author | public (JB) | JB v1.4.2.2 v0.2.0 62.04 (#5); JB v1.5.4 v0.3 71.9 (#4); DI 38.81; fast-decisions 57.6% | 0.00 |
 | Jev-Style-2B v3 | JevBench v1.4.1 public items 73.6% vs Jev 86.6% (self-run) | author | public (JB items) | not on JB or DI | — |
-| decider | decider-4b v2.1 Bespoke suite 0.756; decider-2b v11 0.706; decider-2b regression set 0.802 / 0.752 | author | public (S1Bench); own (regression set) | JB decider-4b v2 71.3 (#7); DI Decider 4B 40.70, 2B 28.97 | — |
+| decider ([doc](models/decider.md)) | decider-4b v2.1 Bespoke suite 0.756; decider-2b v11 0.706; decider-2b regression set 0.802 / 0.752 | author | public (S1Bench); own (regression set) | JB decider-4b v2 71.3 (#7); DI Decider 4B 40.70, 2B 28.97 | — |
 | Tiny-Jev | none | — | — | none | — |
 | OpenThai-SystemOne | S1Bench macro 74.3 vs Nimble-9B 74.8, Jev 76.0 | author | public (S1Bench) | not on DI | — |
 | AgentJev-0.6B | coding completion 57.8%, AUROC 0.589 | author | own | none | — |
-| autotrust JEV-27B / JEV-Gemma4 | JEV-27B six-benchmark mean 84.07 vs Jev 83.85; JEV-Gemma4 DI 0.2.1 58.05 vs Jev 57.91 | author | mixed; public (DI) | not on DI | — |
-| AutoJev-27B | own test set 84.60% vs Jev 82.79% | author | own | DI 56.40 (#4, Jev included); JB 19.5 (Intelligence 72.8) | — |
+| autotrust JEV-27B / JEV-Gemma4 ([doc](models/autotrust-jev.md)) | JEV-27B six-benchmark mean 84.07 vs Jev 83.85; JEV-Gemma4 DI 0.2.1 58.05 vs Jev 57.91 | author | mixed; public (DI) | not on DI | — |
+| AutoJev-27B / pplx-decider-v1-27b ([doc](models/pplx-decider.md); same weights) | AutoJev: own test set 84.60% vs Jev 82.79%. Perplexity: 85.71% vs Jev 84.51% over 11 benchmarks via its API; Jev wins 6 of 11 rows | author / vendor | own | DI 56.40 (#4, Jev included); JB 19.5 (Intelligence 72.8) | — |
+| Cloudflare Clef / Clef-flash ([doc](models/clef.md)) | DI 0.2.1 61.21 / 57.07 vs Jev 57.91 (36 of 38 benchmarks) | vendor | public (DI), own run | JB v1.5.5 Clef 17.0 (#62, cost axis), Flash 55.1 (#25) | — |
+| Strands Decider 2B ([doc](models/strands-decider.md)) | JevBench public set 167/231 (0.723), ECE 0.050–0.052 | vendor | public (JB items) | no JB row | — |
+| Cygnet ([doc](models/cygnet.md)) | JevBench public set 203/231 (87.9%) | author | public (JB items) | JB v1.5.5 73.7 (#1) | — |
+| Intern-Decision-4B ([doc](models/intern-decision.md)) | seven-suite average 90.02% vs Jev 88.74% | vendor | mixed (includes typed-decisions 80.55%, above the 0.735 teacher self-agreement) | DI 37.81 | — |
+| Jev-Omni ([doc](models/jev-omni.md)) | JevBench public 86.15% | author | public (JB items) | JB 71.5 (#6); DI 40.53 | — |
+| Von ([doc](models/von.md)) | DI 13.74 (author run); jabr v2 72.0% macro | author | public (DI), own run | JB 0.0 (#105); kyr0 48.57% | — |
+| openJev Verdict ([doc](models/rlcd-modernbert.md)) | Banking77 95.0% top-1 | author | public (Banking77) | DI 1.87; JB 0.0 | — |
 | Winnow-12B | JevBench public subset 198/231, "matches Jev" | author | public (JB items) | JB Q8 73.2 (#2); DI 50.02 | — |
 | VTX-JEV-1 | 73.10% on 3,000 held-out cases (LF4) | author | own | none | — |
 | lev | S1Bench macro 0.689 vs Jev 0.761 | author | public (S1Bench) | DI 38.54 | — |

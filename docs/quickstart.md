@@ -93,7 +93,7 @@ uv pip install laya   # then: from laya import Router; Router()
 llama-server --hf-repo alibiserikbay/JevK5-GGUF --hf-file jevk5-4b-v0.3-Q8_0.gguf -c 8192 -ngl 99
 ```
 
-Answers come from the `jevk5` client, not from plain chat. See [open-reproductions.md](models/open-reproductions.md#jevk5).
+Answers come from the `jevk5` client, not from plain chat. See [jevk5.md](models/jevk5.md).
 
 ## API-only models
 
@@ -102,6 +102,8 @@ Answers come from the `jevk5` client, not from plain chat. See [open-reproductio
 | [Jev](models/jev.md) | `POST https://api.typesafe.ai/v1/systemone` | `TYPESAFE_API_KEY` |
 | [Liquid d1](models/liquid-d1.md) | `POST https://api.liquid.ai/decisions/v1/systemone`, or Vercel AI Gateway `liquid/d1` | `LIQUID_API_KEY` / `AI_GATEWAY_API_KEY` |
 | [GLiDE](models/glide.md) | `POST https://api.fastino.ai/v1/systemone`, model `fastino/GLiDE`, header `X-API-Key` | `FASTINO_API_KEY` |
+| [Clef, Clef-flash](models/clef.md) (Workers AI; weights also on HF) | `POST https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/ai/run/@cf/cloudflare/clef` (or `clef-flash`) | `CLOUDFLARE_AUTH_TOKEN` |
+| [pplx-decider](models/pplx-decider.md) (weights also on HF) | `POST https://api.perplexity.ai/v1/decisions`, model `pplx-decider-v1-27b` | `PERPLEXITY_API_KEY` |
 | [Decider 1](models/decider-1.md) | `POST https://meragpt.com/v1/systemone` | see doc |
 | [Solar Decide](models/solar-decide.md) | `POST https://api.upstage.ai/v1/systemone` (beta) | see doc |
 | [Span-01](models/span-01.md) | `POST https://api.respan.ai/api/v1/scores` (own format) | see doc |

@@ -97,6 +97,8 @@ DI rows: [benchmarks.md](benchmarks-leaderboards.md#decision-index-021). "Infere
 | [Jev 1.13](models/jev.md) | 255 | 64K | $0.042 | no | DI 57.91; ECE 0.032–0.096 on classification (AI/ML API) |
 | [d1](models/liquid-d1.md) | ≥2, max n/d | 32K | free tier; paid n/d | no | DI 58.9 (Liquid's own run, not on the board); policy permits training on inputs |
 | [GLiDE](models/glide.md) | 255 | 40K per question | $0.30 | no | DI 0.2.1 64.81 (Fastino's own run, not on the board); reasons further when unsure |
+| [Clef / Clef-flash](models/clef.md) (Workers AI) | 2–255 | 65,536 | $0.24 / $0.09 | RL service by Cloudflare staff; open weights | DI 61.21 / 57.07 (Cloudflare's own run); JevBench v1.5.5 Flash 55.1 |
+| [pplx-decider](models/pplx-decider.md) (Perplexity) | 255 | < 262,144 | $0.04 | open weights (= AutoJev-27B) | DI 56.40 (#4 on the board, as AutoJev-27B) |
 | [Decider 1](models/decider-1.md) | 10 | 4,096 | $0.03 | no | typed-decisions 0.768 (vendor) |
 | [Solar Decide](models/solar-decide.md) | 26 | 512K | $0.10 | no | 35B-A3B MoE; beta |
 | [Tev1](models/tev1.md) | 24, one question | 32,768 (Together serverless) | $0.042 | open Qwen3.5-4B weights | returns a letter, no distribution |

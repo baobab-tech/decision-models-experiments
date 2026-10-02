@@ -70,6 +70,9 @@ Answer objects are from [Choice, Score and Noul](https://systemonemodels.org/gui
 | [Span-01](models/span-01.md) | Respan | Noul-like: present / absent / not observable per behaviour | `POST https://api.respan.ai/api/v1/scores`; not TypeSafe-compatible | GA | closed |
 | [OpenAI Decisions API](models/openai-decisions-api.md) | OpenAI | Choice (others unconfirmed) | undocumented | limited preview | closed |
 | [GLiNER2.5-Decide](models/gliner-decide.md) | Fastino | Choice, Score, Noul equivalents; multi-label | own `gliner2` schema; hosted `https://api.fastino.ai` | released | Apache-2.0 |
+| [Clef, Clef-flash](models/clef.md) | Cloudflare | Choice, Score, Noul | Workers AI `@cf/cloudflare/clef`; TypeSafe-compatible request (`instructions` required); 2–255 options, 64 questions, 65,536 tokens | released 2026-10-01 | Apache-2.0 |
+| [pplx-decider-v1-27b](models/pplx-decider.md) | Perplexity | Choice, Score, Noul | `POST https://api.perplexity.ai/v1/decisions`; TypeSafe-shaped body, own path, `model` required | released 2026-10-01 | Apache-2.0 (same weights as AutoJev-27B) |
+| [Strands Decider](models/strands-decider.md) | AWS Strands Labs | Choice, Score, Noul | local `/v1/systemone` server; Jev compatibility "not verified" (authors) | released 2026-10-01 | Apache-2.0 |
 | [Kev](models/kev.md) | Jared Palmer | Choice, Score, Noul | TypeSafe-compatible local server (`kev.serve`) | released | Apache-2.0 |
 | [CLM-8B](models/clm-8b.md) | Contrastive-LM | Choice, Score, Noul | TypeSafe requests replay through the CLM client | released | Apache-2.0 |
 | [Laya](models/open-reproductions.md#laya) | Convai Innovations | Choice, Score, Noul | TypeSafe-shaped (`laya-serve`) | released | Apache-2.0 |
@@ -179,7 +182,9 @@ No published study covers 100+ multi-label tags, Choice vs many-Noul formulation
 | 2026-09-24 | Fastino GLiNER2.5-Decide; Respan Span-01 |
 | 2026-09-26 | Decision Index 0.2.1 |
 | 2026-09-29 | Liquid AI d1; OpenAI Decisions API (limited preview) |
-| 2026-09-30 | Kev-27B `main` becomes v2; Fastino GLiDE (blog; press release 2026-10-01) |
+| 2026-09-30 | Kev-27B `main` becomes v2; Fastino GLiDE (blog; press release 2026-10-01); ModernJEV-Decide-Preview |
+| 2026-10-01 | Cloudflare Clef and Clef-flash; Perplexity pplx-decider-v1-27b and Decisions API; AWS Strands Decider 2B |
+| 2026-10-02 | autotrust GEV-26B-Decide |
 
 ## Glossary
 
