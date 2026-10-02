@@ -18,7 +18,7 @@ Which decision models can we fine-tune, and how? How many labelled examples does
 - Model: GLiNER2.5-Decide, Laya, a small Kev or Qwen-head model.
 - Method: full fine-tune or LoRA.
 - Labelled examples per class: 0, 8, 32, 128, all.
-- Where training runs: this Mac (CPU, MPS or MLX) or a cloud GPU (HF Jobs).
+- Where training runs: this Mac (CPU, MPS or MLX) or a cloud GPU on HF Jobs. Commands, flavors and a GLiNER2 template: [fine-tuning.md](../../docs/fine-tuning.md#training-on-hugging-face-jobs).
 
 ## Data
 
@@ -33,4 +33,4 @@ The same datasets as [01](../01-many-option-classification/), so zero-shot and f
 
 ## Data governance
 
-Fine-tune on this Mac or on EU infrastructure. Record where each training run happened.
+Fine-tune on this Mac or on EU infrastructure. HF Jobs does not document its region, so treat it as non-EU and send it only public or synthetic data. Record where each training run happened, plus the Job ID, flavor and cost for cloud runs.

@@ -65,7 +65,7 @@ Map each `choice` to a task with `labels` = option keys, each `noul` to a two-la
 ## Hardware
 
 - **Apple Silicon (M5 Max, 128 GB).** Unified memory holds bf16 weights of every model here, including 27B (~54 GB) and 35B-A3B (~65–69 GB). The constraints are missing MPS kernels (DeltaNet) and CUDA-only scripts. `mlx_lm.lora` on a Qwen3.5 base is general MLX tooling that no decision-model author documents.
-- **Hugging Face Jobs.** Pay-per-second; default timeout 30 minutes. Command shape: `hf jobs uv run --name sft-training --flavor a10g-small "<script-url-or-path>"`. Region selection is not documented.
+- **Hugging Face Jobs.** Billed per minute while a Job is Starting or Running; default timeout 30 minutes; region selection not documented. See [Training on Hugging Face Jobs](#training-on-hugging-face-jobs).
 
 | Flavor | GPU | $/h | Fits (from cards) |
 |---|---|---:|---|
@@ -76,6 +76,77 @@ Map each `choice` to a task with `labels` = option keys, each `noul` to a two-la
 | `a100-large` | 1× A100 80 GB | 2.50 | 27B LoRA |
 | `h200` | 1× H200 141 GB | 5.00 | AutoJev-27B full SFT |
 | `rtx-pro-6000` | 1× RTX PRO 6000 96 GB | 2.75 | Decision Index evaluation GPU |
+
+## Training on Hugging Face Jobs
+
+From the [Train Models on Jobs](https://huggingface.co/docs/hub/jobs-training) guide, [Configuration](https://huggingface.co/docs/hub/jobs-configuration) and [Pricing](https://huggingface.co/docs/hub/jobs-pricing), read 2026-10-02.
+
+### How a Job is built
+
+- **One file:** a uv script with a PEP 723 header, run with `hf jobs uv run train.py`. The header can carry its own launch config in a `[tool.hf-jobs]` table (`flavor`, `timeout`, `secrets`, `env`, `volumes`, `labels`, `namespace`); flags still win.
+- **A project folder** (local imports, `pyproject.toml`): `hf jobs uv run` uploads only the script, so mount the folder with `-v ./proj:/code` and copy it to a writable path inside the container. Experiments here keep one `pyproject.toml` each, so this is the form they need.
+- **A library image** (TRL, Axolotl): `hf jobs run <image> -- <command>`. Pin the tag.
+- **Token:** Jobs get none by default. `-s HF_TOKEN` forwards it; other keys travel the same way (`--secrets-file .env.secrets`). Secrets are encrypted server side.
+- **`--` separates `hf` flags from script arguments.** Without it, a script flag named `--timeout` or `--token` goes to `hf`.
+- **Output:** the container disk is discarded at the end. Push the model (`--push_to_hub`, or `hub_model_id`), and for runs over an hour write checkpoints to a mounted bucket: `-v hf://buckets/<user>/checkpoints:/ckpt`. Create a private repo first with `hf repos create <name> --private`; a fine-grained token needs write and create access, or the run trains to the end and fails on upload.
+- **Agent loop:** `-d` returns the Job ID; `hf jobs logs -f`, `hf jobs stats`, `hf jobs wait` (non-zero exit on failure) and `hf jobs inspect` cover monitoring. `hf skills add` installs an `hf` CLI skill for Claude Code, Codex and Cursor ([Jobs examples](https://huggingface.co/docs/hub/jobs-examples#coding-agent-skills)).
+
+### Checks before a long run
+
+1. Smoke-test with a step cap on a small flavor: proves install, data load, memory fit and push.
+2. Check disk: weights, data and checkpoints share the flavor's ephemeral storage (50 GB on `t4-small`, 110 GB on `a10g-small`, 1,000 GB on `a100-large`).
+3. Estimate time from the smoke test's `train_steps_per_second` and total steps; set `--timeout` above it.
+4. On `x2`/`x4` flavors, launch one process per GPU (`accelerate launch`); plain `python train.py` uses one.
+5. Pin script URLs to a commit and images to a tag, so a rerun gets the same software. This is also what [AGENTS.md](../AGENTS.md) asks for.
+
+### Decision models on Jobs
+
+| Model | Trainer | Suggested flavor | Measured or estimated cost |
+|---|---|---|---|
+| [ModernJEV-Decide-Preview](models/modernjev-decide.md#fine-tuning) (150M) | own `recipe/train.py` | `a100-large` (used) | 129.8 min ≈ $5.41 training, ≈ $6.58 job (author, runtime estimate) |
+| [GLiNER2.5-Decide](models/gliner-decide.md#fine-tuning) (340M) | `gliner2[train]` `ExtractorTrainer` | `a10g-small` | no published time (estimate: under 1 h for 1,000 examples, unverified) |
+| [open-jev-deberta](models/open-reproductions.md#open-jev-deberta-v3-large) (434M) | `kotoba-lang/typed-decisions` | `a10g-small`; author used one H100 | 229 s on H100 for 18,000 states (author); ≈ $0.32 at the `h200` rate (estimate) |
+| [Laya](models/laya.md) (421M) | Kaggle notebook, RLCD | `a10g-largex2` (no 2×T4 flavor) | 4–5 h on 2×T4 (author); ≈ $12–15 on `a10g-largex2` (estimate; likely faster) |
+| [Kev](models/kev.md#fine-tuning) 0.8B / 4B | `kev` LoRA + pointer head | `a10g-large` / `l40sx1` | Kev-4B: 15 min on H100 for 1,050 records (author) |
+| Qwen 0.5B–2B with TRL | TRL `sft.py` from its URL | `a10g-small` | HF guide: Qwen2-0.5B SFT, 100 steps ≈ 6 min |
+
+The TRL and Transformers example scripts already carry PEP 723 headers and run from their GitHub URL. GLiNER2, Kev, Laya and the ModernJEV recipe need a one-file wrapper or a mounted project.
+
+### Template for a GLiNER2 LoRA run (untested)
+
+```python
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["gliner2[train]==2.0.0", "huggingface_hub>=1.0"]
+#
+# [tool.hf-jobs]
+# flavor  = "a10g-small"
+# timeout = "1h"
+# secrets = ["HF_TOKEN"]
+# ///
+import sys
+from huggingface_hub import hf_hub_download, upload_folder
+from gliner2 import AutoExtractor
+from gliner2.training.trainer import ExtractorTrainer, TrainingConfig
+
+data_repo, out_repo = sys.argv[1], sys.argv[2]          # a private dataset repo and a private model repo
+train = hf_hub_download(data_repo, "train.jsonl", repo_type="dataset")
+val = hf_hub_download(data_repo, "val.jsonl", repo_type="dataset")
+model = AutoExtractor.from_pretrained("fastino/GLiNER2.5-Decide")   # pin a revision before a real run
+cfg = TrainingConfig(output_dir="/tmp/out", use_lora=True, lora_r=16, lora_alpha=32,
+                     lora_target_modules=["encoder"], save_adapter_only=True, num_epochs=10, batch_size=16)
+ExtractorTrainer(model, cfg).train(train_data=train, eval_data=val)
+upload_folder(repo_id=out_repo, folder_path="/tmp/out/final")
+```
+
+Launch: `hf jobs uv run train_gliner.py -- <user>/decide-train-data <user>/decide-lora`. Data format: [Converting a Jev-shaped request to GLiNER2 rows](#converting-a-jev-shaped-request-to-gliner2-rows).
+
+### Data governance on Jobs
+
+- Region: not documented, so treat a Job as processing outside the EU unless Hugging Face confirms otherwise.
+- `-v ./dir:/path` uploads the local folder to a private `jobs-artifacts` bucket in your namespace.
+- Training data reaches a Job through a Hub repo, a bucket, a mounted folder (uploaded to `jobs-artifacts`) or a URL the script downloads. The first three store it on Hugging Face.
+- Rule for this repo: send only public or synthetic data to Jobs unless the maintainer approves otherwise (same as API-only models). Record the flavor, Job ID and cost with each result.
 
 ## When fine-tuning beats zero-shot (published evidence)
 
@@ -103,6 +174,6 @@ Map each `choice` to a task with `labels` = option keys, each `noul` to a two-la
 - READMEs: `github.com/jaredpalmer/kev` (plus the `jaredpalmer/kev-4b` card), `github.com/Mapika/decider`, `github.com/NandhaKishorM/laya`, `github.com/fastino-ai/GLiNER2`, `github.com/togethercomputer/tev1`, `github.com/Contrastive-LM/CLM`.
 - Model cards: `convaiinnovations/laya`, `Mapika/decider-2b`, `autotrust/JEV-27B`, `com-kotobalabs/open-jev-deberta-v3-large`, `VTXAI/VTX-JEV-1`, `denis-pplx/autojev-27b`, `EldanRing/Winnow-E4B`, `chaoliangUNSW/Jev-Style-Qwen3.5-2B-Decision-GGUF`, `chaoliangUNSW/Jev-Style-2B-Decision-v3-MLX`, `alibiserikbay/JevK5`, `aimeigaoshou/agent-jev`, `interfaze-ai/lev`, `monotykamary/LFM2.5-2.6B-RLCD` (metadata only).
 - Datasets: `huggingface.co/datasets/fastino/fast-decisions`.
-- `huggingface.co/docs/huggingface_hub/guides/jobs` (flavors, prices, timeout).
+- `huggingface.co/docs/huggingface_hub/guides/jobs` (flavors, prices, timeout); [Train Models on Jobs](https://huggingface.co/docs/hub/jobs-training), [Jobs configuration](https://huggingface.co/docs/hub/jobs-configuration), [Jobs pricing](https://huggingface.co/docs/hub/jobs-pricing), [Jobs examples](https://huggingface.co/docs/hub/jobs-examples) (read 2026-10-02).
 - Liquid AI LFM2 fine-tuning: `docs.liquid.ai/lfm/getting-started/intro`, `huggingface.co/LiquidAI/LFM2.5-2.6B-Base`.
 - Jev Decision Index `data/index.json` (0.2.1).
