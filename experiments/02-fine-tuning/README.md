@@ -1,36 +1,60 @@
 # 02 Fine-tuning decision models
 
-**Status:** proposed. Nothing runs until the plan is approved.
+**Status:** proposed. It runs after [01](../01-many-option-classification/), on the same data.
 
 ## Question
 
-Which decision models can we fine-tune, and how? How many labelled examples does it take to beat zero-shot, and on what hardware? Background is in [fine-tuning.md](../../docs/fine-tuning.md).
+Does fine-tuning an open decision model on EvalExplorer labels match the fine-tuned small LLMs (`mean_field_score` ~84), and how many labelled examples does it take to beat its own zero-shot score from 01?
 
-## What the research says
+## What we already know
 
-- Jev and d1 cannot be fine-tuned. They can only be used as teachers to generate labels.
-- GLiNER2.5-Decide supports full and LoRA fine-tuning. Training runs on CUDA or CPU only, so on this Mac it trains on CPU.
-- Kev, the Qwen-based heads and the Laya family can be fine-tuned. Recipes and hardware needs are in [fine-tuning.md](../../docs/fine-tuning.md).
-- A published cost reference: [ModernJEV-Decide-Preview](../../docs/models/modernjev-decide.md#fine-tuning) trained ModernBERT-base on 60,000 agent decisions in 129.8 min on one A100 (about $5.41 on HF Jobs). It reached 62.18% on 542 tool-selection test cases vs a 22.88% frequency baseline, and fell below the majority baseline on an untrained task family.
+- EvalExplorer's earlier runs fine-tuned generative LLMs and GLiNER2.5 on this exact task ([results](https://huggingface.co/datasets/baobabtech/evalexplorer-classify-experiments)):
 
-## Variables
+  | Model | Size | Zero-shot | After fine-tuning | Seconds per doc |
+  |---|---|---:|---:|---:|
+  | Qwen3.5-4B | 4B | 67.1 | 84.7 | 1.22 |
+  | LFM2.5-350M | 350M | 20.9 | 79.2 | 0.58 |
+  | GLiNER2.5 small | 74M | 48.7 | 57.3 | 0.04 |
 
-- Model: GLiNER2.5-Decide, Laya, a small Kev or Qwen-head model.
-- Method: full fine-tune or LoRA.
-- Labelled examples per class: 0, 8, 32, 128, all.
-- Where training runs: this Mac (CPU, MPS or MLX) or a cloud GPU on HF Jobs. Commands, flavors and a GLiNER2 template: [fine-tuning.md](../../docs/fine-tuning.md#training-on-hugging-face-jobs).
+- GLiNER2.5 base and small plateaued at 57–58 after fine-tuning. Approach and type accuracy stayed at 25–60%.
+- Jev, d1 and GLiDE cannot be fine-tuned.
+- [ModernJEV-Decide-Preview](../../docs/models/modernjev-decide.md#fine-tuning) gives a cost reference: about $5.41 on one A100. It also fell below the majority baseline on a task family it was not trained on.
 
 ## Data
 
-The same datasets as [01](../01-many-option-classification/), so zero-shot and fine-tuned results can be compared directly. See [common/datasets.md](../common/datasets.md).
+- **Task A:** documents, 1,148 train / 138 validation / 134 test.
+- **Task B:** excerpts, 157,302 train, sampled down per run.
+- Same splits as 01. See [common/datasets.md](../common/datasets.md).
+
+## Models
+
+| Model | Size | Method | Where it trains |
+|---|---|---|---|
+| [GLiNER2.5-Decide](../../docs/models/gliner-decide.md) | 340M | full and LoRA (`gliner2[train]`) | HF Jobs (CPU-only on this Mac) |
+| [openJev Verdict](../../docs/models/rlcd-modernbert.md) or [Laya](../../docs/models/laya.md) | 151M / 421M | full | This Mac (MPS) |
+| [Kev-0.8B](../../docs/models/kev.md) | 0.8B | LoRA + pointer head | HF Jobs or this Mac (MLX) |
+| Plain ModernBERT-base classifier (control) | 150M | full, one head per field | This Mac (MPS) |
+
+## Variables
+
+- Training examples per label:
+  - Task A: 8, 32, 128, all (up to 1,148 docs).
+  - Task B: 8, 32, 128, 1,000, all.
+- Method: full fine-tune vs LoRA, where both exist.
 
 ## Metrics
 
-- The metrics from [common/metrics.md](../common/metrics.md).
-- Training time and cost.
-- Accuracy on data from a different source than the training set.
-- Whether other question types degrade after fine-tuning.
+- The same as 01, so zero-shot, fine-tuned and SFT-LLM rows sit in one table.
+- Training time and cost: record the Job ID, flavor and USD.
+- Forgetting: zero-shot accuracy on a held-out field, and on the Decision Index subset each model was trained against, before and after fine-tuning.
 
 ## Data governance
 
-Fine-tune on this Mac or on EU infrastructure. HF Jobs does not document its region, so treat it as non-EU and send it only public or synthetic data. Record where each training run happened, plus the Job ID, flavor and cost for cloud runs.
+- Train on this Mac where possible.
+- HF Jobs does not document its region, so treat it as non-EU. Using it for this private data needs maintainer approval.
+- Record where each run trained.
+
+## What would change a decision
+
+- **Replace the classifier:** a fine-tuned decision model reaches 80+ at under 0.1 s per document, beating the SFT LLMs on cost and speed.
+- **Keep the SFT LLMs:** decision models plateau near GLiNER2.5's 57–58.

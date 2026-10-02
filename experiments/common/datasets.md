@@ -1,6 +1,21 @@
 # Datasets
 
-Candidates for experiments 01 and 02. Licences are as stated by the source. Confirm each one before the dataset is used; unconfirmed entries are marked (unverified). API-only models get public datasets only (see [AGENTS.md](../../AGENTS.md)).
+## In use: EvalExplorer
+
+Used by experiments 01 and 02.
+
+| | |
+|---|---|
+| Source | `baobabtech/evalexplorer-data` (private): 1,420 international development evaluation reports from about 40 organisations, converted with Docling, plus labels from the EvalExplorer ingestion pipeline |
+| Copy for this repo | New private dataset under `baobabtech`, holding only the rows and columns 01 and 02 use: `classify_codes` documents and an excerpt sample. Not created yet |
+| Splits | By document, 80/10/10 (1,148 / 138 / 134), identical across configs |
+| Labels | LLM output (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) treated as gold; 36 document labels corrected by hand |
+| Licence | Card says `other`: "check the rights of the underlying reports before redistributing". Opening the copy needs a rights review: release labels, IDs and source URLs, or the text too |
+| Version | Record the HF commit of `evalexplorer-data` and of the copy |
+
+## Candidates, not in use
+
+Public datasets kept for later experiments. Licences are as stated by the source; unconfirmed entries are marked (unverified).
 
 | Dataset | Labels | Type | Typical length | Licence | Source | Used for |
 |---|---:|---|---|---|---|---|
