@@ -7,10 +7,10 @@
 | Backbone | Qwen/Qwen3.5-2B-Base, LM head removed, rank-16 LoRA plus a pointer head of about 1M parameters |
 | Size | 1.9B parameters (README). The HF repo holds only the adapter and head; the base downloads separately (about 4.5 GB) |
 | Licence | Apache-2.0 (code, adapter and head); base model Apache-2.0 |
-| Run it via | `pip install strands-decider` (0.1.0); `strands-decider ask` or `strands-decider serve` (`POST /v1/systemone`) on CUDA, MPS or CPU. No hosted API |
+| Run it via | `pip install strands-decider` (0.1.0); `strands-decider ask` or `strands-decider serve` (`POST /v1/systemone`) on CUDA, MPS, CPU or MLX (from a clone until the next release). No hosted API |
 | Status | Reference checkpoint v19. HF repo created 2026-09-30; launch blog 2026-10-01 |
 
-Checked 2026-10-02.
+Checked 2026-10-02; GitHub re-checked at commit `890947e` (2026-10-02 21:20 UTC).
 
 ## Overview
 
@@ -27,7 +27,7 @@ HF metadata, read 2026-10-02 ([API](https://huggingface.co/api/models/StrandsAge
 
 | Repo | Revision | Downloads (30 days) | Likes | Last modified |
 |---|---|---:|---:|---|
-| `StrandsAgents/strands-decider-2B-hobson-v19` | `bb282d7` | 0 (no root `config.json`, so HF does not count downloads) | 23 | 2026-10-01 |
+| `StrandsAgents/strands-decider-2B-hobson-v19` | `bb282d7` | 0 (no root `config.json`, so HF does not count downloads) | 33 (2026-10-02 23:30 UTC) | 2026-10-01 |
 
 `StrandsAgents` has no other model repos. PyPI `strands-decider` 0.1.0 was uploaded 2026-10-01 ([PyPI](https://pypi.org/project/strands-decider/)).
 
@@ -91,13 +91,16 @@ curl -s localhost:8000/v1/systemone -H 'content-type: application/json' -d '{
 - **Mac (M5 Max, 128 GB):** PyTorch MPS, bf16. The authors measured an M3 Pro (36 GB) with torch 2.7.1, transformers 5.17.0, peft 0.21.0, Python 3.12 ([inference.md](https://github.com/strands-labs/strands-decider/blob/main/docs/inference.md#serving-on-a-mac)). `flash-linear-attention` has no macOS build; the package ships its own MPS kernel for the Gated DeltaNet chunk rule (1.7× faster forward). The `causal_conv1d` fallback costs 32 ms per forward.
 - **Mac latency (M3 Pro):** warm median 153 ms under 300 tokens; 234 ms median and 2,628 ms p95 across JevBench. MPS compiles per input length, so a first request of a new length takes 310 ms (under 300 tokens) to 3,836 ms (2,500–5,000 tokens).
 - **CUDA latency:** RTX 3090 under WSL2, median 115 ms, p95 299 ms per JevBench question.
-- No MLX, GGUF or ONNX build exists.
+- **MLX (commit `890947e`, 2026-10-02):** `--device mlx` runs the torso on Metal through mlx-lm, with the head in fp32 on the CPU. Install from a clone with `pip install -e ".[mlx]"` until the extra ships in a release; MLX is opt-in, so a command without `--device` still uses MPS. The authors measured v19 on an M4 Pro: one question 113 ms at 222 tokens, 486 ms at 1,118 and 1,764 ms at 4,094, against 162, 682 and 2,685 ms on MPS; 16 questions on a 1,024-token state 1,060 ms against 1,622 ms ([inference.md](https://github.com/strands-labs/strands-decider/blob/main/docs/inference.md#serving-on-a-mac-with-mlx)).
+- **MLX accuracy:** on 54 answers compared with fp32 on the CPU, none changed on MLX or MPS; the largest probability difference was 0.0138 on MLX (from merging the LoRA into bf16 weights at load) and 0.0051 on MPS.
+- **MLX limits:** mlx-lm is pinned to the tested minor version; the adapter merge refuses DoRA and quantised base weights; the engine caps MLX's buffer cache at 1 GiB; evaluations run one at a time (issue #9, shared with the torch engine).
+- No GGUF or ONNX build exists. Commit `a9d8159` keeps the MPS chunk kernel when `flash-linear-attention` is installed without Triton.
 - **Pin the base:** the loader fetches `Qwen/Qwen3.5-2B-Base` at `main` with no revision. `provenance.json` records `b1485b2` as the inferred training-time revision.
 
 ## Scaling limits
 
 - **Options:** no cap from the head; each option adds its tokens to the input.
-- **Context:** 4,096-token window (`max_length` in `hobson_config.json`). The question's tokens are reserved first, then the state is truncated to fit. Training rows were at most 3,072 tokens.
+- **Context:** 4,096-token window (`max_length` in `hobson_config.json`). The question's tokens are reserved first, then the state is truncated to fit, unless `--strict-window` is set. Training rows were at most 3,072 tokens.
 - **Questions per call:** no documented maximum. With the shared-prefix cache, 8 questions over a ~2,000-token state took 369 ms and 16 took 445 ms on an RTX 3090 (v14).
 - **Concurrency:** "behaviour under concurrent requests is not verified". Local experiments only.
 - **Weak spots (authors):** long multi-step documents (hard tier 0.505; `long_policy` 0.368, `temporal_numeric` 0.267); with state and options fixed, a changed question often gets the same answer; Score and Noul transfer poorly to rubrics unlike the training mix.
@@ -135,12 +138,14 @@ Local use keeps all data on the Mac. The first run downloads the base model from
 - TechCrunch says Hobson "briefly reached the top spot on the Jevbench ranking" for its size. Brooker's own footnote says "joint first of 30 at 2B or below on the v1.4.2 board" with `decider-2b` v10, from his own harness run.
 - Sources disagree on v19's figures: the HF card gives Brier 0.348 and ECE 0.050 (H100, 4096 window); the GitHub README gives 0.342 and 0.052 (RTX 3090, 3072 window). The card reports 167/231 at both windows; the repo reports 168 at 4096.
 - The authors ran the JevBench harness on Windows with one disclosed patch (`fcntl` import replaced by a no-op).
+- **Wider schema (commit `ddd1199`, 2026-10-02):** `state` may be empty; an option description may be a string, structured data (rendered as JSON) or `null` for a bare label; Noul `criteria` values follow the same rule.
+- **`--strict-window`:** refuses a prompt longer than the window with HTTP 422 naming the window, instead of truncating the state. **`--max-batch N`** (default 32) caps questions encoded per forward pass.
 - Not documented: maximum questions per request, behaviour under concurrency, multilingual accuracy.
 - HF reports 0 downloads because the repo has no root `config.json`; usage is unknown.
 
 ## Sources
 
-- Strands: [launch blog](https://strandsagents.com/blog/introducing-strands-decider/) (2026-10-01); GitHub [`strands-labs/strands-decider`](https://github.com/strands-labs/strands-decider) README, [docs/inference.md](https://github.com/strands-labs/strands-decider/blob/main/docs/inference.md), [docs/architecture.md](https://github.com/strands-labs/strands-decider/blob/main/docs/architecture.md), [evaluation/jevbench.md](https://github.com/strands-labs/strands-decider/blob/main/evaluation/jevbench.md), [evaluation/results.md](https://github.com/strands-labs/strands-decider/blob/main/evaluation/results.md), `pyproject.toml`; [PyPI `strands-decider`](https://pypi.org/project/strands-decider/)
+- Strands: [launch blog](https://strandsagents.com/blog/introducing-strands-decider/) (2026-10-01); GitHub [`strands-labs/strands-decider`](https://github.com/strands-labs/strands-decider) README, [docs/inference.md](https://github.com/strands-labs/strands-decider/blob/main/docs/inference.md) (at `890947e`, including [Serving on a Mac with MLX](https://github.com/strands-labs/strands-decider/blob/main/docs/inference.md#serving-on-a-mac-with-mlx)), commits `ddd1199`, `a9d8159`, `890947e`, [docs/architecture.md](https://github.com/strands-labs/strands-decider/blob/main/docs/architecture.md), [evaluation/jevbench.md](https://github.com/strands-labs/strands-decider/blob/main/evaluation/jevbench.md), [evaluation/results.md](https://github.com/strands-labs/strands-decider/blob/main/evaluation/results.md), `pyproject.toml`; [PyPI `strands-decider`](https://pypi.org/project/strands-decider/)
 - Hugging Face: [StrandsAgents/strands-decider-2B-hobson-v19](https://huggingface.co/StrandsAgents/strands-decider-2B-hobson-v19) (README, `hobson_config.json`, `lora/adapter_config.json`, `provenance.json`, `LICENSE.md`, `eval/jevbench-w4096/summary.json`, `eval/jevbench-w3072/summary.json`, HF API)
 - Marc Brooker, [Small Decisions: Engineering a Leading Model](https://brooker.co.za/blog/2026/09/28/engineering-system-one.html) (2026-09-28)
 - TechCrunch, [Amazon releases its own Jev clone as decision models flood the web](https://techcrunch.com/2026/10/01/amazon-releases-its-own-jev-clone-as-decision-models-flood-the-web/) (2026-10-01)

@@ -29,7 +29,7 @@ Research checked 2026-09-30. Models in this field changed weekly in September 20
 | Closed | [OpenAI Decisions API](models/openai-decisions-api.md) | API only | No |
 | Qwen3.8-27B / Qwen3.5-9B | [Clef, Clef-flash](models/clef.md) (Cloudflare); also Workers AI | Apache-2.0 | MLX 4-bit and 8-bit builds |
 | Qwen3.8-27B | [pplx-decider-v1-27b](models/pplx-decider.md) (Perplexity; same weights as AutoJev-27B); also Perplexity API | Apache-2.0 | No documented path |
-| Qwen3.5-2B | [Strands Decider](models/strands-decider.md) (AWS Strands Labs) | Apache-2.0 | Yes (MPS) |
+| Qwen3.5-2B | [Strands Decider](models/strands-decider.md) (AWS Strands Labs) | Apache-2.0 | Yes (MPS; MLX from a clone) |
 | DeBERTa | [GLiNER2.5-Decide](models/gliner-decide.md) (Fastino) | Apache-2.0 | Yes (CPU; MPS unverified) |
 | ModernBERT / mmBERT | [Laya](models/laya.md) (Convai) | Apache-2.0 | Yes (MPS, ONNX) |
 | ModernBERT-large | [Von](models/von.md) (wfzyx) | Apache-2.0 | Yes (MPS) |

@@ -60,7 +60,7 @@ The same request works against Jev, Liquid d1, Kev, Laya (`laya-serve`), Bonsai-
 | GLiNER2.5-Decide (Fastino) | DeBERTa-v3-large, 340M per card | Apache-2.0 | yes, CPU | [gliner-decide](docs/models/gliner-decide.md) |
 | Clef, Clef-flash (Cloudflare) | Qwen3.8-27B / Qwen3.5-9B | Apache-2.0; also Workers AI | MLX builds | [clef](docs/models/clef.md) |
 | pplx-decider-v1-27b (Perplexity) | Qwen3.8-27B; same weights as AutoJev-27B | Apache-2.0; also Perplexity API | no documented path | [pplx-decider](docs/models/pplx-decider.md) |
-| Strands Decider (AWS Strands Labs) | Qwen3.5-2B | Apache-2.0 | yes, MPS | [strands-decider](docs/models/strands-decider.md) |
+| Strands Decider (AWS Strands Labs) | Qwen3.5-2B | Apache-2.0 | yes, MPS or MLX | [strands-decider](docs/models/strands-decider.md) |
 | Laya, Von, openJev Verdict, ModernJEV-Decide | ModernBERT / mmBERT | Apache-2.0 | yes | [laya](docs/models/laya.md), [von](docs/models/von.md), [verdict](docs/models/rlcd-modernbert.md), [modernjev](docs/models/modernjev-decide.md) |
 | Small fine-tunable models: jeff, bekko, Decision-Jef, Yway, systemone-lite, mini-Jev, bit-jev, small RLCD LMs | GLiFormer / Ettin / mmBERT / XLM-R / Qwen / BitNet / LFM | mixed; bekko and bit-jev unlicensed | mostly | [fine-tuning table](docs/fine-tuning.md#small-open-models-you-can-fine-tune--25b) |
 | Other BERT-family encoders | DeBERTa / mmBERT | Apache-2.0 | yes | [open models](docs/models/open-reproductions.md#bert-family-encoders) |
