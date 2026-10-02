@@ -22,8 +22,8 @@ Can zero-shot decision models classify and tag international development evaluat
 | | | | `methods` (methodology only) | 24 | multi |
 | | | | `countries` | 121 seen; ~250 ISO codes | multi |
 
-- Gold labels are being regenerated with GLM (2026-10-02). The dataset is rebuilt from the relabelled source revision before any run, and earlier baselines are re-scored from their saved predictions against the new gold.
-- Labels come from an ingestion pipeline's LLMs (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) and are treated as gold. 36 document labels were corrected by hand.
+- Labels: **silver** labels from GLM-5.3-Flash (the dataset's default columns) are the reference. The ingestion pipeline's labels (`*_pipeline` columns; Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B; 36 corrected by hand) are reported as a second reference. The two agree at 76.2 mean field score on test.
+- GLM leaves fields `null` more often than the pipeline: on test, approach 24, type 10 and temporality 37 of 134.
 - Option counts come from the real taxonomy. `countries` is the 100+ case: ask over the 54 or 121 codes seen, and over all ~250 ISO codes.
 
 ## Models
@@ -67,20 +67,23 @@ Calibrating the thresholds:
 
 - **Earlier Baobab Tech classifier runs on the same test split and metric** (not re-run; results in `baobabtech/evalexplorer-classify-experiments`, private):
 
-  | Model | Zero-shot | After SFT |
-  |---|---:|---:|
-  | Qwen3.5-4B | 67.1 | 84.7 |
-  | Gemma 4 E4B | 72.3 | 83.0 |
-  | GLiNER2.5 base | 45.4 | 57.8 |
+  | Model | Zero-shot vs silver | After SFT vs silver | After SFT vs pipeline |
+  |---|---:|---:|---:|
+  | Gemma 4 26B-A4B | 72.9 | 80.3 | 84.4 |
+  | Qwen3.5-4B | 66.2 | 77.8 | 84.7 |
+  | Gemma 4 E4B | 72.1 | 76.8 | 83.0 |
+  | GLiNER2.5 base | 45.2 | 57.2 | 58.4 |
+
+  The SFT models were trained on pipeline labels. The pipeline labels themselves score 76.2 against silver.
 
 - **[DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)** zero-shot via HF Inference Providers, with the same prompt as the pipeline.
 - Embeddings + logistic regression trained on the train split, for task B.
 
 ## Judge
 
-The gold labels are LLM output, not truth. On every item where a decision model disagrees with gold, DeepSeek-V4.1-Flash, called via HF Inference Providers, sees the text, the gold labels and the prediction, and decides which is supported.
+The silver labels are LLM output, not truth. On every item where a decision model disagrees with silver, DeepSeek-V4.1-Flash, called via HF Inference Providers, sees the text, the silver labels and the prediction, and decides which is supported.
 
-- Report accuracy against gold, plus a judge-adjusted score.
+- Report scores against silver and against pipeline labels, plus a judge-adjusted score.
 - Check the judge on 100 items: compare its verdicts with the 36 hand-corrected documents, and with a second judge. [Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next) is the second judge if a provider serves it. On 2026-10-02 only featherless-ai listed it, and the HF router did not.
 
 ## Metrics
@@ -105,6 +108,6 @@ From [common/metrics.md](../common/metrics.md):
 
 ## What would change a decision
 
-- **Use a decision model as the classifier:** it reaches the SFT models' ~84 `mean_field_score` zero-shot, or within 3 points, at lower latency or cost.
-- **Use one for excerpt tagging only:** it matches gold on task B but not task A, which points to input length as the limit.
-- **Keep fine-tuned small LLMs:** every decision model stays below the 67–72 zero-shot LLM range.
+- **Use a decision model as the classifier:** zero-shot, it reaches the SFT models' 77–80 `mean_field_score` against silver, or comes within 3 points, at lower latency or cost.
+- **Use one for excerpt tagging only:** it matches the labels on task B but not task A, which points to input length as the limit.
+- **Keep fine-tuned small LLMs:** every decision model stays below the 66–73 zero-shot LLM range against silver.

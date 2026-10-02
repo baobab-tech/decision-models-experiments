@@ -4,23 +4,28 @@
 
 ## Question
 
-Does fine-tuning an open decision model on the evaluation-docs labels match the fine-tuned small LLMs (`mean_field_score` ~84), and how many labelled examples does it take to beat its own zero-shot score from 01?
+Does fine-tuning an open decision model on the evaluation-docs labels match the fine-tuned small LLMs (`mean_field_score` 77–80 against silver labels), and how many labelled examples does it take to beat its own zero-shot score from 01?
 
 ## What we already know
 
 - Earlier Baobab Tech runs fine-tuned generative LLMs and GLiNER2.5 on this exact task (results in `baobabtech/evalexplorer-classify-experiments`, private):
 
-  | Model | Size | Zero-shot | After fine-tuning | Seconds per doc |
-  |---|---|---:|---:|---:|
-  | Qwen3.5-4B | 4B | 67.1 | 84.7 | 1.22 |
-  | LFM2.5-350M | 350M | 20.9 | 79.2 | 0.58 |
-  | GLiNER2.5 small | 74M | 48.7 | 57.3 | 0.04 |
+  | Model | Size | Zero-shot vs silver | Fine-tuned vs silver | Fine-tuned vs pipeline | Seconds per doc |
+  |---|---|---:|---:|---:|---:|
+  | Gemma 4 26B-A4B | 26B (4B active) | 72.9 | 80.3 | 84.4 | 1.46 |
+  | Qwen3.5-4B | 4B | 66.2 | 77.8 | 84.7 | 1.22 |
+  | LFM2.5-350M | 350M | 20.3 | 70.9 | 79.2 | 0.58 |
+  | GLiNER2.5 small | 74M | 47.1 | 52.7 | 57.3 | 0.04 |
 
-- GLiNER2.5 base and small plateaued at 57–58 after fine-tuning. Approach and type accuracy stayed at 25–60%.
+  Those models were fine-tuned on pipeline labels; silver is GLM-5.3-Flash.
+
+- GLiNER2.5 base and small plateaued at 57–58 after fine-tuning (52–57 against silver). Approach and type accuracy stayed at 25–60%.
 - Jev, d1 and GLiDE cannot be fine-tuned.
 - [ModernJEV-Decide-Preview](../../docs/models/modernjev-decide.md#fine-tuning) gives a cost reference: about $5.41 on one A100. It also fell below the majority baseline on a task family it was not trained on.
 
 ## Data
+
+- Train on silver labels by default; one run per model on pipeline labels shows how much the label source matters.
 
 - **Task A:** documents, 1,148 train / 138 validation / 134 test.
 - **Task B:** excerpts, 157,302 train, sampled down per run.
@@ -56,5 +61,5 @@ Does fine-tuning an open decision model on the evaluation-docs labels match the 
 
 ## What would change a decision
 
-- **Replace the classifier:** a fine-tuned decision model reaches 80+ at under 0.1 s per document, beating the SFT LLMs on cost and speed.
+- **Replace the classifier:** a fine-tuned decision model reaches 77+ against silver at under 0.1 s per document, beating the SFT LLMs on cost and speed.
 - **Keep the SFT LLMs:** decision models plateau near GLiNER2.5's 57–58.

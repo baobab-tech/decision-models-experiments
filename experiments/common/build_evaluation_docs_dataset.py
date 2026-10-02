@@ -8,7 +8,8 @@ Source: baobabtech/evalexplorer-data (private), pinned by REVISION.
 Taxonomy: label names and definitions from a local checkout of the labelling pipeline (github.com/baobab-tech/eval-explorer).
 
 Configs pushed to --target:
-  documents  first pages (as the classify_codes config truncated them) + gold labels, train/validation/test
+  documents  first pages (as the classify_codes config truncated them) + silver labels (GLM-5.3-Flash)
+             + pipeline labels (`*_pipeline`), train/validation/test
   excerpts   findings, recommendations and methodology excerpts + tags, train/validation/test;
              `eval_sample` marks the fixed 600-excerpt test sample (300 findings, 150 recommendations, 150 methodology, seed 0)
   taxonomy   one row per (field, code): label, definition, region (countries only), and whether the code
@@ -31,7 +32,8 @@ import pycountry
 from datasets import Dataset, DatasetDict, load_dataset
 
 SOURCE = "baobabtech/evalexplorer-data"
-REVISION = "3543e3e66a7708a13bd45ed2bc6e16dda4b9807a"  # checked 2026-10-02
+REVISION = "5315eab20c1d61101401a9b4ac80a2a7e3391623"  # adds labels_glm_5_3_flash; checked 2026-10-02
+SILVER = "labels_glm_5_3_flash"  # GLM-5.3-Flash relabelling, used as silver labels
 TARGET = "baobabtech/decision-models-evaluation-docs"
 SPLITS = ("train", "validation", "test")
 SAMPLE = {"findings": 300, "recommendations": 150, "methodology": 150}
@@ -80,29 +82,45 @@ def taxonomy(ee: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _scalar(v):
+    """pandas reads null strings as NaN; return None for those."""
+    return None if v is None or (isinstance(v, float) and v != v) else v
+
+
+def _codes(v) -> list[str]:
+    return [] if v is None or (isinstance(v, float) and v != v) else list(v)
+
+
 def documents() -> DatasetDict:
     out = {}
     for split in SPLITS:
         codes = load_dataset(SOURCE, "classify_codes", split=split, revision=REVISION).to_pandas()
         docs = load_dataset(SOURCE, "documents", split=split, revision=REVISION).to_pandas()
         docs = docs.set_index("document_id")
+        silver = load_dataset(SOURCE, SILVER, split=split, revision=REVISION).to_pandas().set_index("document_id")
+        missing = set(codes.document_id) - set(silver.index)
+        assert not missing, f"{len(missing)} {split} documents have no silver label"
         rows = []
         for r in codes.itertuples():
             user = r.prompt[1]["content"]
             text = user.removeprefix("<document>\n").removesuffix("\n</document>")
-            gold = json.loads(r.answer)
+            pipe = json.loads(r.answer)
             src = docs.loc[r.document_id]
+            sil = silver.loc[r.document_id]
             rows.append({
                 "document_id": r.document_id,
                 "title": src["title"],
                 "text": text,
                 "n_chars": int(r.n_chars),
                 "truncated": bool(r.truncated),
-                **{k: gold[k] for k in ("evaluation_approach", "evaluation_type", "temporality")},
-                "themes": list(gold["themes"]),
-                "countries": list(gold["countries"]),
-                "regions": list(src["regions"]) if src["regions"] is not None else [],
-                "label_source": src["label_source"],
+                **{k: _scalar(sil[k]) for k in ("evaluation_approach", "evaluation_type", "temporality")},
+                "themes": _codes(sil["themes"]),
+                "countries": _codes(sil["countries"]),
+                **{f"{k}_pipeline": pipe[k] for k in ("evaluation_approach", "evaluation_type", "temporality")},
+                "themes_pipeline": list(pipe["themes"]),
+                "countries_pipeline": list(pipe["countries"]),
+                "regions_pipeline": list(src["regions"]) if src["regions"] is not None else [],
+                "label_source_pipeline": src["label_source"],
             })
         out[split] = Dataset.from_list(rows)
     return DatasetDict(out)
@@ -143,7 +161,10 @@ def main() -> None:
                         out.add((f, code))
         return out
 
-    in_docs = seen(docs, ("evaluation_approach", "evaluation_type", "temporality", "themes", "countries", "regions"))
+    in_docs = seen(docs, ("evaluation_approach", "evaluation_type", "temporality", "themes", "countries",
+                          "evaluation_approach_pipeline", "evaluation_type_pipeline", "temporality_pipeline",
+                          "themes_pipeline", "countries_pipeline", "regions_pipeline"))
+    in_docs = {(f.removesuffix("_pipeline"), c) for f, c in in_docs}
     in_exc = seen(exc, ("themes", "regions", "countries", "methods"))
     tax_df["in_documents"] = [(f, c) in in_docs for f, c in zip(tax_df.field, tax_df.code)]
     tax_df["in_excerpts"] = [(f, c) in in_exc for f, c in zip(tax_df.field, tax_df.code)]
