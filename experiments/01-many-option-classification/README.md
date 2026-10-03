@@ -67,10 +67,12 @@ Scoring:
 | [GLiDE](../../docs/models/glide.md) | Fastino API | 255 options; 40k tokens per question |
 | [GLiNER2.5-Decide](../../docs/models/gliner-decide.md) | This Mac | Only model with native multi-label; earlier zero-shot runs used GLiNER2.5 small/base |
 | [Kev-4B](../../docs/models/kev.md) | This Mac (MLX) | Open, Jev-compatible, 255 options |
+| [Kev-0.8B](../../docs/models/kev.md) | This Mac (MLX) | Zero-shot score for 02's size comparison |
+| [openJev Verdict](../../docs/models/rlcd-modernbert.md) | This Mac (MPS) | Zero-shot score for 02; 151M encoder; max 24 options, so Noul-per-label only for fields above 24 |
 | [Laya](../../docs/models/laya.md) | This Mac | Small encoder; context 512 (en), so task A only after chunking |
 
 - Jev and d1 use `AI_GATEWAY_API_KEY`. The gateway documents only the AI SDK `experimental_evaluate` path (TypeScript), so their client is Node 22.
-- GLiNER2.5-Decide, Kev-4B and Laya have no HF Inference Providers mapping (checked 2026-10-02), so they run locally.
+- GLiNER2.5-Decide, Kev and Laya have no HF Inference Providers mapping (checked 2026-10-02), so they run locally, as does Verdict.
 
 ## Question formats
 
