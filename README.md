@@ -73,7 +73,9 @@ The same request works against Jev, Liquid d1, Kev, Laya (`laya-serve`), Bonsai-
 | Bonsai-Llama-Jev | Qwen3.8-27B, ternary (PrismML Bonsai 2) | MIT code, Apache-2.0 weights | yes, llama.cpp | [bonsai-llama-jev](docs/models/bonsai-llama-jev.md) |
 | AnyJev (Nokia) | any open LLM | Apache-2.0 | yes | [anyjev](docs/models/anyjev.md) |
 
-New releases and download counts as of 2026-10-02: [scan](docs/scan-2026-10-02.md). All 255 models in Han Xiao's [All about Jev](https://hanxiao.io/all-about-jev/) dataset are in [landscape](docs/landscape.md), grouped by backbone and size.
+New releases and download counts as of 2026-10-02: [scan](docs/scan-2026-10-02.md). The Hugging Face collection [Decision models experiments](https://huggingface.co/collections/baobabtech/decision-models-experiments-6ac0461f242cbc19f87d4854) gathers our dataset, the benchmarks, the judge model and the open models above.
+
+All 255 models in Han Xiao's [All about Jev](https://hanxiao.io/all-about-jev/) dataset are in [landscape](docs/landscape.md), grouped by backbone and size.
 
 ## Findings so far
 

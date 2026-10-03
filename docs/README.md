@@ -16,6 +16,8 @@ Research checked 2026-09-30. Models in this field changed weekly in September 20
 | [landscape.md](landscape.md) | All 255 models in Han Xiao's [All about Jev](https://hanxiao.io/all-about-jev/) dataset (generated) |
 | [../experiments/](../experiments/README.md) | Experiment index, plans and results |
 
+Hugging Face collection: [Decision models experiments](https://huggingface.co/collections/baobabtech/decision-models-experiments-6ac0461f242cbc19f87d4854) (dataset, benchmarks, judge and open models).
+
 ## Model docs by backbone
 
 | Backbone | Model | Weights | Runs on this Mac |
