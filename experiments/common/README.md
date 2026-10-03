@@ -15,13 +15,26 @@ Written only when an approved experiment needs it:
 - **Decision client:** one interface over the TypeSafe `/v1/systemone` format (Jev, d1, Kev, Bonsai-Llama-Jev, Decider 1, Solar Decide) and over native APIs (GLiNER2, AnyJev, CLM). See [../../docs/quickstart.md](../../docs/quickstart.md).
 - **Metrics:** implementations of [metrics.md](metrics.md).
 
+## HF Inference Providers
+
+- Call `https://router.huggingface.co/v1` with `HF_TOKEN` and the header `X-HF-Bill-To: baobabtech`, so usage bills to the Baobab Tech org.
+- Pin the provider with a model suffix, e.g. `Qwen/Qwen3.8-Flash-Next:featherless-ai`, and record it in `run.json`.
+
+```python
+client = OpenAI(
+    base_url="https://router.huggingface.co/v1",
+    api_key=os.environ["HF_TOKEN"],
+    default_headers={"X-HF-Bill-To": "baobabtech"},
+)
+```
+
 ## Run metadata
 
 Every run writes `results/<run-id>/run.json` with:
 
 - `experiment`, `run_id`, `date` (UTC)
 - `model`, plus its `revision` (HF commit hash) or `api_version`
-- `where`: `local`, `api` or `gateway`, plus `region` for API and gateway runs
+- `where`: `local`, `api`, `gateway` or `hf-inference-providers`, plus `provider` and `region` for remote runs
 - `hardware` (e.g. `M5 Max 128 GB, MLX`) and `dtype` or quantisation
 - `dataset`, `dataset_version`, `split`, `n`, `seed`
 - `question_format`: `choice`, `noul-per-label` or `staged-choice`, plus label text or descriptions
