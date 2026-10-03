@@ -12,8 +12,9 @@ Configs pushed to --target:
              + pipeline labels (`*_pipeline`), train/validation/test
   excerpts   findings, recommendations and methodology excerpts + tags, train/validation/test;
              `eval_sample` marks the fixed 600-excerpt test sample (300 findings, 150 recommendations, 150 methodology, seed 0)
-  taxonomy   one row per (field, code): label, definition, region (countries only), and whether the code
-             occurs in the documents / excerpts gold labels (the label sets the experiments ask over)
+  taxonomy   one row per (field, code): label, definition (document prompt), definition_excerpts (excerpt
+             prompt: themes and methods), region (countries only), and whether the code occurs in the
+             documents / excerpts gold labels (the label sets the experiments ask over)
 
 Usage:
   uv run experiments/common/build_evaluation_docs_dataset.py --eval-explorer ~/DEV/eval-explorer           # build only
@@ -58,10 +59,24 @@ def prompt_definitions(prompt: str) -> dict[str, dict[str, str]]:
     return out
 
 
+def excerpt_definitions(ee: Path) -> dict[str, dict[str, str]]:
+    """Theme and method definitions from the excerpt extract-and-classify prompts (ingestion-pipeline/lib/extract)."""
+    ex = ee / "ingestion-pipeline/lib/extract"
+    prompts = (ex / "prompts.ts").read_text()
+    body = re.search(r"THEME_LABEL_TO_CODE[^=]*=\s*\{(.*?)\n\};", prompts, re.S).group(1)
+    label_to_code = dict(re.findall(r"'([^']+)':\s*'(\w+)'", body))
+    themes = {label_to_code[t["theme"]]: t["definition"]
+              for t in json.loads((ex / "definitions_themes.json").read_text())["themes"]}
+    section = prompts.split("## Method Descriptions", 1)[1].split("##", 1)[0]
+    methods = dict(re.findall(r"- \\`(\w+)\\` - (.+)", section))
+    return {"themes": themes, "methods": methods}
+
+
 def taxonomy(ee: Path) -> pd.DataFrame:
     tax = (ee / "lib/taxonomy.ts").read_text()
     geo = (ee / "lib/geography.ts").read_text()
     defs = prompt_definitions((ee / "ingestion-pipeline/lib/prompts/document-classification.md").read_text())
+    exc_defs = excerpt_definitions(ee)
     labels = {
         "evaluation_approach": ts_record(tax, "EVALUATION_APPROACH_LABELS"),
         "evaluation_type": ts_record(tax, "EVALUATION_TYPE_LABELS"),
@@ -71,14 +86,15 @@ def taxonomy(ee: Path) -> pd.DataFrame:
         "regions": ts_record(geo, "REGION_LABELS"),
     }
     rows = [
-        {"field": field, "code": code, "label": label, "definition": defs.get(field, {}).get(code), "region": None}
+        {"field": field, "code": code, "label": label, "definition": defs.get(field, {}).get(code),
+         "definition_excerpts": exc_defs.get(field, {}).get(code), "region": None}
         for field, codes in labels.items()
         for code, label in codes.items()
     ]
     for code, region in ts_record(geo, "COUNTRY_TO_REGION").items():
         country = pycountry.countries.get(alpha_2=code)
         rows.append({"field": "countries", "code": code, "label": country.name if country else code,
-                     "definition": None, "region": region})
+                     "definition": None, "definition_excerpts": None, "region": region})
     return pd.DataFrame(rows)
 
 

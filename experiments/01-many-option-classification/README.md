@@ -23,10 +23,10 @@ Can zero-shot decision models classify and tag international development evaluat
 
 | Task | Input | n | Field | Labels | Type |
 |---|---|---|---|---:|---|
-| **B. Excerpt tagging** (phase 1) | Finding, recommendation or methodology excerpt: median 34 words, p90 107 | 600: `eval_sample` (300 findings, 150 recommendations, 150 methodology) | `themes` | 22 | multi, median 2 |
-| | | | `regions` | 17 | multi |
+| **B. Excerpt tagging** (phase 1) | Finding, recommendation or methodology excerpt: median 34 words, p90 107 | 600: `eval_sample` (300 findings, 150 recommendations, 150 methodology) | `themes` (findings, recommendations) | 22 | multi, median 2 |
+| | | | `regions` (findings, recommendations) | 17 | multi |
 | | | | `methods` (methodology only) | 24 | multi |
-| | | | `countries` | 121 seen; ~250 ISO codes | multi |
+| | | | `countries` (findings, recommendations) | 121 seen; ~250 ISO codes | multi |
 | **A. Document classification** (phase 2) | First pages: median 1,935 tokens, p99 5,267 | 134 docs | `evaluation_approach` | 6 | single |
 | | | | `evaluation_type` | 4 | single |
 | | | | `temporality` | 3 | single |
@@ -41,12 +41,12 @@ No human labels exist for most items, so the reference is the consensus of four 
 
 | Label set | Task B (excerpts) | Task A (documents) |
 |---|---|---|
-| Pipeline (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) | in dataset | in dataset (`*_pipeline`; 36 corrected by hand) |
+| Pipeline (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) | in dataset; tagged while extracting, with the whole section as input | in dataset (`*_pipeline`; 36 corrected by hand) |
 | GLM-5.3-Flash | to generate | in dataset (default columns) |
 | DeepSeek-V4.1-Flash | to generate | to generate |
 | Qwen3.8-Flash-Next | to generate | to generate |
 
-- Generated sets use the pipeline's prompt, temperature 0, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)), with the provider pinned and recorded.
+- Generated sets use classify-only prompts rebuilt from the pipeline's extract-and-classify prompts ([common/prompts/excerpt-tagging.md](../common/prompts/excerpt-tagging.md)), with the excerpt alone as input, temperature 0, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)), with the provider pinned and recorded.
 - Qwen3.8-Flash-Next runs on featherless-ai as `Qwen/Qwen3.8-Flash-Next:featherless-ai`. It is a reasoning model and returned empty `content` with `response_format: json_schema` (2 of 2 calls, 2026-10-02), so the JSON format goes in the prompt and `max_tokens` is ~1,000.
 - The generated sets are added to the dataset as new columns (`*_glm`, `*_deepseek`, `*_qwen`), so the write-up's references are public.
 

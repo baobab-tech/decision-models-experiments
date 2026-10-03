@@ -6,6 +6,7 @@ Shared docs and code for all experiments. No shared code exists yet; it's added 
 |---|---|
 | [datasets.md](datasets.md) | Candidate datasets: labels, type, length, licence, source |
 | [metrics.md](metrics.md) | Definitions of every metric we report |
+| [prompts/excerpt-tagging.md](prompts/excerpt-tagging.md) | Classify-only LLM prompts for relabelling task B excerpts |
 
 ## Planned shared code
 

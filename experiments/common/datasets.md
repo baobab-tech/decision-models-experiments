@@ -7,7 +7,7 @@ Used by experiments 01 and 02.
 | | |
 |---|---|
 | Source | 1,420 international development evaluation reports from about 40 organisations, converted with Docling, plus labels from an LLM ingestion pipeline. Built from `baobabtech/evalexplorer-data` (private) |
-| Dataset | [`baobabtech/decision-models-evaluation-docs`](https://huggingface.co/datasets/baobabtech/decision-models-evaluation-docs) (public): configs `documents`, `excerpts` (with the fixed 600-excerpt `eval_sample`) and `taxonomy` (labels, definitions, country→region). Built by [`build_evaluation_docs_dataset.py`](build_evaluation_docs_dataset.py) from source revision `5315eab` |
+| Dataset | [`baobabtech/decision-models-evaluation-docs`](https://huggingface.co/datasets/baobabtech/decision-models-evaluation-docs) (public): configs `documents`, `excerpts` (with the fixed 600-excerpt `eval_sample`) and `taxonomy` (labels, document and excerpt definitions, country→region). Built by [`build_evaluation_docs_dataset.py`](build_evaluation_docs_dataset.py) from source revision `5315eab` |
 | Splits | By document, 80/10/10 (1,148 / 138 / 134), identical across configs |
 | Labels | Silver: GLM-5.3-Flash relabelling (default columns). Pipeline: Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B (`*_pipeline` columns; 36 corrected by hand). Excerpt tags are pipeline only |
 | Licence | Reports are publicly published by their organisations, which keep their rights; the dataset card says `other` |
