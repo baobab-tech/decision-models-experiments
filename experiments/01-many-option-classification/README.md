@@ -158,6 +158,44 @@ Labels per excerpt:
 - Calls: 600 per model, no errors or truncations after retries. GLM 0.86M tokens (p50 3.8 s); DeepSeek 0.84M (p50 1.4 s); Qwen 1.09M, including 216k reasoning tokens (p50 7 s; up to 6,906 output tokens).
 - Two codes outside the label lists were dropped: one DeepSeek, one Qwen.
 
+### Phase 1: API decision models, threshold 0.5
+
+Run 2026-10-04 on the 600 `eval_sample` excerpts, dataset revision `5017706`; `definitions` variant; 198 country codes; one Noul per label, label kept when p ≥ 0.5. Scores are micro-F1 × 100 against the 3-LLM majority; they measure agreement with LLMs, not correctness. LLM range: 84.2–85.0.
+
+| Model | Provider | Themes | Regions | Countries | Methods | Mean | Mean vs each LLM | Vs pipeline |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Jev | `typesafe-ai` (gateway) | 66.2 | 78.2 | 71.1 | 68.3 | **71.0** | 69.8 | 43.6 |
+| GLiDE | Fastino API | 59.5 | 56.7 | 41.0 | 52.2 | **52.4** | 51.1 | 37.5 |
+| d1 | `liquid` (gateway) | 64.5 | 27.4 | 15.3 | 51.0 | **39.5** | 38.9 | 35.7 |
+
+Labels per excerpt (reference: themes 1.48, regions 0.21, countries 0.25, methods 0.51):
+
+| Model | Themes | Regions | Countries | Methods |
+|---|---:|---:|---:|---:|
+| Jev | 1.28 | 0.19 | 0.19 | 0.85 |
+| GLiDE | 1.53 | 0.40 | 0.39 | 1.15 |
+| d1 | 2.05 | 0.94 | 1.78 | 1.45 |
+
+Regions are the union of the direct region Nouls and the regions of predicted countries. Each part alone:
+
+| Model | Direct only | From countries only | Union |
+|---|---:|---:|---:|
+| Jev | 76.2 | 73.5 | 78.2 |
+| GLiDE | 77.3 | 48.0 | 56.7 |
+| d1 | 65.5 | 25.5 | 27.4 |
+
+Speed and cost (1,950 requests, 110,250 Nouls):
+
+| Model | p50 per request | Wall time | Input tokens | Cost |
+|---|---:|---:|---:|---:|
+| Jev | 340 ms | 95 s (8 concurrent) | 3.5M | $0.15 (gateway) |
+| d1 | 663 ms | 183 s (8 concurrent) | 12.5M | $0.50 (gateway) |
+| GLiDE | 1,136 ms | 242 s (16 concurrent) | 15.5M | $4.64 (list price × tokens) |
+
+- At p = 0.5, d1 and GLiDE over-tag: d1 gives 7× the reference's countries per excerpt. Their scores depend on the threshold, so these are not their best scores.
+- Regions: 88 of the reference's 95 region labels follow from its countries; 7 name a region with no country. The union keeps both. For d1 and GLiDE, the union scores below the direct Nouls because their over-tagged countries add wrong regions.
+- Jev is the closest to the LLM range: 13–14 points below it.
+
 ## Write-up
 
 Results go in this README per phase. Besides scores, each phase records per model:

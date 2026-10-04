@@ -19,6 +19,21 @@ It takes a `state` and named typed questions and returns one answer per question
 It makes a fast first pass, then reasons further when the leading answer is uncertain and folds that reasoning into the final probabilities ([blog](https://fastino.ai/blog/introducing-glide-the-first-thinking-decision-model)).
 Fastino reports that "roughly two-thirds of requests were resolved on the fast path" in its testing ([press release](https://www.prnewswire.com/news-releases/fastino-labs-releases-glide-the-first-thinking-decision-model-leading-the-decision-indexs-top-model-by-6-9-points-302896638.html)).
 Reasoning tokens appear as `usage.output_tokens` and are not billed.
+
+Latency is set by the reasoning path, not by question count (5 synthetic Noul requests, 2026-10-04):
+
+| Questions | Time | Input tokens | Output (reasoning) tokens |
+|---:|---:|---:|---:|
+| 1 | 1.0–1.9 s | 76 | 1 |
+| 22 | 0.8 s | 1,684 | 22 |
+| 64 | 1.1 s | 4,918 | 64 |
+| 128 | 1.2 s | 9,874 | 128 |
+| 10 (reasoned) | 31.0 s | 9,509 | 6,917 |
+
+- A request waits for its slowest question, so one uncertain question that triggers reasoning makes the whole request take ~30 s.
+- When it reasons, `input_tokens` rises too (9,509 for 10 questions against ~760 on the fast path), and input tokens are billed.
+- `SystemOneRequest` has no field to turn reasoning off: `model`, `provider`, `questions`, `session_id`, `state`, `trace`, `user` ([OpenAPI](https://docs.fastino.ai/openapi.json), 2026-10-04).
+- Experiment 01 (2026-10-04): a 9-excerpt smoke test (27 requests of 17–128 Nouls) ran at p50 18 s per request; the full 600-excerpt run (1,950 requests, 16 concurrent) ran at p50 1.1 s, 242 s wall, $4.64 at list price.
 It is text-only (`supports_image_input: false`).
 It is unrelated to Fastino's open-weight [GLiNER2.5-Decide](gliner-decide.md), which uses the `gliner2` schema.
 
@@ -107,7 +122,7 @@ Not legal advice. The hosted API is shared with GLiNER2.5-Decide, so the account
 | Fine-tuning | No | [catalog](https://api.fastino.ai/v1/base-models) |
 | Processing location | US on AWS; all 15 listed subprocessors are in the US, including OpenAI, Anthropic, Modal and Azure for "AI/ML services" | [Trust & Safety](https://docs.fastino.ai/trust-safety) (subprocessors updated 2026-07-30) |
 | EU processing option | n/d | |
-| Retention / ZDR | Inputs and outputs "retained indefinitely" by default; `store: false` gives zero retention "for eligible use cases". Catalog: `supports_zdr: true` | [Trust & Safety](https://docs.fastino.ai/trust-safety) |
+| Retention / ZDR | Inputs and outputs "retained indefinitely" by default; `store: false` gives zero retention "for eligible use cases". Catalog: `supports_zdr: true`. On `/v1/systemone`, `store: false` is rejected with HTTP 422 ("Extra inputs are not permitted", 2026-10-04), so zero retention is not available for GLiDE. | [Trust & Safety](https://docs.fastino.ai/trust-safety); experiment 01 |
 | Training on inputs | Yes by default ("Sometimes, by default"); Enterprise can opt out in Settings. The terms say Pro and above (see gliner-decide.md) | [Trust & Safety](https://docs.fastino.ai/trust-safety) |
 | DPA / GDPR | "At this time, we do not offer a Data Processing Addendum (DPA)" | [Trust & Safety](https://docs.fastino.ai/trust-safety) |
 | Certifications | SOC 2 Type II and ISO 27001 in progress; first audit expected November 2026 | [Trust & Safety](https://docs.fastino.ai/trust-safety) |

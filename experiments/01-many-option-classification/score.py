@@ -56,6 +56,8 @@ def score(pred: dict, sample: pd.DataFrame, fields: tuple[str, ...] = FIELDS) ->
             "micro_f1_vs_pipeline": micro_f1(pred, refs["pipeline"], ids, f),
             "labels_per_item": sum(len(pred.get(e, {}).get(f, ())) for e in ids) / len(ids),
         }
+    if not fields:
+        return out
     for key in ("micro_f1", "micro_f1_mean_vs_llms", "micro_f1_vs_pipeline"):
         out[f"mean_field_score{'' if key == 'micro_f1' else key.removeprefix('micro_f1')}"] = (
             sum(out["fields"][f][key] for f in fields) / len(fields))

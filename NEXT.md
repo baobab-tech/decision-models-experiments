@@ -16,7 +16,9 @@ Current state and next steps. Keep this short: delete items when done, add new o
 1. **Before 01 phase 1 runs:**
    - `.env` has `HF_TOKEN`, `AI_GATEWAY_API_KEY` (Jev, d1) and `FASTINO_API_KEY` (GLiDE). Jev and d1 smoke-tested through the gateway on 2026-10-04.
    - Check featherless-ai's processing region and retention (Qwen3.8-Flash-Next) for the data governance section.
-   - Runner and scorer written (`run.py`, `score.py`, `gateway/evaluate.mjs`). Next: full 600-excerpt runs for Jev and d1, then GLiDE, then the local models (GLiNER2.5-Decide and Verdict need Python adapters; Kev and Laya serve `/v1/systemone`).
+   - Runner and scorer written (`run.py`, `score.py`, `gateway/evaluate.mjs`). Jev 71.0, GLiDE 52.4, d1 39.5 at p ≥ 0.5 (2026-10-04); LLM range 84.2–85.0.
+   - Thresholds: d1 and GLiDE over-tag at 0.5. Fit per-model thresholds on held-out labels: label ~300 validation excerpts with the three LLMs (~$0.50), fit there, re-score the test set.
+   - Local models (Kev-4B, Kev-0.8B, Laya, GLiNER2.5-Decide, Verdict): installing them was blocked by the auto-mode permission classifier (third-party code). The maintainer needs to allow it or install them.
 2. **Dataset viewer:** check that it renders for `decision-models-evaluation-docs`. If it still fails, open a discussion on the repo.
 3. **Baselines:** decide whether to publish the earlier classifier leaderboard. The 01/02 baselines cite `evalexplorer-classify-experiments`, which is private.
 4. **Experiment 02:** `planned` (approved 2026-10-02); runs after 01 phase 1, starting with the training-label pilot.

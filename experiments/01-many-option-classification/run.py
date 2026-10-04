@@ -39,7 +39,7 @@ MODELS = {
     "jev": ("gateway", "typesafe-ai/jev", {"only": "typesafe-ai"}),
     "d1": ("gateway", "liquid/d1", {"only": "liquid"}),
     "glide": ("systemone", "fastino/GLiDE", {"url": "https://api.fastino.ai/v1/systemone", "key_env": "FASTINO_API_KEY",
-                                            "key_header": "X-API-Key"}),
+                                            "key_header": "X-API-Key", "usd_per_m_input": 0.30}),
     "kev-4b": ("systemone", "kev-latest", {"url": "http://127.0.0.1:8009/v1/systemone"}),
     "laya": ("systemone", None, {"url": "http://127.0.0.1:8000/v1/systemone", "key_env": "LAYA_API_KEY",
                                  "key_header": "Authorization"}),
@@ -105,14 +105,15 @@ async def call_systemone(model_id: str | None, opts: dict, reqs: list[dict], con
     sem = asyncio.Semaphore(concurrency)
 
     async def one(client, req):
-        body = {"state": req["state"], "questions": req["questions"], **({"model": model_id} if model_id else {})}
+        body = {"state": req["state"], "questions": req["questions"], **({"model": model_id} if model_id else {}),
+                **opts.get("extra", {})}
         async with sem:
             for attempt in range(5):
                 t0 = time.perf_counter()
                 try:
                     r = await client.post(opts["url"], json=body, headers=headers)
-                    if r.status_code in (429, 500, 502, 503) and attempt < 4:
-                        await asyncio.sleep(2 ** attempt)
+                    if r.status_code in (425, 429, 500, 502, 503) and attempt < 4:
+                        await asyncio.sleep(float(r.headers.get("retry-after", 2 ** attempt * 5)))
                         continue
                     r.raise_for_status()
                     data = r.json()
@@ -123,8 +124,23 @@ async def call_systemone(model_id: str | None, opts: dict, reqs: list[dict], con
                         return {"id": req["id"], "error": repr(e)[:500]}
                     await asyncio.sleep(2 ** attempt)
 
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=300) as client:  # Fastino advises >= 300 s
         return await asyncio.gather(*(one(client, r) for r in reqs))
+
+
+def add_regions(preds: dict, tax) -> dict[str, dict]:
+    """Regions = direct region Nouls ∪ regions of predicted countries. Returns the direct and derived-only variants."""
+    country_region = dict(tax[tax.field == "countries"][["code", "region"]].itertuples(index=False))
+    variants = {"regions_direct": {}, "regions_derived": {}}
+    for eid, fields in preds.items():
+        if "countries" not in fields and "regions" not in fields:
+            continue
+        direct = fields.get("regions", set())
+        derived = {country_region[c] for c in fields.get("countries", ()) if c in country_region}
+        variants["regions_direct"][eid] = {"regions": direct}
+        variants["regions_derived"][eid] = {"regions": derived}
+        fields["regions"] = direct | derived
+    return variants
 
 
 def to_predictions(responses: list[dict]) -> dict:
@@ -171,11 +187,17 @@ def main() -> None:
     (raw / "responses.jsonl").write_text("".join(json.dumps(r) + "\n" for r in responses))
 
     preds = to_predictions(responses)
+    variants = add_regions(preds, tax)
     fields = tuple(f for f in FIELDS if any(f in p for p in preds.values()))
     metrics = score(preds, sample, fields)
+    if "regions" in fields:
+        metrics["regions_variants"] = {k: score(v, sample, ("regions",))["fields"]["regions"]
+                                       for k, v in variants.items()}
     ok = [r for r in responses if "error" not in r]
     lat = sorted(r["latency_ms"] for r in ok)
     cost = sum(float((r.get("provider_metadata") or {}).get("gateway", {}).get("cost", 0) or 0) for r in ok)
+    if opts.get("usd_per_m_input"):  # list price × reported input tokens
+        cost = sum((r.get("usage") or {}).get("input_tokens", 0) for r in ok) * opts["usd_per_m_input"] / 1e6
     metrics.update({
         "errors": len(responses) - len(ok),
         "latency_p50_ms": lat[len(lat) // 2] if lat else None,
@@ -195,7 +217,8 @@ def main() -> None:
         "provider": sorted({r.get("provider") for r in ok if r.get("provider")}) or None,
         "dataset": DATASET, "dataset_version": DATASET_REVISION, "split": "test", "subset": "eval_sample",
         "n": len(sample), "question_format": "noul-per-label", "threshold": THRESHOLD,
-        "variant": args.variant, "countries": args.countries, "reference": "majority of glm, deepseek, qwen",
+        "variant": args.variant, "countries": args.countries,
+        "regions": "direct region Nouls ∪ regions of predicted countries (taxonomy map); variants in metrics.json", "reference": "majority of glm, deepseek, qwen",
         "hardware": f"{platform.machine()} {platform.system()} (client)", "concurrency": args.concurrency,
     }
     (out / "run.json").write_text(json.dumps(run, indent=2) + "\n")
@@ -207,6 +230,8 @@ def main() -> None:
     for f, m in metrics["fields"].items():
         print(f"{f:10} {metrics['n'][f]:4} {m['micro_f1']:6.1f} {m['macro_f1']:6.1f} {m['micro_f1_mean_vs_llms']:6.1f} "
               f"{m['micro_f1_vs_pipeline']:6.1f} {m['labels_per_item']:6.2f}")
+    for k, v in metrics.get("regions_variants", {}).items():
+        print(f"  {k:16} vsMaj {v['micro_f1']:5.1f}  lab/it {v['labels_per_item']:.2f}")
     print(f"mean_field_score {metrics['mean_field_score']:.1f} (vs LLMs {metrics['mean_field_score_mean_vs_llms']:.1f}, "
           f"vs pipeline {metrics['mean_field_score_vs_pipeline']:.1f})")
 
