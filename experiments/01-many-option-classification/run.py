@@ -40,7 +40,10 @@ MODELS = {
     "d1": ("gateway", "liquid/d1", {"only": "liquid"}),
     "glide": ("systemone", "fastino/GLiDE", {"url": "https://api.fastino.ai/v1/systemone", "key_env": "FASTINO_API_KEY",
                                             "key_header": "X-API-Key", "usd_per_m_input": 0.30}),
-    "kev-4b": ("systemone", "kev-latest", {"url": "http://127.0.0.1:8009/v1/systemone"}),
+    "kev-4b": ("systemone", "kev-latest", {"url": "http://127.0.0.1:8009/v1/systemone",
+                                           "revision": "jaredpalmer/kev-4b@139fdd94", "serving": "kev.serve, MLX, bf16"}),
+    "kev-0.8b": ("systemone", "kev-latest", {"url": "http://127.0.0.1:8010/v1/systemone",
+                                             "revision": "jaredpalmer/kev-0.8b@9a45d25e", "serving": "kev.serve, MLX, bf16"}),
     "laya": ("systemone", None, {"url": "http://127.0.0.1:8000/v1/systemone", "key_env": "LAYA_API_KEY",
                                  "key_header": "Authorization"}),
 }
@@ -219,7 +222,9 @@ def main() -> None:
         "n": len(sample), "question_format": "noul-per-label", "threshold": THRESHOLD,
         "variant": args.variant, "countries": args.countries,
         "regions": "direct region Nouls ∪ regions of predicted countries (taxonomy map); variants in metrics.json", "reference": "majority of glm, deepseek, qwen",
-        "hardware": f"{platform.machine()} {platform.system()} (client)", "concurrency": args.concurrency,
+        "hardware": f"{platform.machine()} {platform.system()} (client)" if backend == "gateway" or opts["url"].startswith("https")
+        else "Apple M5 Max, 128 GB", "revision": opts.get("revision"), "serving": opts.get("serving"),
+        "concurrency": args.concurrency,
     }
     (out / "run.json").write_text(json.dumps(run, indent=2) + "\n")
     (out / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")

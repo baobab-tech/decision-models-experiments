@@ -12,3 +12,6 @@ node_modules/
 *.bin
 **/results/raw/
 data/all-about-jev/*.jsonl
+
+# Third-party model code and environments for local runs (not ours; not committed)
+third_party/
