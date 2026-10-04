@@ -37,26 +37,27 @@ Option counts come from the real taxonomy. `countries` is the 100+ case: ask ove
 
 ## Reference labels
 
-No human labels exist for most items, so the reference is the consensus of four LLM label sets. No LLM judge.
+There is no human gold set. No person labelled the test items, and no decision model is checked against human answers. The reference is the agreement of three LLMs, so every score here measures **agreement with LLMs, not correctness**. A decision model that beats the LLMs on a label they all get wrong scores lower, not higher. The only human check is the 36 hand-corrected documents in task A.
 
-| Label set | Task B (excerpts) | Task A (documents) |
-|---|---|---|
-| Pipeline (Gemini 2.5 Flash, gpt-oss-120b, Qwen 3 235B) | in dataset; tagged while extracting, with the whole section as input | in dataset (`*_pipeline`; 36 corrected by hand) |
-| GLM-5.3-Flash | to generate | in dataset (default columns) |
-| DeepSeek-V4.1-Flash | to generate | to generate |
-| Qwen3.8-Flash-Next | to generate | to generate |
+| Label set | Input | Task B (excerpts) | Task A (documents) |
+|---|---|---|---|
+| GLM-5.3-Flash | excerpt alone | generated 2026-10-03 | in dataset (default columns) |
+| DeepSeek-V4.1-Flash | excerpt alone | generated 2026-10-03 | to generate |
+| Qwen3.8-Flash-Next | excerpt alone | generated 2026-10-03 | to generate |
+| Pipeline (gpt-oss-120b; fallbacks Gemini 2.5 Flash, Qwen 3 235B) | whole section, tagged while extracting | in dataset | in dataset (`*_pipeline`; 36 corrected by hand) |
 
-- Generated sets use classify-only prompts rebuilt from the pipeline's extract-and-classify prompts ([common/prompts/excerpt-tagging.md](../common/prompts/excerpt-tagging.md)), with the excerpt alone as input, temperature 0, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)), with the provider pinned and recorded.
-- Qwen3.8-Flash-Next runs on featherless-ai as `Qwen/Qwen3.8-Flash-Next:featherless-ai`. It is a reasoning model and returned empty `content` with `response_format: json_schema` (2 of 2 calls, 2026-10-02), so the JSON format goes in the prompt and `max_tokens` is ~1,000.
-- The generated sets are added to the dataset as new columns (`*_glm`, `*_deepseek`, `*_qwen`), so the write-up's references are public.
+- The reference sets are GLM, DeepSeek and Qwen. They see the same input as the decision models.
+- The pipeline is not a reference. It saw the whole section, and on task B it agrees with the other three at 51.8–54.0 against their 83.5–85.1 with each other ([results](#phase-1-reference-labels)). Its scores are reported as a separate comparison.
+- Generated sets use classify-only prompts rebuilt from the pipeline's extract-and-classify prompts ([common/prompts/excerpt-tagging.md](../common/prompts/excerpt-tagging.md)), temperature 0, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)), with the provider pinned: GLM and DeepSeek on deepinfra, Qwen on featherless-ai.
+- Qwen3.8-Flash-Next is a reasoning model. It returned empty `content` with `response_format: json_schema` (2 of 2 calls, 2026-10-02), so the JSON format goes in the prompt, and `max_tokens` is 16,384.
+- The generated sets are in the dataset as `<field>_glm`, `<field>_deepseek`, `<field>_qwen`, with the reference as `<field>_majority` (revision `5017706`). Per-call records: [results/labels/](results/labels/).
 
 Scoring:
 
-- **Leave-one-out reference:** for each LLM *L*, the reference *R_L* is the labels chosen by at least 2 of the other 3 LLMs. For a single-label field with no majority, the item is excluded from that field.
-- Each LLM is scored against its own *R_L*. Each decision model is scored against all four *R_L* and the scores are averaged, so both are scored against three-LLM majorities.
-- **LLM range:** the four LLMs' leave-one-out scores give the range a decision model has to reach to count as "as good as an LLM". Pairwise agreement between the four sets is reported too.
-- Scores against the pipeline and GLM sets alone are reported for comparison with the earlier classifier runs.
-- **Human check:** task A only, on the 36 hand-corrected documents. Task B has no human labels.
+- **Reference:** labels chosen by at least 2 of the 3 LLMs. For a single-label field with no majority, the item is excluded from that field.
+- **LLM range:** each LLM's mean agreement with the other two. A decision model is also scored against each LLM separately and averaged, so its score compares directly with the range.
+- Decision models get both scores: against the majority reference (headline), and the mean against each LLM (for the range).
+- Scores against the pipeline labels are reported too, for comparison with the earlier classifier runs.
 
 ## Models
 
@@ -102,7 +103,8 @@ Calibrating the thresholds:
 
 ## Baselines
 
-- **The four LLMs**, scored leave-one-out as above.
+- **The three reference LLMs**, as the LLM range above.
+- **The pipeline labels**, scored against the majority reference.
 - **Embeddings + logistic regression** trained on the train split, for task B.
 - **Earlier Baobab Tech classifier runs** on the task A test split (phase 2; not re-run; results in `baobabtech/evalexplorer-classify-experiments`, private):
 
@@ -123,6 +125,35 @@ From [common/metrics.md](../common/metrics.md):
 - **Per field:** `accuracy` for single-label fields; `micro_f1` and `macro_f1` for multi-label fields.
 - **Calibration:** `ece_15`, `brier`, `coverage_at_5`.
 - **Speed and cost:** `latency_p50_ms` and `p95`, `cost_per_1k`, `tokens_per_request`. LLM labelling cost and latency are recorded too, as the ingestion comparison.
+
+## Results
+
+### Phase 1: reference labels
+
+Run 2026-10-03 on the 600 `eval_sample` excerpts, dataset revision `fcd40f8`. Fields: `themes`, `regions` and `countries` on 450 findings and recommendations; `methods` on 150 methodology excerpts. Scores are micro-F1 × 100; the mean is over the four fields.
+
+LLM range (each LLM's mean agreement with the other two):
+
+| LLM | Provider | Themes | Regions | Countries | Methods | Mean |
+|---|---|---:|---:|---:|---:|---:|
+| GLM-5.3-Flash | deepinfra | 79.7 | 85.6 | 86.7 | 84.9 | 84.2 |
+| DeepSeek-V4.1-Flash | deepinfra | 80.9 | 85.1 | 89.2 | 82.0 | 84.3 |
+| Qwen3.8-Flash-Next | featherless-ai | 81.2 | 86.3 | 87.9 | 84.5 | 85.0 |
+
+Pipeline labels against the majority reference: themes 67.3, regions 44.3, countries 45.6, methods 54.2; mean 52.8.
+
+Labels per excerpt:
+
+| | Themes | Regions | Countries | Methods |
+|---|---:|---:|---:|---:|
+| Pipeline | 2.37 | 0.60 | 0.68 | 1.06 |
+| GLM / DeepSeek / Qwen | 1.36 / 1.62 / 1.62 | 0.24 / 0.20 / 0.21 | 0.30 / 0.24 / 0.25 | 0.55 / 0.43 / 0.55 |
+| Majority reference | 1.48 | 0.21 | 0.25 | 0.51 |
+
+- All three LLMs agree on 75% of the majority's theme and method labels, 82% of region labels and 88% of country labels.
+- The pipeline tags 2–3 times more regions and countries. In a 9-excerpt pilot, 3 of its 6 country tags on findings and recommendations named a country absent from the excerpt (Tanzania, Syria, Pakistan), which fits its section-level input.
+- Calls: 600 per model, no errors or truncations after retries. GLM 0.86M tokens (p50 3.8 s); DeepSeek 0.84M (p50 1.4 s); Qwen 1.09M, including 216k reasoning tokens (p50 7 s; up to 6,906 output tokens).
+- Two codes outside the label lists were dropped: one DeepSeek, one Qwen.
 
 ## Write-up
 

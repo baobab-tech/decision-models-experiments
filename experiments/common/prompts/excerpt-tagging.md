@@ -103,6 +103,7 @@ User:
 
 ## Call settings
 
-- Temperature 0. `max_tokens` 1,000 for the reasoning models.
+- Temperature 0. `max_tokens` 16,384, so reasoning never truncates; billing is per token used. Qwen3.8-Flash-Next used up to 1,462 output tokens per excerpt (2026-10-02).
+- featherless-ai caps concurrent requests per user: 8 parallel Qwen requests returned HTTP 429, so Qwen runs 2 at a time.
 - Parse the first JSON object in `content`. Drop codes not in the label list and record how many were dropped.
 - HF Inference Providers, billed to `baobabtech` ([../README.md](../README.md#hf-inference-providers)); pin and record the provider.

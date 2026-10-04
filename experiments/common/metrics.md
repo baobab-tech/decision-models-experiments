@@ -5,6 +5,7 @@
 | `accuracy` | Share of items whose top answer equals the reference label | Single-label only |
 | `macro_f1` | Unweighted mean of per-class F1 | Weights rare classes equally |
 | `micro_f1` | F1 over all (item, label) decisions pooled | Multi-label |
+| `mean_field_score` | Unweighted mean over fields of `accuracy` (single-label fields) and `micro_f1` (multi-label fields), × 100 | Main score in experiments 01 and 02 |
 | `ece_15` | Top-label expected calibration error, 15 equal-width bins | Same binning as [typed-decision-bench](../../docs/benchmarks.md) |
 | `brier` | Mean squared error between the predicted distribution and the one-hot reference label | Multiclass form; lower is better |
 | `nll` | Mean negative log-probability of the reference label | Probabilities clipped at 1e-12 |
@@ -13,7 +14,7 @@
 | `cost_per_1k` | USD per 1,000 decisions | API: list price at run date. Local: n/a (record hardware) |
 | `tokens_per_request` | Input tokens per request as reported by the API or tokenizer | State plus question text |
 
-- Reference labels are the silver labels unless a result says pipeline.
+- Reference labels are the majority of three LLMs (GLM-5.3-Flash, DeepSeek-V4.1-Flash, Qwen3.8-Flash-Next) unless a result says otherwise. There is no human gold set, so scores measure agreement with LLMs, not correctness.
 - Multi-label with one Noul per label: threshold each Noul at 0.5 unless the plan says otherwise. Report the threshold.
 - Staged Choices (coarse then fine): the probability of a leaf label is the product of the stage probabilities.
 - Report `n` and a 95% bootstrap interval (1,000 resamples) for `accuracy`, `macro_f1` and `ece_15`.

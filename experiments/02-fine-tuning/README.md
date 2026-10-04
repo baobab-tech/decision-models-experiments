@@ -17,7 +17,7 @@ Does a fine-tuned open decision model reach the LLM range from 01 and match the 
   | LFM2.5-350M | 350M | 20.3 | 70.9 | 79.2 | 0.58 |
   | GLiNER2.5 small | 74M | 47.1 | 52.7 | 57.3 | 0.04 |
 
-  Those models were fine-tuned on pipeline labels. The scores are task A only, against single label sets: GLM-5.3-Flash or the pipeline. They are rescored against 01's consensus reference if their predictions are available.
+  Those models were fine-tuned on pipeline labels. The scores are task A only, against single label sets: GLM-5.3-Flash or the pipeline. They are rescored against 01's majority reference if their predictions are available.
 
 - GLiNER2.5 base and small plateaued at 57–58 after fine-tuning (52–57 against GLM). Approach and type accuracy stayed at 25–60%.
 - Jev, d1 and GLiDE cannot be fine-tuned.
@@ -26,11 +26,11 @@ Does a fine-tuned open decision model reach the LLM range from 01 and match the 
 ## Data
 
 - **Splits:** the same as 01. Task A: documents, 1,148 train / 138 validation / 134 test. Task B: excerpts, 157,302 train, sampled per run. See [common/datasets.md](../common/datasets.md).
-- **Evaluation:** against 01's leave-one-out consensus of four LLM label sets (pipeline, GLM-5.3-Flash, DeepSeek-V4.1-Flash, Qwen3.8-Flash-Next), on the same test items, so zero-shot and fine-tuned scores compare directly.
+- **Evaluation:** against 01's reference, the labels chosen by at least 2 of GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next, on the same test items, so zero-shot and fine-tuned scores compare directly. There is no human gold set, so scores measure agreement with LLMs, not correctness ([01](../01-many-option-classification/README.md#reference-labels)).
 - **Training labels:** settled by a pilot before the main runs.
   - A fixed sample of 10,000 train excerpts gets GLM, DeepSeek and Qwen labels, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)).
-  - Laya trains twice on the same excerpts: once on pipeline labels, once on consensus labels (at least 3 of 4 LLMs).
-  - If the consensus-label run scores at least 2 points higher, consensus labels become the default and are generated for the rest of the training data. Otherwise pipeline labels are the default, since they cover every train item.
+  - Laya trains twice on the same excerpts: once on pipeline labels, once on consensus labels (at least 2 of the 3 LLMs).
+  - If the consensus-label run scores at least 2 points higher, consensus labels become the default and are generated for the rest of the training data. Otherwise pipeline labels are the default, since they cover every train item. On the task B test sample, pipeline labels agree with the LLM majority at 52.8, against 84.2–85.0 between the LLMs (01, 2026-10-03), so the pilot is expected to favour consensus labels.
   - Task A gets the same treatment in its phase: DeepSeek and Qwen label the 1,148 train documents; GLM labels already exist.
 
 ## Models

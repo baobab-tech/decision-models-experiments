@@ -10,5 +10,5 @@ node_modules/
 *.safetensors
 *.gguf
 *.bin
-results/raw/
+**/results/raw/
 data/all-about-jev/*.jsonl
