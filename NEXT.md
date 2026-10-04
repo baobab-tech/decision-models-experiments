@@ -14,9 +14,9 @@ Current state and next steps. Keep this short: delete items when done, add new o
 ## Next
 
 1. **Before 01 phase 1 runs:**
-   - `.env` has `HF_TOKEN`, `AI_GATEWAY_API_KEY` (Jev, d1) and `FASTINO_API_KEY` (GLiDE). Smoke-test `typesafe-ai/jev` and `liquid/d1` through the gateway with synthetic text before the run.
+   - `.env` has `HF_TOKEN`, `AI_GATEWAY_API_KEY` (Jev, d1) and `FASTINO_API_KEY` (GLiDE). Jev and d1 smoke-tested through the gateway on 2026-10-04.
    - Check featherless-ai's processing region and retention (Qwen3.8-Flash-Next) for the data governance section.
-   - Write the decision-model runner and scorer; score against `<field>_majority` at dataset revision `5017706`.
+   - Runner and scorer written (`run.py`, `score.py`, `gateway/evaluate.mjs`). Next: full 600-excerpt runs for Jev and d1, then GLiDE, then the local models (GLiNER2.5-Decide and Verdict need Python adapters; Kev and Laya serve `/v1/systemone`).
 2. **Dataset viewer:** check that it renders for `decision-models-evaluation-docs`. If it still fails, open a discussion on the repo.
 3. **Baselines:** decide whether to publish the earlier classifier leaderboard. The 01/02 baselines cite `evalexplorer-classify-experiments`, which is private.
 4. **Experiment 02:** `planned` (approved 2026-10-02); runs after 01 phase 1, starting with the training-label pilot.

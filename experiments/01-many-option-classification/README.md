@@ -26,7 +26,7 @@ Can zero-shot decision models classify and tag international development evaluat
 | **B. Excerpt tagging** (phase 1) | Finding, recommendation or methodology excerpt: median 34 words, p90 107 | 600: `eval_sample` (300 findings, 150 recommendations, 150 methodology) | `themes` (findings, recommendations) | 22 | multi, median 2 |
 | | | | `regions` (findings, recommendations) | 17 | multi |
 | | | | `methods` (methodology only) | 24 | multi |
-| | | | `countries` (findings, recommendations) | 121 seen; ~250 ISO codes | multi |
+| | | | `countries` (findings, recommendations) | 121 in test, 198 in all excerpts; 250 ISO codes | multi |
 | **A. Document classification** (phase 2) | First pages: median 1,935 tokens, p99 5,267 | 134 docs | `evaluation_approach` | 6 | single |
 | | | | `evaluation_type` | 4 | single |
 | | | | `temporality` | 3 | single |
@@ -72,7 +72,10 @@ Scoring:
 | [openJev Verdict](../../docs/models/rlcd-modernbert.md) | This Mac (MPS) | Zero-shot score for 02; 151M encoder; max 24 options, so Noul-per-label only for fields above 24 |
 | [Laya](../../docs/models/laya.md) | This Mac | Small encoder; context 512 (en), so task A only after chunking |
 
-- Jev and d1 use `AI_GATEWAY_API_KEY`. The gateway documents only the AI SDK `experimental_evaluate` path (TypeScript), so their client is Node 22.
+- Jev and d1 use `AI_GATEWAY_API_KEY`. The gateway documents only the AI SDK `experimental_evaluate` path (TypeScript), so [gateway/evaluate.mjs](gateway/evaluate.mjs) (Node 22, `ai` 7.0.127) bridges Jev-format JSONL to it. Providers are pinned: Jev to `typesafe-ai`, d1 to `liquid`.
+- Runner: [run.py](run.py) builds the requests and [score.py](score.py) scores them. One request per (excerpt, field), split into chunks of at most 128 questions, because d1 rejects more (2026-10-04). Every model gets the same chunks.
+- Noul wording: themes "The excerpt is about {label}: {definition}" (`definitions` variant) or without the definition (`labels`); regions "The excerpt substantively discusses {region} or countries in it, not just a passing mention"; countries the same without the region clause; methods "The excerpt describes a {method} method used in the evaluation".
+- Country option sets: the 198 codes seen in any excerpt split (`in_excerpts`), or all 250 taxonomy codes.
 - GLiNER2.5-Decide, Kev and Laya have no HF Inference Providers mapping (checked 2026-10-02), so they run locally, as does Verdict.
 
 ## Question formats
@@ -168,7 +171,7 @@ Results go in this README per phase. Besides scores, each phase records per mode
 
 - Local models run on this Mac.
 - These models send document text to third parties:
-  - Jev via Vercel AI Gateway: served by `digitalocean`; no ZDR; no training on inputs (`has_no_training: true`); no EU region.
+  - Jev via Vercel AI Gateway, pinned to the `typesafe-ai` provider (TypeSafe: no training on inputs, US); no ZDR; no EU region.
   - d1 via Vercel AI Gateway: served by `liquid`; no ZDR; Liquid's terms let it use inputs to improve its models; no EU region.
   - GLiDE: Fastino API, US.
   - GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next via HF Inference Providers: the region depends on the provider; record the pinned provider and its region.

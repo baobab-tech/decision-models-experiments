@@ -81,14 +81,14 @@ curl -s https://api.liquid.ai/decisions/v1/systemone \
 | Billing | Input tokens only |
 | Free tier | `d1:free`; quotas undocumented |
 | Paid pricing / paid model id | Not documented; [liquid.ai/pricing](https://www.liquid.ai/pricing) covers open LFM licensing only |
-| AI Gateway price | $0 input and output for `liquid/d1` ([`/v1/models`](https://ai-gateway.vercel.sh/v1/models)); whether this draws on the `d1:free` quota is undocumented |
+| AI Gateway price | $0.04 per million input tokens, output $0 for `liquid/d1` ([endpoints](https://ai-gateway.vercel.sh/v1/models/liquid/d1/endpoints), checked 2026-10-04). A 143-token call cost $0.00000572 in the gateway's `providerMetadata` (experiment 01 smoke test, 2026-10-04). |
 | Context | 32,000 tokens ([Vercel](https://vercel.com/ai-gateway/models/d1), [gateway endpoints](https://ai-gateway.vercel.sh/v1/models/liquid/d1/endpoints), DataNorth) |
 | Rate limits, regions | Not documented |
 
 ## Scaling limits
 
 - **Options:** minimum 2; maximum undocumented. Compatible providers publish their own caps, not stated to apply to d1: Telnyx 2–64 options, 2–64 levels, 1–64 questions; LLM Gateway (Jev 1.13) 255 options, 2–10 levels, 600 requests/minute per organisation.
-- **Questions per request:** a search summary claims "1–16 questions, up to 62 options" without a traceable source (unverified). perch PR #230 ran 100 questions in one call.
+- **Questions per request:** at most 128. Through the gateway, a request with 198 questions fails with "A request accepts at most 128 questions" (experiment 01, 2026-10-04).
 - **Multi-label:** no multi-select mode (Telnyx's compatible API states the same). Use one `noul` per label; Choice probabilities sum to about 1 and cannot be thresholded independently.
 - **Input length:** 32k tokens for state and questions. perch ran a ~20k-token state with 100 questions and 8 parallel calls on `d1:free` (no latency reported). No accuracy or latency data by input length.
 - **Cost growth:** whether `instructions` and `criteria` count as input tokens is undocumented. LLM Gateway says "Question text counts as input on every call" for Jev (unverified for d1). Under that model 100 one-line options cost about 10× the question tokens of 10, re-billed every call with no caching discount; a 2,000-token state costs ~20× a 100-token one.
