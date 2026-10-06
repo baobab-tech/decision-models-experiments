@@ -44,18 +44,75 @@ BASE = "answerdotai/ModernBERT-base"  # default; --base picks another encoder
 FIELDS = ("themes", "regions", "countries", "methods")
 FINDINGS_FIELDS = ("themes", "regions", "countries")
 LABELLERS = ("glm", "deepseek")
+CONTEXT_HEADING = "## CONTEXT SECTIONS"  # `input` = excerpt block, then this heading and the document context
+EXCERPTS_PER_DOC = 134.6  # dataset `excerpts` config: 191,136 excerpts over 1,420 documents
+
+
+def split_input(text: str) -> tuple[str, str]:
+    """(excerpt block, document context block) of an `input` string."""
+    i = text.find(CONTEXT_HEADING)
+    return (text, "") if i < 0 else (text[:i].strip(), text[i:].strip())
+
+
+def special_ids(tok) -> tuple[list[int], list[int], int]:
+    """Start and separator ids (CLS/SEP, or BOS/EOS for decoder-style tokenizers) and the pad id."""
+    start = tok.cls_token_id if tok.cls_token_id is not None else tok.bos_token_id
+    sep = tok.sep_token_id if tok.sep_token_id is not None else tok.eos_token_id
+    pad = tok.pad_token_id if tok.pad_token_id is not None else (sep if sep is not None else 0)
+    return ([start] if start is not None else []), ([sep] if sep is not None else []), pad
+
+
+def pad_batch(seqs: list[list[int]], masks: list[list[int]], pad: int, device) -> dict:
+    n = max(len(x) for x in seqs)
+    ids = torch.tensor([x + [pad] * (n - len(x)) for x in seqs], device=device)
+    att = torch.tensor([[1] * len(x) + [0] * (n - len(x)) for x in seqs], device=device)
+    pool = torch.tensor([m + [0] * (n - len(m)) for m in masks], device=device, dtype=torch.float)
+    return {"input_ids": ids, "attention_mask": att, "pool_mask": pool}
+
+
+def encode(tok, rows, max_len: int, device, arch: str) -> dict:
+    """joint: [start] excerpt [sep] context [sep], pooled over the excerpt's tokens only.
+    two_tower: excerpt and context encoded separately (context once per document at inference)."""
+    start, sep, pad = special_ids(tok)
+    parts = [split_input(r["input"]) for r in rows]
+    ex = [tok(e, add_special_tokens=False)["input_ids"][: max_len // 2] for e, _ in parts]
+    cx = [tok(c, add_special_tokens=False)["input_ids"] for _, c in parts]
+    if arch == "joint":
+        seqs, masks = [], []
+        for e, c in zip(ex, cx):
+            room = max_len - len(start) - len(e) - 2 * len(sep)
+            seq = start + e + sep + c[:max(room, 0)] + sep
+            seqs.append(seq)
+            masks.append([0] * len(start) + [1] * len(e) + [0] * (len(seq) - len(start) - len(e)))
+        return {"joint": pad_batch(seqs, masks, pad, device)}
+    exs = [start + e + sep for e in ex]
+    cxs = [start + c[: max_len - len(start) - len(sep)] + sep for c in cx]
+    return {"excerpt": pad_batch(exs, [[1] * len(x) for x in exs], pad, device),
+            "context": pad_batch(cxs, [[1] * len(x) for x in cxs], pad, device)}
 
 
 class Tagger(torch.nn.Module):
-    def __init__(self, n_labels: int, base: str, revision: str, trust_remote_code: bool):
-        super().__init__()
-        self.encoder = AutoModel.from_pretrained(base, revision=revision, trust_remote_code=trust_remote_code)
-        self.head = torch.nn.Linear(self.encoder.config.hidden_size, n_labels)
+    """joint: one pass over excerpt + context, mean-pooled over the excerpt's tokens.
+    two_tower: one shared encoder; excerpt vector e and document-context vector c combined as [e, c, e*c]."""
 
-    def forward(self, input_ids, attention_mask):
+    def __init__(self, n_labels: int, base: str, revision: str, trust_remote_code: bool, arch: str):
+        super().__init__()
+        self.arch = arch
+        self.encoder = AutoModel.from_pretrained(base, revision=revision, trust_remote_code=trust_remote_code)
+        h = self.encoder.config.hidden_size if hasattr(self.encoder.config, "hidden_size") \
+            else self.encoder.config.get_text_config().hidden_size
+        self.head = torch.nn.Linear(h, n_labels) if arch == "joint" else \
+            torch.nn.Sequential(torch.nn.LayerNorm(3 * h), torch.nn.Linear(3 * h, n_labels))
+
+    def pool(self, input_ids, attention_mask, pool_mask):
         hidden = self.encoder(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state
-        pooled = (hidden * attention_mask.unsqueeze(-1)).sum(1) / attention_mask.sum(1, keepdim=True)
-        return self.head(pooled)
+        return (hidden * pool_mask.unsqueeze(-1)).sum(1) / pool_mask.sum(1, keepdim=True).clamp(min=1)
+
+    def forward(self, batch):
+        if self.arch == "joint":
+            return self.head(self.pool(**batch["joint"]))
+        e, c = self.pool(**batch["excerpt"]), self.pool(**batch["context"])
+        return self.head(torch.cat([e, c, e * c], dim=-1))
 
 
 def label_space(tax) -> tuple[list[tuple[str, str]], dict[str, str]]:
@@ -82,14 +139,12 @@ def targets(row, space, source: str) -> tuple[list[float], list[float]]:
     return y, mask
 
 
-def predict(model, tok, rows, device, max_len, batch) -> np.ndarray:
+def predict(model, tok, rows, device, max_len, batch, arch) -> np.ndarray:
     model.eval()
     out = []
     with torch.no_grad():
         for i in range(0, len(rows), batch):
-            enc = tok([r["input"] for r in rows[i:i + batch]], truncation=True, max_length=max_len, padding=True,
-                      return_tensors="pt").to(device)
-            out.append(torch.sigmoid(model(enc["input_ids"], enc["attention_mask"])).float().cpu().numpy())
+            out.append(torch.sigmoid(model(encode(tok, rows[i:i + batch], max_len, device, arch))).float().cpu().numpy())
     return np.concatenate(out)
 
 
@@ -125,6 +180,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--labels", choices=("llm", "pipeline"), default="llm")
     ap.add_argument("--base", default=BASE, help="encoder to fine-tune")
+    ap.add_argument("--arch", choices=("joint", "two_tower"), default="joint",
+                    help="joint: excerpt + context in one pass, pooled over the excerpt; "
+                         "two_tower: context encoded once per document")
     ap.add_argument("--base-revision", default=None, help="commit; resolved and recorded if omitted")
     ap.add_argument("--trust-remote-code", action="store_true", help="needed for e.g. chandar-lab/NeoBERT")
     ap.add_argument("--dataset-revision", default="main")
@@ -155,7 +213,7 @@ def main() -> None:
 
     base_revision = HfApi().model_info(args.base, revision=args.base_revision).sha
     tok = AutoTokenizer.from_pretrained(args.base, revision=base_revision, trust_remote_code=args.trust_remote_code)
-    model = Tagger(len(space), args.base, base_revision, args.trust_remote_code).to(device)
+    model = Tagger(len(space), args.base, base_revision, args.trust_remote_code, args.arch).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     steps = args.epochs * -(-len(train) // args.batch)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=args.lr, total_steps=steps, pct_start=0.1)
@@ -169,11 +227,10 @@ def main() -> None:
         total = 0.0
         for i in range(0, len(order), args.batch):
             idx = order[i:i + args.batch]
-            enc = tok([train[j]["input"] for j in idx], truncation=True, max_length=args.max_len, padding=True,
-                      return_tensors="pt").to(device)
+            batch_in = encode(tok, [train[j] for j in idx], args.max_len, device, args.arch)
             y = torch.tensor([ys[j][0] for j in idx], device=device)
             mask = torch.tensor([ys[j][1] for j in idx], device=device)
-            logits = model(enc["input_ids"], enc["attention_mask"])
+            logits = model(batch_in)
             loss = (torch.nn.functional.binary_cross_entropy_with_logits(logits, y, reduction="none") * mask).sum() \
                 / mask.sum()
             opt.zero_grad()
@@ -181,26 +238,33 @@ def main() -> None:
             opt.step()
             sched.step()
             total += loss.item() * len(idx)
-        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 64), val, space, country_region, 0.5),
+        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 64, args.arch), val, space, country_region, 0.5),
                           val)["mean_field_score"]
         print(f"epoch {epoch + 1}: train loss {total / len(train):.4f}; validation mean at 0.5 {val_score:.1f}")
     train_s = time.perf_counter() - t0
 
-    val_probs = predict(model, tok, val, device, args.max_len, 64)
+    val_probs = predict(model, tok, val, device, args.max_len, 64, args.arch)
     grid = [round(0.05 * i, 2) for i in range(1, 20)]
     curve = {t: score(to_sets(val_probs, val, space, country_region, t), val)["mean_field_score"] for t in grid}
     best_t = max(t for t, v in curve.items() if v == max(curve.values()))
 
     t1 = time.perf_counter()
-    test_probs = predict(model, tok, test, device, args.max_len, 64)
+    test_probs = predict(model, tok, test, device, args.max_len, 64, args.arch)
     infer_s = time.perf_counter() - t1
     results = {t_name: score(to_sets(test_probs, test, space, country_region, t), test)
                for t_name, t in (("at_0.5", 0.5), ("fitted", best_t))}
-    tokens = [len(tok(r["input"], truncation=True, max_length=args.max_len)["input_ids"]) for r in test]
+    ex_tok = [len(tok(split_input(r["input"])[0], add_special_tokens=False)["input_ids"]) for r in test]
+    cx_tok = [len(tok(split_input(r["input"])[1], add_special_tokens=False)["input_ids"]) for r in test]
+    # joint reads excerpt + context per excerpt; two_tower reads the context once per document
+    per_excerpt = [e + c for e, c in zip(ex_tok, cx_tok)] if args.arch == "joint" else \
+        [e + c / EXCERPTS_PER_DOC for e, c in zip(ex_tok, cx_tok)]
+    tokens = per_excerpt
     params = sum(p.numel() for p in model.parameters())
     metrics = {
         **results, "threshold": best_t, "validation_curve": curve,
         "compute": {"parameters": params, "tokens_per_excerpt": float(np.mean(tokens)),
+                    "excerpt_tokens": float(np.mean(ex_tok)), "context_tokens": float(np.mean(cx_tok)),
+                    "excerpts_per_document_assumed": EXCERPTS_PER_DOC if args.arch == "two_tower" else None,
                     "flops_per_excerpt_est": 2 * params * float(np.mean(tokens))},
         "train_seconds": round(train_s, 1), "test_inference_seconds": round(infer_s, 1),
     }
@@ -217,7 +281,7 @@ def main() -> None:
 
     if args.no_push:
         return
-    repo = f"{args.push_to}-{args.base.split('/')[-1].lower()}-{args.labels}"
+    repo = f"{args.push_to}-{args.base.split('/')[-1].lower()}-{args.labels}" + ("-2tower" if args.arch == "two_tower" else "")
     api = HfApi()
     api.create_repo(repo, private=True, exist_ok=True)
     os.makedirs("out", exist_ok=True)

@@ -15,6 +15,9 @@ Why: the case for a small model is compute and environmental impact. A ~150M enc
    - Training targets are soft: 1 if both LLMs chose the label, 0.5 if one did, 0 if neither.
    - Evaluation: 01's test excerpts, scored as mean agreement with GLM and DeepSeek.
 3. Fine-tune small encoders on those labels as HF Jobs in the `baobabtech` namespace with [train_encoder.py](train_encoder.py), which reads everything from the Hub so others can rerun it. Candidates: encoders released since March 2026 under ~300M parameters with a context window of at least 8,192 tokens, with ModernBERT-base and Ettin as 2025 references; label-conditioned models (GLiClass, GLiNER2.5) in a second round.
+   - **Input layout:** `[start] excerpt block [sep] context block [sep]`, excerpt first, so truncation only cuts context. The excerpt and context blocks keep their headings (`## EXCERPT TO CLASSIFY`, `## CONTEXT SECTIONS`) as markers.
+   - **Joint model (default):** one pass over excerpt + context; the classifier reads the mean of the excerpt's token vectors only. Those tokens attend to the context, so they carry the report's country and topic, but the context tokens do not dilute the vector the classifier reads. ~540 tokens per excerpt.
+   - **Two-tower model:** the same encoder reads the document context once per report and the excerpt on its own; the classifier sees [excerpt vector, context vector, their product]. At ~135 excerpts per report, that is ~90 tokens per excerpt, about 6× less compute. Run with `jhu-clsp/ettin-encoder-150m`.
 4. Score on 01's test excerpts; fit one threshold on 01's validation sample; report compute per excerpt next to the score.
 5. One run on pipeline labels for the same excerpts shows how much the label source matters.
 
