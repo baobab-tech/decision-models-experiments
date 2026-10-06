@@ -1,6 +1,6 @@
 # 01 Many-option classification
 
-**Status:** planned. Phase 1 (excerpt tagging) starts with a context pilot.
+**Status:** planned. Context pilot done (2026-10-06); reference labels next.
 
 ## Question
 
@@ -46,8 +46,25 @@ Which context gives the best tags for the least input? Run on 50 random test exc
 - Labellers: GLM-5.3-Flash and DeepSeek-V4.1-Flash (Qwen3.8-Flash-Next is slow on featherless-ai; it joins for the full samples).
 - Reported per variant: agreement between the two LLMs, agreement of each with the pipeline labels (production's own tags, made with section context), labels per excerpt, and input tokens.
 - A sample of disagreements is read by hand to see which variant gets geography and themes right.
-- The chosen variant must also work for a small encoder or classifier: one input sequence of context plus the marked excerpt, with outputs that tag only the excerpt. It has to fit the encoder's window (8,192 tokens for ModernBERT, Ettin and mmBERT) at an acceptable compute per excerpt. Document-level blocks are the same for every excerpt of a report, so they can be encoded once per document; the window is not.
+- The chosen variant must also work for a small encoder or classifier: one input sequence of context plus the marked excerpt, with outputs that tag only the excerpt. It has to fit the encoder's window (at least 8,192 tokens; DeBERTa-v3 (512) and NeoBERT (4,096) are excluded) at an acceptable compute per excerpt. Document-level blocks are the same for every excerpt of a report, so they can be encoded once per document; the window is not.
 - The variant with the best agreement per input token, within those limits, becomes the input for the reference labels, the decision models and the training data in [02](../02-fine-tuning/).
+
+### Pilot result
+
+Run 2026-10-06 on 50 random test excerpts (seed 0: 25 findings, 10 recommendations, 15 methodology; [context_pilot.py](context_pilot.py), [summary](results/context_pilot/summary.json)). Micro-F1 × 100, mean over fields. Input tokens include the ~1,350-token system prompt.
+
+| Variant | Input tokens | GLM vs DeepSeek | vs pipeline (GLM / DeepSeek) | Countries per excerpt (GLM) |
+|---|---:|---:|---:|---:|
+| `excerpt` | 1,351 | 86.1 | 44.3 / 44.5 | 0.29 |
+| `doc` | 1,532 | 87.0 | 67.3 / 68.5 | 0.83 |
+| **`doc+summary`** | **1,787** | **90.2** | **67.8 / 69.3** | 0.83 |
+| `production` | 3,608 | 74.2 | 64.3 / 62.3 | 1.06 |
+| `summary_doc` | 2,127 | 87.0 | 58.9 / 56.2 | 1.43 |
+
+- Document context drives agreement with the pipeline: title and Document Start alone raise it from 44 to 68. Countries and regions are mostly a property of the report.
+- The whole section window lowers LLM agreement, mostly on countries (68.8): sections list many countries, and the two LLMs tag different subsets. In 6 hand-read cases, `doc+summary` gave both LLMs the same countries where `production` gave 0–7 different ones.
+- **Chosen input: `doc+summary`** (title, Document Start, executive summary and abstract cut to 1,500 characters each, then the excerpt). It adds ~440 tokens of document-level context that every excerpt of a report shares.
+- 50 excerpts (15 methodology) give noisy per-field numbers; the ranking is clear.
 
 ## Data
 

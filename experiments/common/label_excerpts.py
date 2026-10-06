@@ -42,7 +42,7 @@ FINDINGS_SYSTEM = """You are an expert evaluator classifying excerpts from evalu
 
 ## Task
 
-Classify the excerpt below by themes, regions and countries.
+Classify the excerpt below by themes, regions and countries. Use the main section and context sections for understanding, e.g. which country or programme the excerpt refers to.
 
 ## Themes (select 1 to 3 maximum per excerpt)
 
@@ -79,7 +79,7 @@ METHODS_SYSTEM = """You are an expert evaluator classifying methodology excerpts
 
 ## Task
 
-Classify the methodology excerpt below with the research methods used.
+Classify the methodology excerpt below with the research methods used. Use the main section and context sections for understanding.
 
 ## Methods (select all that apply per excerpt)
 

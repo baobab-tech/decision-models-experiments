@@ -1,0 +1,232 @@
+{
+ "n": 50,
+ "excerpt_ids": [
+  "2aefc794-ba31-4cc4-9a3d-c77b4ea18b45",
+  "f42d3603-729f-462a-995d-894c5251cd1f",
+  "799f2996-8536-4d8b-8403-9409776dfc5c",
+  "2fb7cbaf-1a02-4d54-9bfc-00a3fe15e1ad",
+  "514a06fd-77a2-4c38-b1a4-591f3994718a",
+  "e319e59c-f695-4da9-9365-3966d5bc53c1",
+  "691469e2-4709-4f09-bd73-c863011e4c9a",
+  "b6a93554-96e1-4506-9759-062e1c30ff25",
+  "cfc2e4c3-4df3-4b89-ab79-de8958f47df2",
+  "f8a961fe-9bff-48ca-94d4-37078bdfac53",
+  "a8c66237-2903-469b-b59b-a03a0b9a1e91",
+  "06d2935d-06d1-406e-b6d3-cf87084c4419",
+  "d612ede6-ddb0-493f-bfd6-d4502da0a1a0",
+  "216cc45e-b402-439b-84a6-b7e6d52b1573",
+  "6608e82a-4565-4310-b971-1c7db09d03e8",
+  "cdb2189e-23ac-4bf8-9965-4cc98980d3e6",
+  "6e1d4247-42c1-4f3e-88fd-4f07c6adc8f3",
+  "299fe3ef-87b3-42f3-a73d-9508ae8e15a1",
+  "55c4faff-86ca-416b-9102-da89b2844e6f",
+  "72ff5894-ee33-443a-9ee2-74f123ed7671",
+  "1ceb151a-8340-499b-8bc7-61346dd9bc60",
+  "e8d7dd8b-fbe0-4f2a-8063-4de11b299165",
+  "136a1ab9-8e69-4deb-803f-11f03d4a3c08",
+  "4a922cce-7512-41e5-b50e-1f98f469383d",
+  "1cd207e5-03d0-4fcf-863f-3a1b4d999e32",
+  "4416b2d0-5956-4e2f-b670-836edd5a0bf7",
+  "a7d84bfe-6345-4c0b-94c9-45f7c5cf9428",
+  "336c79e0-7057-4d62-8531-22d5238b858a",
+  "8cb57302-720a-46a2-b04a-1f67ab1b151a",
+  "4ec54c63-21bc-498a-9e1e-c77895839d46",
+  "a8a663da-1b9e-49ef-a08b-dea1c338f630",
+  "0f6367ed-e978-4805-8553-466ec124bbec",
+  "f6db193a-0bf9-48a5-aee7-5da8d74b69f2",
+  "5321dbe5-5916-4b57-bca9-63d2d40f868c",
+  "5b03c48f-7e91-454b-adcd-4ccbe10b1bf2",
+  "70d3208f-af90-408e-8874-af59b53f050a",
+  "a69cb8f7-6a74-4d20-9b7d-b2e091293e6e",
+  "e911df73-017d-4a95-a4fd-6e46ec2677d7",
+  "c0d87740-fc62-46f6-8ae9-921f58e85b78",
+  "253946dd-4cd1-4ab5-a585-4ee775d61864",
+  "5d966854-e4fb-42c2-aa49-6727de221723",
+  "68c3a586-d30a-41d6-a7a8-2d74c35e51b6",
+  "31802fec-1814-4c0e-aec1-487aac9140c2",
+  "e0eebbfc-48f1-4528-90d7-0c47051d2791",
+  "dc9a82d0-ad50-40e9-988d-a93429ef6c95",
+  "36021600-f630-4ab9-969e-e1535a7c7404",
+  "cb14973e-a33b-4e20-8069-1a3d373eb4a3",
+  "8da6f03b-7ea1-430f-a225-602c3736d141",
+  "e845db52-4450-475f-87de-17d2622bf0d0",
+  "653d2085-61bb-4aef-a38b-575e01dd8c22"
+ ],
+ "variants": {
+  "excerpt": {
+   "input_tokens_per_excerpt": 1351,
+   "glm_deepseek": {
+    "themes": 81.8,
+    "regions": 90.9,
+    "countries": 94.7,
+    "methods": 76.9
+   },
+   "glm_deepseek_mean": 86.1,
+   "vs_pipeline": {
+    "glm": {
+     "themes": 66.7,
+     "regions": 35.7,
+     "countries": 30.3,
+     "methods": 44.4
+    },
+    "deepseek": {
+     "themes": 68.1,
+     "regions": 37.0,
+     "countries": 31.2,
+     "methods": 41.7
+    }
+   },
+   "vs_pipeline_mean": {
+    "glm": 44.3,
+    "deepseek": 44.5
+   },
+   "labels_per_excerpt_glm": {
+    "themes": 1.49,
+    "regions": 0.17,
+    "countries": 0.29,
+    "methods": 0.53
+   },
+   "errors": 0
+  },
+  "doc": {
+   "input_tokens_per_excerpt": 1532,
+   "glm_deepseek": {
+    "themes": 80.6,
+    "regions": 96.0,
+    "countries": 96.4,
+    "methods": 75.0
+   },
+   "glm_deepseek_mean": 87.0,
+   "vs_pipeline": {
+    "glm": {
+     "themes": 60.9,
+     "regions": 83.3,
+     "countries": 76.9,
+     "methods": 48.3
+    },
+    "deepseek": {
+     "themes": 71.4,
+     "regions": 82.6,
+     "countries": 80.0,
+     "methods": 40.0
+    }
+   },
+   "vs_pipeline_mean": {
+    "glm": 67.3,
+    "deepseek": 68.5
+   },
+   "labels_per_excerpt_glm": {
+    "themes": 1.94,
+    "regions": 0.74,
+    "countries": 0.83,
+    "methods": 0.67
+   },
+   "errors": 0
+  },
+  "doc_summary": {
+   "input_tokens_per_excerpt": 1787,
+   "glm_deepseek": {
+    "themes": 85.1,
+    "regions": 96.0,
+    "countries": 96.4,
+    "methods": 83.3
+   },
+   "glm_deepseek_mean": 90.2,
+   "vs_pipeline": {
+    "glm": {
+     "themes": 65.8,
+     "regions": 83.3,
+     "countries": 76.9,
+     "methods": 45.2
+    },
+    "deepseek": {
+     "themes": 69.6,
+     "regions": 82.6,
+     "countries": 80.0,
+     "methods": 45.2
+    }
+   },
+   "vs_pipeline_mean": {
+    "glm": 67.8,
+    "deepseek": 69.3
+   },
+   "labels_per_excerpt_glm": {
+    "themes": 1.89,
+    "regions": 0.74,
+    "countries": 0.83,
+    "methods": 0.8
+   },
+   "errors": 0
+  },
+  "production": {
+   "input_tokens_per_excerpt": 3608,
+   "glm_deepseek": {
+    "themes": 81.0,
+    "regions": 85.3,
+    "countries": 68.8,
+    "methods": 61.5
+   },
+   "glm_deepseek_mean": 74.2,
+   "vs_pipeline": {
+    "glm": {
+     "themes": 71.8,
+     "regions": 80.0,
+     "countries": 76.7,
+     "methods": 28.6
+    },
+    "deepseek": {
+     "themes": 69.4,
+     "regions": 77.2,
+     "countries": 58.2,
+     "methods": 44.4
+    }
+   },
+   "vs_pipeline_mean": {
+    "glm": 64.3,
+    "deepseek": 62.3
+   },
+   "labels_per_excerpt_glm": {
+    "themes": 2.09,
+    "regions": 0.94,
+    "countries": 1.06,
+    "methods": 0.6
+   },
+   "errors": 0
+  },
+  "summary_doc": {
+   "input_tokens_per_excerpt": 2127,
+   "glm_deepseek": {
+    "themes": 85.0,
+    "regions": 87.1,
+    "countries": 94.2,
+    "methods": 81.8
+   },
+   "glm_deepseek_mean": 87.0,
+   "vs_pipeline": {
+    "glm": {
+     "themes": 67.9,
+     "regions": 68.9,
+     "countries": 57.5,
+     "methods": 41.4
+    },
+    "deepseek": {
+     "themes": 67.1,
+     "regions": 64.7,
+     "countries": 54.5,
+     "methods": 38.7
+    }
+   },
+   "vs_pipeline_mean": {
+    "glm": 58.9,
+    "deepseek": 56.2
+   },
+   "labels_per_excerpt_glm": {
+    "themes": 2.09,
+    "regions": 1.11,
+    "countries": 1.43,
+    "methods": 0.67
+   },
+   "errors": 0
+  }
+ }
+}

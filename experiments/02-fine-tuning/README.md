@@ -10,12 +10,12 @@ Why: the case for a small model is compute and environmental impact. A ~150M enc
 
 ## First step
 
-1. Input: the context variant chosen by 01's [context pilot](../01-many-option-classification/README.md#context-pilot), so the model sees what production's tagger sees. Document-level context (title, Document Start, summary) is the same for every excerpt of a report, so a model can encode it once per document.
+1. Input: `doc+summary`, the context chosen by 01's [context pilot](../01-many-option-classification/README.md#pilot-result) (title, Document Start, executive summary and abstract, then the excerpt), so the model sees what production's tagger sees. Document-level context (title, Document Start, summary) is the same for every excerpt of a report, so a model can encode it once per document.
 2. Label a fixed sample of 10,000 train excerpts (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0; ids in [results/labels/train_sample.json](results/labels/train_sample.json)) with GLM-5.3-Flash and DeepSeek-V4.1-Flash, using production's taxonomy and definitions.
    - Training targets are soft: 1 if both LLMs chose the label, 0.5 if one did, 0 if neither.
    - Qwen3.8-Flash-Next is not used for training labels: on featherless-ai it labels about 10 excerpts per minute (2 concurrent requests, long reasoning), ~17 hours for 10,000 (2026-10-06).
    - Evaluation: 01's 3-LLM majority reference on its 600 test excerpts.
-3. Fine-tune small encoders on those labels as HF Jobs in the `baobabtech` namespace with [train_encoder.py](train_encoder.py), which reads everything from the Hub so others can rerun it. Candidates: encoders released since March 2026 under ~300M parameters, with ModernBERT-base and Ettin as 2025 references; label-conditioned models (GLiClass, GLiNER2.5) in a second round.
+3. Fine-tune small encoders on those labels as HF Jobs in the `baobabtech` namespace with [train_encoder.py](train_encoder.py), which reads everything from the Hub so others can rerun it. Candidates: encoders released since March 2026 under ~300M parameters with a context window of at least 8,192 tokens, with ModernBERT-base and Ettin as 2025 references; label-conditioned models (GLiClass, GLiNER2.5) in a second round.
 4. Score on 01's test excerpts; fit one threshold on 01's validation sample; report compute per excerpt next to the score.
 5. One run on pipeline labels for the same excerpts shows how much the label source matters.
 

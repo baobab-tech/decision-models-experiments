@@ -14,7 +14,7 @@ Current state and next steps. Keep this short: delete items when done, add new o
 
 ## Next
 
-1. **01 context pilot** ([plan](experiments/01-many-option-classification/README.md#context-pilot)): 50 random test excerpts × 5 context variants × GLM and DeepSeek. Pick the variant with the best agreement per input token.
+1. **01 context pilot:** done 2026-10-06; chosen input `doc+summary` (title + Document Start + executive summary/abstract + excerpt): LLM agreement 90.2, pipeline agreement 68–69, +440 tokens.
 2. **01 reference labels:** label the 600 test and 300 validation excerpts with GLM, DeepSeek and Qwen using the chosen context; publish them in the dataset's `llm_labels` config.
 3. **01 zero-shot runs:** decision models with the chosen context (`run.py` needs context in `state`).
 4. **02 first step:** label 10,000 train excerpts (GLM + DeepSeek, soft targets) with the chosen context; publish as the `llm_labels` config; sweep small encoders as HF Jobs (`train_encoder.py`).
