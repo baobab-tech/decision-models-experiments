@@ -15,12 +15,13 @@ Current state and next steps. Keep this short: delete items when done, add new o
 ## Next
 
 1. **Experiment 02, first step** ([plan](experiments/02-fine-tuning/README.md#first-step)):
-   - Label 10,000 train excerpts with GLM, DeepSeek and Qwen (`label_excerpts.py` needs a `--split train` sample option). Qwen takes ~10 hours at 2 concurrent requests; run it overnight.
-   - Fine-tune ModernBERT-base (one sigmoid head per field) and GLiNER2.5-Decide on the 2-of-3 majority; score on 01's test sample; report compute per excerpt.
-2. **Experiment 01 leftovers (optional):** Kev-4B, Kev-0.8B and Verdict zero-shot runs did not finish (2-hour background limit while sharing the Mac). Re-run one at a time if wanted; make `run.py` save responses as it goes first. Servers and environments are in `third_party/` (gitignored).
-3. **Dataset:** add the 300 validation-sample LLM labels (`results/labels/excerpts_*_validation.jsonl`) to `decision-models-evaluation-docs`, and the 10,000 train labels when they exist.
-4. **Dataset viewer:** check that it renders for `decision-models-evaluation-docs`. If it still fails, open a discussion on the repo.
-5. **Baselines:** decide whether to publish the earlier classifier leaderboard; `evalexplorer-classify-experiments` is private.
+   - Labelling 10,000 train excerpts with GLM and DeepSeek (started 2026-10-06, detached processes; resume with `uv run experiments/common/label_excerpts.py --model glm --split train`). Qwen dropped for training labels (~17 h on featherless-ai); targets are soft (1 / 0.5 / 0).
+   - Fine-tune ModernBERT-base (one sigmoid head per field) and GLiNER2.5-Decide on the soft labels; score on 01's test sample (3-LLM majority); report compute per excerpt.
+2. **Taxonomy:** production theme definitions overlap (cash transfers, renewable energy, refugees, mediation, technology transfer each under 2–3 themes; Growth lists only trade terms; Conflict reads as humanitarian practice), and the prompt says 1–3 themes while the zod schema says 1–4. Raise with the taxonomy owner; experiments keep production's version.
+3. **Experiment 01 leftovers (optional):** Kev-4B, Kev-0.8B and Verdict zero-shot runs did not finish (2-hour background limit while sharing the Mac). Re-run one at a time if wanted; make `run.py` save responses as it goes first. Servers and environments are in `third_party/` (gitignored).
+4. **Dataset:** add the 300 validation-sample LLM labels (`results/labels/excerpts_*_validation.jsonl`) to `decision-models-evaluation-docs`, and the 10,000 train labels when they exist.
+5. **Dataset viewer:** check that it renders for `decision-models-evaluation-docs`. If it still fails, open a discussion on the repo.
+6. **Baselines:** decide whether to publish the earlier classifier leaderboard; `evalexplorer-classify-experiments` is private.
 
 ## Don't touch
 

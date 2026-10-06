@@ -140,6 +140,21 @@ def validation_sample() -> list[dict]:
     return rows
 
 
+TRAIN_SAMPLE = {"findings": 5000, "recommendations": 2500, "methodology": 2500}
+TRAIN_IDS = ROOT / "experiments/02-fine-tuning/results/labels/train_sample.json"
+
+
+def train_sample() -> list[dict]:
+    """Fixed experiment-02 training sample from the train split; ids written to TRAIN_IDS."""
+    df = load_dataset(DATASET, "excerpts", split="train", revision=DATASET_REVISION).to_pandas()
+    picks = [df[df["type"] == t].sample(n=n, random_state=0) for t, n in TRAIN_SAMPLE.items()]
+    rows = [r for p in picks for r in p[["excerpt_id", "type", "text"]].to_dict("records")]
+    TRAIN_IDS.parent.mkdir(parents=True, exist_ok=True)
+    TRAIN_IDS.write_text(json.dumps({"dataset_revision": DATASET_REVISION, "split": "train", "design": TRAIN_SAMPLE,
+                                     "seed": 0, "excerpt_ids": [r["excerpt_id"] for r in rows]}, indent=1) + "\n")
+    return rows
+
+
 def parse(content: str, fields: tuple[str, ...], valid: dict[str, set[str]]) -> tuple[dict | None, dict]:
     """First JSON object in content -> per-field code lists, keeping only valid codes; also returns dropped codes."""
     match = re.search(r"\{.*\}", content or "", re.S)
@@ -202,25 +217,29 @@ async def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", choices=MODELS, required=True)
     ap.add_argument("--limit", type=int, help="label only the first N excerpts of eval_sample")
-    ap.add_argument("--split", choices=("test", "validation"), default="test",
+    ap.add_argument("--split", choices=("test", "validation", "train"), default="test",
                     help="test: the 600 eval_sample excerpts; validation: the threshold-fitting sample "
-                         "(150 findings, 75 recommendations, 75 methodology, seed 0)")
+                         "(150 findings, 75 recommendations, 75 methodology, seed 0); train: the experiment-02 "
+                         "training sample (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0)")
     ap.add_argument("--concurrency", type=int, help="default: per-model value in CONCURRENCY")
     ap.add_argument("--out", type=Path, help="default: experiments/01-many-option-classification/results/raw/labels_<model>.jsonl")
     args = ap.parse_args()
 
     load_dotenv(ROOT / ".env")
     model = MODELS[args.model]
-    suffix = "" if args.split == "test" else "_validation"
-    out = args.out or ROOT / f"experiments/01-many-option-classification/results/raw/labels_{args.model}{suffix}.jsonl"
+    suffix = "" if args.split == "test" else f"_{args.split}"
+    exp = "02-fine-tuning" if args.split == "train" else "01-many-option-classification"
+    out = args.out or ROOT / f"experiments/{exp}/results/raw/labels_{args.model}{suffix}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     findings_sys, methods_sys, valid = build_prompts()
     if args.split == "test":
         ds = load_dataset(DATASET, "excerpts", split="test", revision=DATASET_REVISION)
         rows = [r for r in ds if r["eval_sample"]]
-    else:
+    elif args.split == "validation":
         rows = validation_sample()
+    else:
+        rows = train_sample()
     rows.sort(key=lambda r: r["excerpt_id"])
     if args.limit:
         # spread the pilot over the three excerpt types

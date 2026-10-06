@@ -7,6 +7,7 @@ Classify-only prompts for relabelling task B excerpts with GLM-5.3-Flash, DeepSe
 - The pipeline had no separate tagging prompt. It extracted and tagged excerpts in one call per document section: `EXTRACT_AND_CLASSIFY_FINDINGS_PROMPT` and `EXTRACT_AND_CLASSIFY_METHODOLOGY_PROMPT` in `ingestion-pipeline/lib/extract/prompts.ts` of [baobab-tech/eval-explorer](https://github.com/baobab-tech/eval-explorer), commit `6ae90f7` (2026-07-29).
 - Pipeline model: `openai/gpt-oss-120b`, with fallbacks `google/gemini-2.5-flash` and `alibaba/qwen-3-235b`, via Vercel AI Gateway (`ingestion-pipeline/lib/config.ts`).
 - The prompts below keep the pipeline's taxonomy text and classification rules word for word, and drop the extraction instructions.
+- The theme definitions (`definitions_themes.json`) and `prompts.ts` are identical on eval-explorer `main`, `staging` and `6ae90f7` (checked 2026-10-06), so these are the production definitions. The zod schema (`schemas.ts`) takes its enums from `prompts.ts`; its `themes` description says "1-4 relevant theme codes" while the prompt says 1 to 3. These prompts follow the prompt text.
 
 ## Differences from the pipeline
 

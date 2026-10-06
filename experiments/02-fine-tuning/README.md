@@ -10,7 +10,10 @@ Why: 01 found no zero-shot decision model in the LLM range, and small zero-shot 
 
 ## First step
 
-1. Label a fixed sample of 10,000 train excerpts (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0) with GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next, using [label_excerpts.py](../common/label_excerpts.py). Training labels are the 2-of-3 majority. Cost: about $3 for GLM and DeepSeek; Qwen runs 2 requests at a time on featherless-ai, so about 10 hours.
+1. Label a fixed sample of 10,000 train excerpts (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0; ids in `results/labels/train_sample.json`) with GLM-5.3-Flash and DeepSeek-V4.1-Flash, using [label_excerpts.py](../common/label_excerpts.py) and the production taxonomy and definitions (eval-explorer `ingestion-pipeline/lib/extract/`, identical on `main` and `staging`, checked 2026-10-06). Cost: about $3.
+   - Training targets are soft: 1 if both LLMs chose the label, 0.5 if one did, 0 if neither. No third labeller.
+   - Qwen3.8-Flash-Next was dropped for training labels: featherless-ai allows 2 concurrent requests and Qwen reasons on every excerpt, about 10 excerpts per minute, so ~17 hours for 10,000 (2026-10-06). On 01's test sample, Qwen decides 18% of the majority labels (169 of 953), all of them labels where GLM and DeepSeek disagree; soft targets mark those as uncertain instead.
+   - Evaluation is unchanged: 01's 3-LLM majority on the 600 test excerpts, Qwen included.
 2. Fine-tune two models on those labels, on this Mac:
    - a plain ModernBERT-base classifier (150M), one sigmoid head per field, reading each excerpt once;
    - GLiNER2.5-Decide (340M), native multi-label.
@@ -39,12 +42,8 @@ The model list and variables below apply after the first step, if a small model 
 ## Data
 
 - **Splits:** the same as 01. Task A: documents, 1,148 train / 138 validation / 134 test. Task B: excerpts, 157,302 train, sampled per run. See [common/datasets.md](../common/datasets.md).
-- **Evaluation:** against 01's reference, the labels chosen by at least 2 of GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next, on the same test items, so zero-shot and fine-tuned scores compare directly. There is no human gold set, so scores measure agreement with LLMs, not correctness ([01](../01-many-option-classification/README.md#reference-labels)).
-- **Training labels:** settled by a pilot before the main runs.
-  - A fixed sample of 10,000 train excerpts gets GLM, DeepSeek and Qwen labels, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)).
-  - Laya trains twice on the same excerpts: once on pipeline labels, once on consensus labels (at least 2 of the 3 LLMs).
-  - If the consensus-label run scores at least 2 points higher, consensus labels become the default and are generated for the rest of the training data. Otherwise pipeline labels are the default, since they cover every train item. On the task B test sample, pipeline labels agree with the LLM majority at 52.8, against 84.2–85.0 between the LLMs (01, 2026-10-03), so the pilot is expected to favour consensus labels.
-  - Task A gets the same treatment in its phase: DeepSeek and Qwen label the 1,148 train documents; GLM labels already exist.
+- **Evaluation:** against 01's reference, the labels chosen by at least 2 of GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next, on the same test items. Training targets come from GLM and DeepSeek only (soft labels; see [First step](#first-step)), so zero-shot and fine-tuned scores compare directly. There is no human gold set, so scores measure agreement with LLMs, not correctness ([01](../01-many-option-classification/README.md#reference-labels)).
+- **Training labels:** soft GLM + DeepSeek labels (see [First step](#first-step)). One ModernBERT run on pipeline labels for the same excerpts shows how much the label source matters; pipeline labels agree with the LLM majority at 52.8 on 01's test sample, against 84.2–85.0 between the LLMs.
 
 ## Models
 
