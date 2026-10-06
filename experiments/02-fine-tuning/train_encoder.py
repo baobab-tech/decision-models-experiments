@@ -6,6 +6,7 @@
 #   "datasets==5.1.0",
 #   "huggingface_hub>=1.16,<2",
 #   "numpy",
+#   "pycountry==24.6.1",
 # ]
 # ///
 """Experiment 02, first step: fine-tune a small encoder (default ModernBERT-base) to tag evaluation-report excerpts.
@@ -33,6 +34,8 @@ import random
 import time
 from datetime import datetime, timezone
 
+import re
+
 import numpy as np
 import torch
 from datasets import load_dataset, load_from_disk
@@ -46,6 +49,33 @@ FINDINGS_FIELDS = ("themes", "regions", "countries")
 LABELLERS = ("glm", "deepseek")
 CONTEXT_HEADING = "## CONTEXT SECTIONS"  # `input` = excerpt block, then this heading and the document context
 EXCERPTS_PER_DOC = 134.6  # dataset `excerpts` config: 191,136 excerpts over 1,420 documents
+
+
+COUNTRY_ALIASES = {  # names pycountry does not list, or lists differently
+    "vietnam": "VN", "tanzania": "TZ", "bolivia": "BO", "laos": "LA", "lao pdr": "LA", "syria": "SY", "iran": "IR",
+    "russia": "RU", "south korea": "KR", "north korea": "KP", "moldova": "MD", "drc": "CD", "dr congo": "CD",
+    "democratic republic of the congo": "CD", "republic of congo": "CG", "côte d'ivoire": "CI", "cote d'ivoire": "CI",
+    "ivory coast": "CI", "palestine": "PS", "gaza": "PS", "west bank": "PS", "uk": "GB", "united kingdom": "GB",
+    "usa": "US", "united states": "US", "venezuela": "VE", "turkey": "TR", "türkiye": "TR", "czech republic": "CZ",
+    "kyrgyzstan": "KG", "cape verde": "CV", "eswatini": "SZ", "swaziland": "SZ", "burma": "MM", "myanmar": "MM",
+    "macedonia": "MK", "kosovo": "XK", "micronesia": "FM", "taiwan": "TW", "the gambia": "GM", "gambia": "GM",
+}
+
+
+def country_lookup():
+    """Country-name lookup over the excerpt, title and Document Start (not the summaries, which mention
+    comparison and donor countries). Returns text -> set of ISO alpha-2 codes."""
+    import pycountry
+    names = {n.lower(): c.alpha_2 for c in pycountry.countries
+             for n in {c.name, getattr(c, "common_name", None), getattr(c, "official_name", None)} - {None}}
+    names.update(COUNTRY_ALIASES)
+    pat = re.compile(r"\b(" + "|".join(sorted(map(re.escape, names), key=len, reverse=True)) + r")\b", re.I)
+
+    def find(input_text: str) -> set[str]:
+        excerpt, context = split_input(input_text)
+        text = excerpt + "\n" + context.split("### Executive Summary")[0].split("### Abstract")[0]
+        return {names[m.group(1).lower()] for m in pat.finditer(text)}
+    return find
 
 
 def split_input(text: str) -> tuple[str, str]:
@@ -121,10 +151,10 @@ class Tagger(torch.nn.Module):
         return self.head(torch.cat([e, c, e * c], dim=-1))
 
 
-def label_space(tax) -> tuple[list[tuple[str, str]], dict[str, str]]:
+def label_space(tax, exclude=()) -> tuple[list[tuple[str, str]], dict[str, str]]:
     """(field, code) for every output, and country -> region."""
     asked = tax.filter(lambda r: r["in_excerpts"])
-    space = [(r["field"], r["code"]) for r in asked if r["field"] in FIELDS]
+    space = [(r["field"], r["code"]) for r in asked if r["field"] in FIELDS and r["field"] not in exclude]
     country_region = {r["code"]: r["region"] for r in tax if r["field"] == "countries"}
     return space, country_region
 
@@ -156,21 +186,24 @@ def predict(model, tok, rows, device, max_len, batch, arch, context_first=False)
     return np.concatenate(out)
 
 
-def to_sets(probs, rows, space, country_region, t) -> dict:
+def to_sets(probs, rows, space, country_region, t, lookup=None) -> dict:
+    """Labels at threshold t; with lookup, countries come from the country-name lookup instead of the model."""
     preds = {}
     for p, row in zip(probs, rows):
         fields = ("methods",) if row["type"] == "methodology" else FINDINGS_FIELDS
         sets = {f: {code for (field, code), v in zip(space, p) if field == f and v >= t} for f in fields}
+        if lookup is not None and "countries" in sets:
+            sets["countries"] = lookup(row["input"])
         if "regions" in sets:
             sets["regions"] |= {country_region[c] for c in sets["countries"] if country_region.get(c)}
         preds[row["excerpt_id"]] = sets
     return preds
 
 
-def score(preds, rows) -> dict:
+def score(preds, rows, fields=FIELDS) -> dict:
     """Micro-F1 x 100 per field against each labelling LLM, averaged over LLMs; mean over fields."""
     out = {}
-    for f in FIELDS:
+    for f in fields:
         ids = [r for r in rows if (r["type"] == "methodology") == (f == "methods")]
         vs = []
         for m in LABELLERS:
@@ -181,7 +214,7 @@ def score(preds, rows) -> dict:
             vs.append(100 * 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else 100.0)
         out[f] = {"micro_f1": sum(vs) / len(vs), "n": len(ids),
                   "labels_per_item": sum(len(preds[r["excerpt_id"]].get(f, ())) for r in ids) / len(ids)}
-    return {"fields": out, "mean_field_score": sum(v["micro_f1"] for v in out.values()) / len(FIELDS)}
+    return {"fields": out, "mean_field_score": sum(v["micro_f1"] for v in out.values()) / len(fields)}
 
 
 def main() -> None:
@@ -191,6 +224,10 @@ def main() -> None:
     ap.add_argument("--arch", choices=("joint", "two_tower"), default="joint",
                     help="joint: excerpt + context in one pass, pooled over the excerpt; "
                          "two_tower: context encoded once per document")
+    ap.add_argument("--exclude-fields", nargs="*", default=(), choices=FIELDS,
+                    help="train without these outputs, e.g. countries")
+    ap.add_argument("--country-lookup", action="store_true",
+                    help="countries from the country-name lookup (excerpt, title, Document Start), not the model")
     ap.add_argument("--context-first", action="store_true",
                     help="joint input with context before the excerpt, for one-directional (decoder) encoders")
     ap.add_argument("--base-revision", default=None, help="commit; resolved and recorded if omitted")
@@ -218,7 +255,9 @@ def main() -> None:
     train, val, test = (list(data[s]) for s in ("train", "validation", "test"))
     if args.limit_train:
         train = train[:args.limit_train]
-    space, country_region = label_space(tax)
+    space, country_region = label_space(tax, args.exclude_fields)
+    lookup = country_lookup() if args.country_lookup else None
+    scored = tuple(f for f in FIELDS if f not in args.exclude_fields or (f == "countries" and lookup))
     print(f"device {device}; outputs {len(space)}; train {len(train)} val {len(val)} test {len(test)}; "
           f"labels {args.labels}")
 
@@ -254,20 +293,21 @@ def main() -> None:
                 total += loss.item() * len(idx)
             opt.step()
             sched.step()
-        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 16, args.arch, args.context_first), val, space, country_region, 0.5),
-                          val)["mean_field_score"]
+        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 16, args.arch, args.context_first), val, space, country_region, 0.5, lookup),
+                          val, scored)["mean_field_score"]
         print(f"epoch {epoch + 1}: train loss {total / len(train):.4f}; validation mean at 0.5 {val_score:.1f}")
     train_s = time.perf_counter() - t0
 
     val_probs = predict(model, tok, val, device, args.max_len, 16, args.arch, args.context_first)
     grid = [round(0.05 * i, 2) for i in range(1, 20)]
-    curve = {t: score(to_sets(val_probs, val, space, country_region, t), val)["mean_field_score"] for t in grid}
+    curve = {t: score(to_sets(val_probs, val, space, country_region, t, lookup), val, scored)["mean_field_score"]
+             for t in grid}
     best_t = max(t for t, v in curve.items() if v == max(curve.values()))
 
     t1 = time.perf_counter()
     test_probs = predict(model, tok, test, device, args.max_len, 16, args.arch, args.context_first)
     infer_s = time.perf_counter() - t1
-    results = {t_name: score(to_sets(test_probs, test, space, country_region, t), test)
+    results = {t_name: score(to_sets(test_probs, test, space, country_region, t, lookup), test, scored)
                for t_name, t in (("at_0.5", 0.5), ("fitted", best_t))}
     ex_tok = [len(tok(split_input(r["input"])[0], add_special_tokens=False)["input_ids"]) for r in test]
     cx_tok = [len(tok(split_input(r["input"])[1], add_special_tokens=False)["input_ids"]) for r in test]
@@ -290,14 +330,17 @@ def main() -> None:
         "training_labels": "soft share of glm, deepseek" if args.labels == "llm" else "pipeline",
         "reference": "test: mean agreement with glm and deepseek", "device": device,
         "gpu": torch.cuda.get_device_name() if device == "cuda" else None,
-        "job_id": os.environ.get("JOB_ID"), **{k: v for k, v in vars(args).items() if k not in ("push_to", "local_data", "no_push", "base", "base_revision")},
+        "job_id": os.environ.get("JOB_ID"), "fields_scored": list(scored),
+        **{k: (list(v) if isinstance(v, tuple) else v) for k, v in vars(args).items()
+           if k not in ("push_to", "local_data", "no_push", "base", "base_revision")},
     }
     print(json.dumps({"run": run, "metrics": {k: metrics[k] for k in ("at_0.5", "fitted", "threshold", "compute")}},
                      indent=1))
 
     if args.no_push:
         return
-    repo = f"{args.push_to}-{args.base.split('/')[-1].lower()}-{args.labels}" + ("-2tower" if args.arch == "two_tower" else "")
+    repo = f"{args.push_to}-{args.base.split('/')[-1].lower()}-{args.labels}" + ("-2tower" if args.arch == "two_tower" else "") \
+        + ("-no" + "-".join(args.exclude_fields) if args.exclude_fields else "") + ("-lookup" if args.country_lookup else "")
     api = HfApi()
     api.create_repo(repo, private=True, exist_ok=True)
     os.makedirs("out", exist_ok=True)

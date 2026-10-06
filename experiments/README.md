@@ -12,6 +12,18 @@ Statuses: `proposed` → `planned` (plan approved) → `running` → `done`.
 
 Experiment 03 is [LlamaIndex's `jev_vs_oss`](https://github.com/run-llama/jev_vs_oss) (MIT), copied with credit; its results are theirs.
 
+## The story so far
+
+For outside readers; each step links to the experiment README with the numbers.
+
+1. **The task.** EvalExplorer's ingestion pipeline uses a large LLM to tag excerpts of evaluation reports with themes (22), regions (17), countries (198) and methods (24), with document context in view. Can a much smaller model do it?
+2. **Context decides the answer.** Tagged alone, an excerpt rarely says which country it is about. Adding the report's title, first 100 words and executive summary raises agreement with the pipeline from 44 to 68; adding the whole section lowers it ([01 context pilot](01-many-option-classification/README.md#pilot-result)).
+3. **The bar.** No human gold set exists. Two LLMs (GLM-5.3-Flash, DeepSeek-V4.1-Flash) given that context agree at 88.8 micro-F1; a model at that level agrees with each LLM as much as they agree with each other ([01 reference](01-many-option-classification/README.md#reference-labels-result)).
+4. **Geography is mostly a lookup.** Matching country names in the excerpt, title and first 100 words scores 71.6 on countries and 74.7 on regions with no model at all ([01 lookup](01-many-option-classification/README.md#country-lookup-baseline)).
+5. **Zero-shot decision models** (Jev, d1, GLiDE, GLiNER2.5-Decide, Kev, Laya, Verdict): to be rerun with the chosen context.
+6. **Fine-tuned small encoders** (32M–270M parameters, trained on 10,000 LLM-labelled excerpts): results per encoder, compute per excerpt, a two-tower variant that reads document context once per report, and a hybrid with countries from the lookup ([02](02-fine-tuning/README.md)).
+7. **What to deploy:** after 5 and 6.
+
 ## Layout
 
 ```

@@ -10,3 +10,6 @@
 2026-10-06T20:42:56Z	6ac55d50fbc85ba6823b9605	jhu-clsp/ettin-encoder-150m	--arch two_tower
 2026-10-06T20:42:57Z	6ac55d51404719ba37663063	jhu-clsp/mmBERT-small	
 2026-10-06T20:42:58Z	6ac55d52fbc85ba6823b9607	Alibaba-NLP/gte-modernbert-base	
+2026-10-06T21:01:01Z	6ac5618dfbc85ba6823b98f5	jhu-clsp/ettin-encoder-150m	--exclude-fields countries --country-lookup
+2026-10-06T21:01:02Z	6ac5618efbc85ba6823b98fe	jhu-clsp/ettin-encoder-32m	--exclude-fields countries --country-lookup
+2026-10-06T21:01:03Z	6ac5618f404719ba376632d6	LiquidAI/LFM2.5-Encoder-230M	--trust-remote-code --exclude-fields countries --country-lookup

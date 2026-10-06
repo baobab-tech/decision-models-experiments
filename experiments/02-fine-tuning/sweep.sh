@@ -36,3 +36,7 @@ run jhu-clsp/ettin-encoder-150m --arch two_tower
 # Multilingual reference (2025)
 run jhu-clsp/mmBERT-small
 run Alibaba-NLP/gte-modernbert-base
+# Hybrid: no country outputs; countries from the country-name lookup, regions from the model ∪ lookup countries
+run jhu-clsp/ettin-encoder-150m --exclude-fields countries --country-lookup
+run jhu-clsp/ettin-encoder-32m --exclude-fields countries --country-lookup
+run LiquidAI/LFM2.5-Encoder-230M --trust-remote-code --exclude-fields countries --country-lookup
