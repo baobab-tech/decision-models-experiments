@@ -1,6 +1,6 @@
 # 01 Many-option classification
 
-**Status:** planned. Plan approved 2026-10-02; phase 1 (task B) runs first.
+**Status:** done (phase 1, 2026-10-06). Phase 2 not run. See [conclusion](#phase-1-conclusion).
 
 ## Question
 
@@ -158,15 +158,17 @@ Labels per excerpt:
 - Calls: 600 per model, no errors or truncations after retries. GLM 0.86M tokens (p50 3.8 s); DeepSeek 0.84M (p50 1.4 s); Qwen 1.09M, including 216k reasoning tokens (p50 7 s; up to 6,906 output tokens).
 - Two codes outside the label lists were dropped: one DeepSeek, one Qwen.
 
-### Phase 1: API decision models, threshold 0.5
+### Phase 1: decision models, threshold 0.5
 
-Run 2026-10-04 on the 600 `eval_sample` excerpts, dataset revision `5017706`; `definitions` variant; 198 country codes; one Noul per label, label kept when p ≥ 0.5. Scores are micro-F1 × 100 against the 3-LLM majority; they measure agreement with LLMs, not correctness. LLM range: 84.2–85.0.
+Run 2026-10-04 and 2026-10-05 on the 600 `eval_sample` excerpts, dataset revision `5017706`; `definitions` variant; 198 country codes; one Noul per label, label kept when p ≥ 0.5. Scores are micro-F1 × 100 against the 3-LLM majority; they measure agreement with LLMs, not correctness. LLM range: 84.2–85.0.
 
 | Model | Provider | Themes | Regions | Countries | Methods | Mean | Mean vs each LLM | Vs pipeline |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | Jev | `typesafe-ai` (gateway) | 66.2 | 78.2 | 71.1 | 68.3 | **71.0** | 69.8 | 43.6 |
 | GLiDE | Fastino API | 59.5 | 56.7 | 41.0 | 52.2 | **52.4** | 51.1 | 37.5 |
 | d1 | `liquid` (gateway) | 64.5 | 27.4 | 15.3 | 51.0 | **39.5** | 38.9 | 35.7 |
+| GLiNER2.5-Decide | this Mac (MPS), native multi-label | 21.1 | 12.3 | 9.6 | 33.3 | **19.1** | 18.9 | 14.6 |
+| Laya 0.3.27 | this Mac (MPS), `laya-serve` | 23.1 | 22.1 | 10.8 | 14.1 | **17.5** | 17.5 | 18.6 |
 
 Labels per excerpt (reference: themes 1.48, regions 0.21, countries 0.25, methods 0.51):
 
@@ -175,6 +177,8 @@ Labels per excerpt (reference: themes 1.48, regions 0.21, countries 0.25, method
 | Jev | 1.28 | 0.19 | 0.19 | 0.85 |
 | GLiDE | 1.53 | 0.40 | 0.39 | 1.15 |
 | d1 | 2.05 | 0.94 | 1.78 | 1.45 |
+| GLiNER2.5-Decide | 11.56 | 0.04 | 0.03 | 0.17 |
+| Laya | 5.24 | 0.74 | 1.32 | 3.55 |
 
 Regions are the union of the direct region Nouls and the regions of predicted countries. Each part alone:
 
@@ -195,6 +199,45 @@ Speed and cost (1,950 requests, 110,250 Nouls):
 - At p = 0.5, d1 and GLiDE over-tag: d1 gives 7× the reference's countries per excerpt. Their scores depend on the threshold, so these are not their best scores.
 - Regions: 88 of the reference's 95 region labels follow from its countries; 7 name a region with no country. The union keeps both. For d1 and GLiDE, the union scores below the direct Nouls because their over-tagged countries add wrong regions.
 - Jev is the closest to the LLM range: 13–14 points below it.
+
+- Not run: Kev-4B, Kev-0.8B and openJev Verdict. Their full runs hit the 2-hour background limit on 2026-10-05 while four local models shared the Mac, and the runner saves results only at the end. Kev-4B's 9-excerpt smoke test scored 51.0.
+- Local latencies are not comparable: GLiNER and Laya ran while other models shared the Mac (GLiNER p50 1.8 s, Laya 3.7 s per request).
+
+### Phase 1: thresholds
+
+Thresholds per model and field were fitted on a 300-excerpt validation sample (150 findings, 75 recommendations, 75 methodology, seed 0; labelled by the same three LLMs; [results/labels/](results/labels/)), with [fit.py](fit.py).
+
+| Model | Test at 0.5 | Fitted per field | One threshold per model |
+|---|---:|---:|---:|
+| Jev | 71.0 | 66.7 | 70.1 (0.55) |
+| GLiDE | 52.4 | 58.5 | 60.1 (0.60) |
+| d1 | 39.5 | 56.2 | 49.6 (0.85) |
+
+Fitting raises d1 and GLiDE by 6–17 points and does not help Jev; no model reaches the LLM range. 300 validation excerpts give unstable per-field fits (Jev scores 59.2 on validation and 71.0 on test at 0.5). Thresholds were not fitted for the local models.
+
+### Phase 1: compute per excerpt
+
+Estimated compute ≈ 2 × active parameters × tokens processed per excerpt. Token counts come from API usage where reported; others are estimates. Jev, d1 and GLiDE do not disclose their size.
+
+| Model | Active parameters | Tokens per excerpt | Compute vs DeepSeek | Score |
+|---|---:|---:|---:|---:|
+| DeepSeek-V4.1-Flash (labeller) | 8–16B of 552B ([card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)) | ~1,400 (measured) | 1× | in LLM range |
+| Jev | n/d | ~5,800 (measured) | n/d | 71.0 |
+| d1 | n/d | ~20,800 (measured) | n/d | 39.5 |
+| GLiDE | n/d | ~25,800 (measured; includes reasoning passes) | n/d | 52.4 |
+| Laya | 421M | ~18,000 (est.: 237 Nouls × ~75 tokens) | ~1/3 (est.) | 17.5 |
+| GLiNER2.5-Decide | 340M | ~1,500 (est.: excerpt + label list) | ~1/45 (est.) | 19.1 |
+| Fine-tuned encoder with label heads (experiment 02) | ~150M | ~100 (est.: excerpt once) | ~1/1,000 (est.) | to test |
+
+- One Noul per label costs most of a small model's advantage: Laya processes about 13× more tokens per excerpt than DeepSeek.
+- Measured energy is not available for API models. Local runs can be measured with `powermetrics` (needs sudo).
+
+### Phase 1: conclusion
+
+- No zero-shot decision model reaches the LLM range (84.2–85.0) on excerpt tagging. Jev comes closest at 71.0; the small local models score 17–19.
+- Per excerpt, DeepSeek-V4.1-Flash cost $0.0003 at list price, about the same as Jev ($0.0002) and below GLiDE ($0.008).
+- The case for small models is compute and environmental impact, and it rests on fine-tuning: a ~150M encoder that reads each excerpt once would use about 1/1,000 of DeepSeek's compute. Experiment [02](../02-fine-tuning/) tests whether it reaches the LLM range.
+- Phase 2 (task A, ~2,000-token first pages) was not run: longer inputs do not change this conclusion for zero-shot models.
 
 ## Write-up
 

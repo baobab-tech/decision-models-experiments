@@ -1,0 +1,29 @@
+{
+  "experiment": "01-many-option-classification",
+  "phase": 1,
+  "task": "B",
+  "run_id": "jev-definitions-excerpts-val-20261005T0008",
+  "date": "2026-10-05T00:08:57.777894+00:00",
+  "model": "jev",
+  "model_id": "typesafe-ai/jev",
+  "where": "gateway",
+  "provider": [
+    "typesafe-ai"
+  ],
+  "dataset": "baobabtech/decision-models-evaluation-docs",
+  "dataset_version": "5017706",
+  "split": "validation",
+  "subset": "results/labels/validation_sample.json",
+  "n": 300,
+  "question_format": "noul-per-label",
+  "threshold": 0.5,
+  "variant": "definitions",
+  "countries": "excerpts",
+  "regions": "direct region Nouls \u222a regions of predicted countries (taxonomy map); variants in metrics.json",
+  "reference": "majority of glm, deepseek, qwen",
+  "hardware": "arm64 Darwin (client)",
+  "revision": null,
+  "serving": null,
+  "max_questions_per_request": 128,
+  "concurrency": 8
+}

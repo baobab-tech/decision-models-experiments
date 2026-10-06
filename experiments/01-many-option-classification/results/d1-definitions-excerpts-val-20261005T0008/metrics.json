@@ -1,0 +1,63 @@
+{
+  "n": {
+    "themes": 225,
+    "regions": 225,
+    "countries": 225,
+    "methods": 75
+  },
+  "fields": {
+    "themes": {
+      "micro_f1": 67.40196078431373,
+      "macro_f1": 61.847247333508804,
+      "micro_f1_mean_vs_llms": 65.25094870853225,
+      "micro_f1_vs_pipeline": 57.51503006012024,
+      "labels_per_item": 2.026666666666667
+    },
+    "regions": {
+      "micro_f1": 26.373626373626372,
+      "macro_f1": 35.570972886762355,
+      "micro_f1_mean_vs_llms": 26.35903765355793,
+      "micro_f1_vs_pipeline": 23.098591549295776,
+      "labels_per_item": 0.9688888888888889
+    },
+    "countries": {
+      "micro_f1": 19.047619047619047,
+      "macro_f1": 45.54545454545455,
+      "micro_f1_mean_vs_llms": 18.947020882829147,
+      "micro_f1_vs_pipeline": 14.798206278026905,
+      "labels_per_item": 1.3555555555555556
+    },
+    "methods": {
+      "micro_f1": 45.3125,
+      "macro_f1": 57.78083028083027,
+      "micro_f1_mean_vs_llms": 45.559535201640465,
+      "micro_f1_vs_pipeline": 48.08743169398907,
+      "labels_per_item": 1.28
+    }
+  },
+  "mean_field_score": 39.53392655138979,
+  "mean_field_score_mean_vs_llms": 39.029135611639944,
+  "mean_field_score_vs_pipeline": 35.874814895358,
+  "regions_variants": {
+    "regions_direct": {
+      "micro_f1": 63.04347826086956,
+      "macro_f1": 45.551839464882946,
+      "micro_f1_mean_vs_llms": 61.31710583323487,
+      "micro_f1_vs_pipeline": 27.586206896551722,
+      "labels_per_item": 0.16444444444444445
+    },
+    "regions_derived": {
+      "micro_f1": 25.56390977443609,
+      "macro_f1": 33.63538794030785,
+      "micro_f1_mean_vs_llms": 25.556778032417473,
+      "micro_f1_vs_pipeline": 22.413793103448278,
+      "labels_per_item": 0.9377777777777778
+    }
+  },
+  "errors": 0,
+  "latency_p50_ms": 630,
+  "latency_p95_ms": 1132,
+  "wall_s": 90.6,
+  "cost_usd": 0.252743,
+  "input_tokens": 6318564
+}

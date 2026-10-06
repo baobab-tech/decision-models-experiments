@@ -124,6 +124,22 @@ def build_prompts() -> tuple[str, str, dict[str, set[str]]]:
     return findings, method, valid
 
 
+VALIDATION_SAMPLE = {"findings": 150, "recommendations": 75, "methodology": 75}
+VALIDATION_IDS = ROOT / "experiments/01-many-option-classification/results/labels/validation_sample.json"
+
+
+def validation_sample() -> list[dict]:
+    """Fixed threshold-fitting sample from the validation split; ids written to VALIDATION_IDS."""
+    df = load_dataset(DATASET, "excerpts", split="validation", revision=DATASET_REVISION).to_pandas()
+    picks = [df[df["type"] == t].sample(n=n, random_state=0) for t, n in VALIDATION_SAMPLE.items()]
+    rows = [r for p in picks for r in p[["excerpt_id", "type", "text"]].to_dict("records")]
+    VALIDATION_IDS.parent.mkdir(parents=True, exist_ok=True)
+    VALIDATION_IDS.write_text(json.dumps({"dataset_revision": DATASET_REVISION, "split": "validation",
+                                          "design": VALIDATION_SAMPLE, "seed": 0,
+                                          "excerpt_ids": [r["excerpt_id"] for r in rows]}, indent=1) + "\n")
+    return rows
+
+
 def parse(content: str, fields: tuple[str, ...], valid: dict[str, set[str]]) -> tuple[dict | None, dict]:
     """First JSON object in content -> per-field code lists, keeping only valid codes; also returns dropped codes."""
     match = re.search(r"\{.*\}", content or "", re.S)
@@ -186,18 +202,25 @@ async def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", choices=MODELS, required=True)
     ap.add_argument("--limit", type=int, help="label only the first N excerpts of eval_sample")
+    ap.add_argument("--split", choices=("test", "validation"), default="test",
+                    help="test: the 600 eval_sample excerpts; validation: the threshold-fitting sample "
+                         "(150 findings, 75 recommendations, 75 methodology, seed 0)")
     ap.add_argument("--concurrency", type=int, help="default: per-model value in CONCURRENCY")
     ap.add_argument("--out", type=Path, help="default: experiments/01-many-option-classification/results/raw/labels_<model>.jsonl")
     args = ap.parse_args()
 
     load_dotenv(ROOT / ".env")
     model = MODELS[args.model]
-    out = args.out or ROOT / f"experiments/01-many-option-classification/results/raw/labels_{args.model}.jsonl"
+    suffix = "" if args.split == "test" else "_validation"
+    out = args.out or ROOT / f"experiments/01-many-option-classification/results/raw/labels_{args.model}{suffix}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     findings_sys, methods_sys, valid = build_prompts()
-    ds = load_dataset(DATASET, "excerpts", split="test", revision=DATASET_REVISION)
-    rows = [r for r in ds if r["eval_sample"]]
+    if args.split == "test":
+        ds = load_dataset(DATASET, "excerpts", split="test", revision=DATASET_REVISION)
+        rows = [r for r in ds if r["eval_sample"]]
+    else:
+        rows = validation_sample()
     rows.sort(key=lambda r: r["excerpt_id"])
     if args.limit:
         # spread the pilot over the three excerpt types

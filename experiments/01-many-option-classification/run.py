@@ -32,7 +32,9 @@ ROOT = HERE.parents[1]
 DATASET = "baobabtech/decision-models-evaluation-docs"
 DATASET_REVISION = "5017706"
 THRESHOLD = 0.5
-MAX_QUESTIONS = 128  # d1 rejects requests with more than 128 questions (2026-10-04); applied to every model
+MAX_QUESTIONS = 128  # d1 rejects requests with more than 128 questions (2026-10-04); default chunk size
+# Per-model caps: laya-serve rejects more than 64 questions (HTTP 413). Nouls are answered independently,
+# so chunk size does not change answers.
 
 # backend, model id, options
 MODELS = {
@@ -44,15 +46,46 @@ MODELS = {
                                            "revision": "jaredpalmer/kev-4b@139fdd94", "serving": "kev.serve, MLX, bf16"}),
     "kev-0.8b": ("systemone", "kev-latest", {"url": "http://127.0.0.1:8010/v1/systemone",
                                              "revision": "jaredpalmer/kev-0.8b@9a45d25e", "serving": "kev.serve, MLX, bf16"}),
+    "gliner-decide": ("bridge", "fastino/GLiNER2.5-Decide", {
+        "python": "third_party/gliner/.venv/bin/python", "script": "local/gliner_bridge.py", "args": ["--device", "mps"],
+        "revision": "fastino/GLiNER2.5-Decide", "serving": "gliner2 2.0.0, native multi-label, MPS"}),
+    "verdict": ("bridge", "heman10x/rlcd-modernbert-151m", {
+        "python": "third_party/Verdict-open-jev/.venv/bin/python", "script": "local/verdict_bridge.py",
+        "args": ["--device", "cpu"], "revision": "Verdict-open-jev@30f1556; HF calibrator 8af2496e",
+        "serving": "rlcd 0.1.0, ONNX Runtime CPU, Nouls"}),
     "laya": ("systemone", None, {"url": "http://127.0.0.1:8000/v1/systemone", "key_env": "LAYA_API_KEY",
-                                 "key_header": "Authorization"}),
+                                 "key_header": "Authorization", "max_questions": 64,
+                                 "revision": "laya 0.3.27 (Router)", "serving": "laya-serve, PyTorch MPS"}),
 }
 
 
-def load(limit: int | None):
+LABELS = HERE / "results/labels"
+LLMS = ("glm", "deepseek", "qwen")
+
+
+def attach_llm_labels(sample, suffix: str) -> None:
+    """Add <field>_<llm> and <field>_majority (2 of 3) columns from results/labels/excerpts_<llm><suffix>.jsonl."""
+    per_llm = {m: {r["excerpt_id"]: r["labels"] for r in map(json.loads, (LABELS / f"excerpts_{m}{suffix}.jsonl").open())}
+               for m in LLMS}
+    for f in FIELDS:
+        for m in LLMS:
+            sample[f"{f}_{m}"] = [sorted(per_llm[m][e].get(f, [])) for e in sample.index]
+        sample[f"{f}_majority"] = [
+            sorted({c for c in sum((per_llm[m][e].get(f, []) for m in LLMS), []) if
+                    sum(c in per_llm[m][e].get(f, []) for m in LLMS) >= 2}) for e in sample.index]
+
+
+def load(limit: int | None, split: str = "test"):
     tax = load_dataset(DATASET, "taxonomy", split="train", revision=DATASET_REVISION).to_pandas()
-    exc = load_dataset(DATASET, "excerpts", split="test", revision=DATASET_REVISION).to_pandas()
-    sample = exc[exc.eval_sample].set_index("excerpt_id").sort_index()
+    exc = load_dataset(DATASET, "excerpts", split=split, revision=DATASET_REVISION).to_pandas()
+    if split == "test":
+        sample = exc[exc.eval_sample].set_index("excerpt_id").sort_index()
+    else:  # threshold-fitting sample; LLM labels come from results/labels, not the dataset
+        ids = json.loads((LABELS / "validation_sample.json").read_text())["excerpt_ids"]
+        sample = exc.set_index("excerpt_id").loc[sorted(ids)].copy()
+        for f in FIELDS:
+            sample[f] = sample[f].map(lambda v: list(v) if v is not None else [])
+        attach_llm_labels(sample, "_validation")
     if limit:  # spread over the three excerpt types
         sample = sample.groupby("type").head(-(-limit // 3)).iloc[:limit]
     return tax, sample
@@ -78,16 +111,22 @@ def noul_text(field: str, label: str, definition: str | None, variant: str) -> s
     return f"The excerpt substantively discusses {label}, not just a passing mention"
 
 
-def build_requests(tax, sample, variant: str, countries: str) -> list[dict]:
+def build_requests(tax, sample, variant: str, countries: str, max_questions: int = MAX_QUESTIONS) -> list[dict]:
     reqs = []
     for eid, row in sample.iterrows():
         fields = ("methods",) if row["type"] == "methodology" else ("themes", "regions", "countries")
         for f in fields:
+            opts = options(tax, f, countries)
             questions = [(f"{f}__{code}", {"type": "noul", "instructions": noul_text(f, label, d, variant)})
-                         for code, label, d in options(tax, f, countries)]
-            for i in range(0, len(questions), MAX_QUESTIONS):
-                reqs.append({"id": f"{eid}::{f}::{i // MAX_QUESTIONS}", "state": row["text"],
-                             "questions": dict(questions[i:i + MAX_QUESTIONS])})
+                         for code, label, d in opts]
+            # label metadata for native multi-label backends (GLiNER); Jev-format backends ignore it
+            meta = {f"{f}__{code}": {"label": label,
+                                     "description": d if (f == "methods" or variant == "definitions") else None}
+                    for code, label, d in opts}
+            for i in range(0, len(questions), max_questions):
+                chunk = dict(questions[i:i + max_questions])
+                reqs.append({"id": f"{eid}::{f}::{i // max_questions}", "state": row["text"], "questions": chunk,
+                             "labels": {k: meta[k] for k in chunk}})
     return reqs
 
 
@@ -98,6 +137,14 @@ def call_gateway(model_id: str, opts: dict, reqs: list[dict], concurrency: int) 
     proc = subprocess.run(cmd, input="".join(json.dumps(r) + "\n" for r in reqs), capture_output=True, text=True,
                           check=True)
     return [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
+
+
+def call_bridge(opts: dict, reqs: list[dict]) -> list[dict]:
+    """Pipe requests through a local Python bridge running in the model's own environment."""
+    cmd = [str(ROOT / opts["python"]), str(HERE / opts["script"]), *opts.get("args", [])]
+    proc = subprocess.run(cmd, input="".join(json.dumps(r) + "\n" for r in reqs), capture_output=True, text=True,
+                          check=True)
+    return [json.loads(line) for line in proc.stdout.splitlines() if line.strip().startswith("{")]
 
 
 async def call_systemone(model_id: str | None, opts: dict, reqs: list[dict], concurrency: int) -> list[dict]:
@@ -165,22 +212,27 @@ def main() -> None:
     ap.add_argument("--countries", choices=("excerpts", "all"), default="excerpts",
                     help="country codes seen in the excerpts (198) or all ISO codes in the taxonomy (250)")
     ap.add_argument("--limit", type=int, help="first N eval_sample excerpts, spread over the three types")
+    ap.add_argument("--split", choices=("test", "validation"), default="test",
+                    help="validation: the 300-excerpt threshold-fitting sample")
     ap.add_argument("--concurrency", type=int, default=8)
     args = ap.parse_args()
 
     load_dotenv(ROOT / ".env")
     backend, model_id, opts = MODELS[args.model]
-    tax, sample = load(args.limit)
-    reqs = build_requests(tax, sample, args.variant, args.countries)
+    tax, sample = load(args.limit, args.split)
+    reqs = build_requests(tax, sample, args.variant, args.countries, opts.get("max_questions", MAX_QUESTIONS))
 
     started = datetime.now(timezone.utc)
-    run_id = f"{args.model}-{args.variant}-{args.countries}-{'n' + str(len(sample)) + '-' if args.limit else ''}" \
+    run_id = f"{args.model}-{args.variant}-{args.countries}-{'val-' if args.split == 'validation' else ''}" \
+             f"{'n' + str(len(sample)) + '-' if args.limit else ''}" \
              f"{started:%Y%m%dT%H%M}"
     print(f"{run_id}: {len(sample)} excerpts, {len(reqs)} requests, "
           f"{sum(len(r['questions']) for r in reqs)} Nouls")
     t0 = time.perf_counter()
     if backend == "gateway":
         responses = call_gateway(model_id, opts, reqs, args.concurrency)
+    elif backend == "bridge":
+        responses = call_bridge(opts, reqs)
     else:
         responses = asyncio.run(call_systemone(model_id, opts, reqs, args.concurrency))
     wall_s = time.perf_counter() - t0
@@ -216,15 +268,16 @@ def main() -> None:
     run = {
         "experiment": "01-many-option-classification", "phase": 1, "task": "B", "run_id": run_id,
         "date": started.isoformat(), "model": args.model, "model_id": model_id,
-        "where": "gateway" if backend == "gateway" else ("api" if opts["url"].startswith("https") else "local"),
+        "where": "gateway" if backend == "gateway" else ("api" if opts.get("url", "").startswith("https") else "local"),
         "provider": sorted({r.get("provider") for r in ok if r.get("provider")}) or None,
-        "dataset": DATASET, "dataset_version": DATASET_REVISION, "split": "test", "subset": "eval_sample",
+        "dataset": DATASET, "dataset_version": DATASET_REVISION, "split": args.split,
+        "subset": "eval_sample" if args.split == "test" else "results/labels/validation_sample.json",
         "n": len(sample), "question_format": "noul-per-label", "threshold": THRESHOLD,
         "variant": args.variant, "countries": args.countries,
         "regions": "direct region Nouls ∪ regions of predicted countries (taxonomy map); variants in metrics.json", "reference": "majority of glm, deepseek, qwen",
-        "hardware": f"{platform.machine()} {platform.system()} (client)" if backend == "gateway" or opts["url"].startswith("https")
+        "hardware": f"{platform.machine()} {platform.system()} (client)" if backend == "gateway" or opts.get("url", "").startswith("https")
         else "Apple M5 Max, 128 GB", "revision": opts.get("revision"), "serving": opts.get("serving"),
-        "concurrency": args.concurrency,
+        "max_questions_per_request": opts.get("max_questions", MAX_QUESTIONS), "concurrency": args.concurrency,
     }
     (out / "run.json").write_text(json.dumps(run, indent=2) + "\n")
     (out / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")

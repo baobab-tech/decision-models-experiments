@@ -1,7 +1,8 @@
 """Bridge from Jev wire-format requests to local GLiNER2.5-Decide, using its native multi-label classification.
 
-Each request's Nouls become one multi-label task: labels = question keys, label descriptions = Noul instructions.
-The per-label probability is returned as the Noul answer, so run.py thresholds and scores it like any model.
+Each request becomes one multi-label task over its labels (human label names, with definitions as label
+descriptions when the run uses them). Every label's score is returned as the Noul answer, so run.py thresholds
+and scores it like any model.
 
 stdin: JSONL {id, state, questions}; stdout: JSONL {id, answers, latency_ms, model_id} or {id, error}.
 Run with the GLiNER environment: third_party/gliner/.venv/bin/python local/gliner_bridge.py --device mps
@@ -39,13 +40,15 @@ def main() -> None:
         req = json.loads(line)
         t0 = time.perf_counter()
         try:
-            labels = {key: q["instructions"] for key, q in req["questions"].items()}
-            task = {"labels": labels, "multi_label": True}
-            out = model.classify_text(req["state"], {"task": task}, include_confidence=True)
-            probs = out["task"]["probabilities"] if isinstance(out.get("task"), dict) else None
-            if probs is None:
-                raise ValueError(f"no probabilities in output: {str(out)[:300]}")
-            answers = {key: {"type": "noul", "noul": float(probs.get(key, 0.0))} for key in labels}
+            meta = req.get("labels") or {k: {"label": q["instructions"], "description": None}
+                                         for k, q in req["questions"].items()}
+            name_to_key = {m["label"]: k for k, m in meta.items()}
+            labels = {m["label"]: (m.get("description") or m["label"]) for m in meta.values()}
+            # cls_threshold 0 returns every label with its score; >= 0.5 equals GLiNER's default selection
+            task = {"labels": labels, "multi_label": True, "cls_threshold": 0.0}
+            out = model.classify_text(req["state"], {"task": task}, threshold=0.0, include_confidence=True)
+            scores = {d["label"]: float(d["confidence"]) for d in out["task"]}
+            answers = {key: {"type": "noul", "noul": scores.get(name, 0.0)} for name, key in name_to_key.items()}
             res = {"id": req["id"], "answers": answers, "latency_ms": round((time.perf_counter() - t0) * 1000),
                    "model_id": MODEL}
         except Exception as e:

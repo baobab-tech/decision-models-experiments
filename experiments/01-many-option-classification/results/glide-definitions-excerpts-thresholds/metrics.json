@@ -1,0 +1,125 @@
+{
+  "fitted": {
+    "n": {
+      "themes": 450,
+      "regions": 450,
+      "countries": 450,
+      "methods": 150
+    },
+    "fields": {
+      "themes": {
+        "micro_f1": 59.418282548476455,
+        "macro_f1": 47.25903138328263,
+        "micro_f1_mean_vs_llms": 58.27262512734677,
+        "micro_f1_vs_pipeline": 49.97284084736556,
+        "labels_per_item": 1.7244444444444444
+      },
+      "regions": {
+        "micro_f1": 76.14213197969544,
+        "macro_f1": 82.87205579825716,
+        "micro_f1_mean_vs_llms": 74.1514398018291,
+        "micro_f1_vs_pipeline": 38.06970509383378,
+        "labels_per_item": 0.22666666666666666
+      },
+      "countries": {
+        "micro_f1": 36.111111111111114,
+        "macro_f1": 31.9534632034632,
+        "micro_f1_mean_vs_llms": 35.0761667089093,
+        "micro_f1_vs_pipeline": 15.339233038348082,
+        "labels_per_item": 0.06888888888888889
+      },
+      "methods": {
+        "micro_f1": 62.18487394957983,
+        "macro_f1": 49.309163059163055,
+        "micro_f1_mean_vs_llms": 62.06001406893779,
+        "micro_f1_vs_pipeline": 36.81592039800995,
+        "labels_per_item": 0.28
+      }
+    },
+    "mean_field_score": 58.46409989721571,
+    "mean_field_score_mean_vs_llms": 57.390061426755736,
+    "mean_field_score_vs_pipeline": 35.04942484438934
+  },
+  "at_0.5": {
+    "n": {
+      "themes": 450,
+      "regions": 450,
+      "countries": 450,
+      "methods": 150
+    },
+    "fields": {
+      "themes": {
+        "micro_f1": 59.54310980103169,
+        "macro_f1": 47.28126990704306,
+        "micro_f1_mean_vs_llms": 58.47593541971265,
+        "micro_f1_vs_pipeline": 48.68871151653364,
+        "labels_per_item": 1.531111111111111
+      },
+      "regions": {
+        "micro_f1": 56.72727272727273,
+        "macro_f1": 68.60333795766105,
+        "micro_f1_mean_vs_llms": 55.21392514514195,
+        "micro_f1_vs_pipeline": 33.70288248337029,
+        "labels_per_item": 0.4
+      },
+      "countries": {
+        "micro_f1": 40.97222222222222,
+        "macro_f1": 45.106534090909086,
+        "micro_f1_mean_vs_llms": 40.539034973663945,
+        "micro_f1_vs_pipeline": 24.016563146997928,
+        "labels_per_item": 0.3888888888888889
+      },
+      "methods": {
+        "micro_f1": 52.208835341365464,
+        "macro_f1": 50.564516007456305,
+        "micro_f1_mean_vs_llms": 50.05096254256379,
+        "micro_f1_vs_pipeline": 43.50453172205438,
+        "labels_per_item": 1.1466666666666667
+      }
+    },
+    "mean_field_score": 52.362860022973024,
+    "mean_field_score_mean_vs_llms": 51.06996452027058,
+    "mean_field_score_vs_pipeline": 37.478172217239056
+  },
+  "validation_fitted": {
+    "n": {
+      "themes": 225,
+      "regions": 225,
+      "countries": 225,
+      "methods": 75
+    },
+    "fields": {
+      "themes": {
+        "micro_f1": 60.59782608695652,
+        "macro_f1": 56.91587498495355,
+        "micro_f1_mean_vs_llms": 60.00854571959986,
+        "micro_f1_vs_pipeline": 50.326797385620914,
+        "labels_per_item": 1.6711111111111112
+      },
+      "regions": {
+        "micro_f1": 80.70175438596492,
+        "macro_f1": 70.4076688815061,
+        "micro_f1_mean_vs_llms": 79.47810948725551,
+        "micro_f1_vs_pipeline": 41.83673469387755,
+        "labels_per_item": 0.26222222222222225
+      },
+      "countries": {
+        "micro_f1": 57.89473684210526,
+        "macro_f1": 42.53333333333333,
+        "micro_f1_mean_vs_llms": 54.165316648976784,
+        "micro_f1_vs_pipeline": 23.03030303030303,
+        "labels_per_item": 0.10666666666666667
+      },
+      "methods": {
+        "micro_f1": 71.42857142857143,
+        "macro_f1": 58.326086956521735,
+        "micro_f1_mean_vs_llms": 72.53428188473039,
+        "micro_f1_vs_pipeline": 39.63963963963964,
+        "labels_per_item": 0.32
+      }
+    },
+    "mean_field_score": 67.65572218589953,
+    "mean_field_score_mean_vs_llms": 66.54656343514064,
+    "mean_field_score_vs_pipeline": 38.708368687360284
+  }
+}

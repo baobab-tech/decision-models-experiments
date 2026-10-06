@@ -1,10 +1,23 @@
 # 02 Fine-tuning decision models
 
-**Status:** planned. Plan approved 2026-10-02. It runs after [01](../01-many-option-classification/), on the same data and phases: task B (excerpts) first, then task A (documents).
+**Status:** planned; the main experiment after 01 (2026-10-06). Task B (excerpts) first.
 
 ## Question
 
-Does a fine-tuned open decision model reach the LLM range from 01 and match the fine-tuned small LLMs (`mean_field_score` 77–80 against GLM labels), and how many labelled examples does it take to beat its own zero-shot score from 01?
+What is the smallest model, by compute per excerpt, that reaches 01's LLM range (84.2–85.0 `mean_field_score` against the 3-LLM majority) on excerpt tagging after fine-tuning, and how many labelled examples does it take?
+
+Why: 01 found no zero-shot decision model in the LLM range, and small zero-shot models scored 17–19. A cheap LLM matches decision models on cost and speed, so the case for a small model is compute and environmental impact: a ~150M encoder that reads each excerpt once would use about 1/1,000 of DeepSeek-V4.1-Flash's compute per excerpt ([01 compute table](../01-many-option-classification/README.md#phase-1-compute-per-excerpt)).
+
+## First step
+
+1. Label a fixed sample of 10,000 train excerpts (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0) with GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next, using [label_excerpts.py](../common/label_excerpts.py). Training labels are the 2-of-3 majority. Cost: about $3 for GLM and DeepSeek; Qwen runs 2 requests at a time on featherless-ai, so about 10 hours.
+2. Fine-tune two models on those labels, on this Mac:
+   - a plain ModernBERT-base classifier (150M), one sigmoid head per field, reading each excerpt once;
+   - GLiNER2.5-Decide (340M), native multi-label.
+3. Score on 01's 600 test excerpts; fit thresholds on 01's 300-excerpt validation sample; report compute per excerpt next to the score.
+4. One ModernBERT run on pipeline labels for the same 10,000 excerpts shows how much the label source matters. Pipeline labels agree with the LLM majority at 52.8 on test, so they are not the default.
+
+The model list and variables below apply after the first step, if a small model gets within ~10 points of the LLM range.
 
 ## What we already know
 
@@ -76,5 +89,6 @@ Does a fine-tuned open decision model reach the LLM range from 01 and match the 
 
 ## What would change a decision
 
-- **Replace the LLM in ingestion:** a fine-tuned decision model scores within 01's LLM range at under 0.1 s per item, beating the LLMs and SFT LLMs on cost and speed.
+- **Replace the LLM in ingestion:** a fine-tuned small model scores within 01's LLM range at a small fraction of DeepSeek-V4.1-Flash's compute per excerpt.
+- **Keep the LLM:** the best fine-tuned small model stays more than ~10 points below the LLM range after 10,000 examples.
 - **Keep the SFT LLMs:** decision models plateau near GLiNER2.5's 57–58.
