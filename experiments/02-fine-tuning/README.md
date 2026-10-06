@@ -1,6 +1,6 @@
 # 02 Fine-tuning decision models
 
-**Status:** planned; runs after 01's context pilot. Task B (excerpts) first.
+**Status:** running. First step done (2026-10-06).
 
 ## Question
 
@@ -22,6 +22,32 @@ Why: the case for a small model is compute and environmental impact. A ~150M enc
 5. One run on pipeline labels for the same excerpts shows how much the label source matters.
 
 The model list and variables below apply after the first step, if a small model gets within ~10 points of the LLM range.
+
+## Results
+
+### First step: encoder sweep
+
+Run 2026-10-06 as HF Jobs in `baobabtech` (A10G; bf16; effective batch 32; 5 epochs; learning rate 5e-5; one threshold fitted on 01's validation sample). Training: 9,998 excerpts with soft GLM + DeepSeek labels and the `doc+summary` context (dataset revision `5b5de6f`). Test: 01's 600 excerpts. Score: mean micro-F1 × 100 against GLM and DeepSeek; the LLMs agree with each other at **88.8** (themes 82.4, regions 94.9, countries 89.8, methods 88.1). Per-run metrics: [results/sweep_summary.json](results/sweep_summary.json) and each model repo (`baobabtech/evaldocs-excerpt-tagger-*`, private).
+
+| Model | Params | Mean | Themes | Regions | Countries | Methods | Tokens per excerpt |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Ettin-150M, countries from lookup | 149M | **75.3** | **80.6** | 83.7 | 72.3 | 64.4 | 541 |
+| Ettin-32M, countries from lookup | 32M | 74.7 | 75.5 | 82.7 | 72.3 | **68.2** | 541 |
+| ModernJEV-Decide-Preview | 149M | 73.8 | 74.0 | 89.6 | 71.6 | 60.1 | 541 |
+| LFM2.5-Encoder-230M | 230M | 73.5 | 68.5 | 83.5 | **78.4** | 63.7 | 548 |
+| mmBERT-small | 141M | 73.4 | 69.8 | **89.7** | 71.5 | 62.7 | 521 |
+| Ettin-150M | 149M | 70.9 | 70.3 | 86.4 | 73.2 | 53.7 | 541 |
+| ModernBERT-base | 149M | 68.8 | 71.3 | 84.4 | 62.1 | 57.5 | 541 |
+| Ettin-150M, two-tower | 150M | 64.6 | 70.3 | 75.9 | 53.7 | 58.4 | **90** |
+| F2LLM-v2-80M | 80M | 63.9 | 61.2 | 86.0 | 60.5 | 47.8 | 531 |
+| Ettin-32M | 32M | 63.2 | 61.8 | 81.0 | 51.6 | 58.5 | 541 |
+| Country lookup alone (01) | — | — | — | 74.7 | 71.6 | — | ~0 |
+
+- **Countries from the lookup, not the model, help every other field.** Without the 198 country outputs, Ettin-150M's themes rise from 70.3 to 80.6 and Ettin-32M's from 61.8 to 75.5. The lookup matches the best fine-tuned country scores (72.3; only LFM2.5 is higher at 78.4).
+- **Size matters little in that setup:** Ettin-32M scores 74.7 against Ettin-150M's 75.3 with a fifth of the parameters.
+- **Themes and regions approach the LLMs** (best 80.6 vs 82.4, and 89.7 vs 94.9). **Methods are furthest** (best 68.2 vs 88.1); the training sample has ~2,500 methodology excerpts for 24 methods.
+- **The two-tower model** reads document context once per report: ~90 tokens per excerpt instead of ~540, for 6.3 points less than the joint Ettin-150M.
+- **Not reported as results, pending a check:** gte-modernbert-base (collapsed to no predictions), and harrier-oss-v1-270m, granite-embedding-97m-multilingual-r2 and NeoMME-260M (33–43; no country predictions). The first three are embedding models and NeoMME is multimodal; their training settings were not tuned.
 
 ## What we already know
 

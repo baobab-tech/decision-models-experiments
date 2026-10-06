@@ -21,7 +21,8 @@ Publication: `experiments/README.md` holds the story outline. Leave internal ite
 2. **01 reference labels:** done 2026-10-06 with GLM + DeepSeek (Qwen dropped: too slow on featherless-ai). LLM range 88.8 on test; pipeline 67.5. Publish with the `llm_labels` config.
 3. **01 zero-shot runs:** rerun Jev, d1, GLiDE (and local models one at a time) with the `doc_summary` context (`run.py` state = `input`). Needed for step 5 of the story in `experiments/README.md`.
 4. **02 first step:** label 10,000 train excerpts (GLM + DeepSeek, soft targets) with the chosen context; publish as the `llm_labels` config; sweep small encoders as HF Jobs (`train_encoder.py`).
-   - Sweep launched 2026-10-06 (`experiments/02-fine-tuning/results/jobs.tsv`). These jobs push to `baobabtech/evaldocs-tagger-*`; when they finish, move each repo to `baobabtech/evaldocs-excerpt-tagger-*` (`HfApi().move_repo`). New runs use the new prefix.
+   - Sweep done 2026-10-06 (results in the 02 README; repos renamed to `evaldocs-excerpt-tagger-*`). Best: Ettin-150M + country lookup 75.3, Ettin-32M + lookup 74.7 (LLM range 88.8).
+   - Next in 02: lookup hybrid for ModernJEV, mmBERT and LFM2.5 (LFM2.5 running); more methodology training excerpts (methods 64–68 vs 88); two-tower + lookup; check the failed runs (gte, harrier, granite, NeoMME).
 5. **Taxonomy:** production theme definitions overlap (cash transfers, renewable energy, refugees, mediation, technology transfer each under 2–3 themes; Growth lists only trade terms; Conflict reads as humanitarian practice), and the prompt says 1–3 themes while the zod schema says 1–4. Raise with the taxonomy owner; experiments keep production's version.
 6. **Dataset viewer:** check that it renders for `decision-models-evaluation-docs`.
 7. **Baselines:** decide whether to publish the earlier classifier leaderboard; `evalexplorer-classify-experiments` is private.
