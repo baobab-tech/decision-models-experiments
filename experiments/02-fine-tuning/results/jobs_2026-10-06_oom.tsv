@@ -1,0 +1,13 @@
+2026-10-06T20:38:09Z	6ac55c31fbc85ba6823b9539	answerdotai/ModernBERT-base	
+2026-10-06T20:38:10Z	6ac55c32fbc85ba6823b953b	jhu-clsp/ettin-encoder-150m	
+2026-10-06T20:38:11Z	6ac55c33fbc85ba6823b953e	jhu-clsp/ettin-encoder-32m	
+2026-10-06T20:38:12Z	6ac55c34fbc85ba6823b9540	ibm-granite/granite-embedding-97m-multilingual-r2	
+2026-10-06T20:38:23Z	6ac55c3f404719ba37662fa8	LiquidAI/LFM2.5-Encoder-230M	--trust-remote-code
+2026-10-06T20:38:24Z	6ac55c40fbc85ba6823b9547	Hcompany/NeoMME-260M	--trust-remote-code
+2026-10-06T20:38:25Z	6ac55c41fbc85ba6823b9549	microsoft/harrier-oss-v1-270m	--context-first
+2026-10-06T20:38:26Z	6ac55c42fbc85ba6823b954b	codefuse-ai/F2LLM-v2-80M	--context-first
+2026-10-06T20:38:28Z	6ac55c44404719ba37662fac	MaziyarPanahi/ModernJEV-Decide-Preview	
+2026-10-06T20:38:29Z	6ac55c45404719ba37662fae	jhu-clsp/ettin-encoder-150m	--arch two_tower
+2026-10-06T20:38:30Z	6ac55c46fbc85ba6823b9550	jhu-clsp/mmBERT-small	
+2026-10-06T20:38:31Z	6ac55c47404719ba37662fb0	Alibaba-NLP/gte-modernbert-base	
+2026-10-06T20:41:26Z	6ac55cf6404719ba3766301b	LiquidAI/LFM2.5-Encoder-230M	--trust-remote-code (l40sx1; a10g-small OOM)

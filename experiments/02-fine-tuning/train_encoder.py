@@ -150,7 +150,9 @@ def predict(model, tok, rows, device, max_len, batch, arch, context_first=False)
     out = []
     with torch.no_grad():
         for i in range(0, len(rows), batch):
-            out.append(torch.sigmoid(model(encode(tok, rows[i:i + batch], max_len, device, arch, context_first))).float().cpu().numpy())
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=device == "cuda"):
+                logits = model(encode(tok, rows[i:i + batch], max_len, device, arch, context_first))
+            out.append(torch.sigmoid(logits.float()).cpu().numpy())
     return np.concatenate(out)
 
 
@@ -196,7 +198,8 @@ def main() -> None:
     ap.add_argument("--dataset-revision", default="main")
     ap.add_argument("--epochs", type=int, default=5)
     ap.add_argument("--lr", type=float, default=5e-5)
-    ap.add_argument("--batch", type=int, default=32)
+    ap.add_argument("--batch", type=int, default=32, help="effective batch (optimizer step)")
+    ap.add_argument("--micro-batch", type=int, default=8, help="examples per forward pass; gradients accumulate")
     ap.add_argument("--max-len", type=int, default=1024, help="input = excerpt + document context (~600 tokens)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--local-data", help="load llm_labels from a save_to_disk folder (smoke tests)")
@@ -235,29 +238,34 @@ def main() -> None:
         total = 0.0
         for i in range(0, len(order), args.batch):
             idx = order[i:i + args.batch]
-            batch_in = encode(tok, [train[j] for j in idx], args.max_len, device, args.arch, args.context_first)
-            y = torch.tensor([ys[j][0] for j in idx], device=device)
-            mask = torch.tensor([ys[j][1] for j in idx], device=device)
-            logits = model(batch_in)
-            loss = (torch.nn.functional.binary_cross_entropy_with_logits(logits, y, reduction="none") * mask).sum() \
-                / mask.sum()
+            # micro-batches with gradient accumulation keep the effective batch at --batch within GPU memory
+            n_active = sum(sum(ys[j][1]) for j in idx)
             opt.zero_grad()
-            loss.backward()
+            for k in range(0, len(idx), args.micro_batch):
+                sub = idx[k:k + args.micro_batch]
+                batch_in = encode(tok, [train[j] for j in sub], args.max_len, device, args.arch, args.context_first)
+                y = torch.tensor([ys[j][0] for j in sub], device=device)
+                mask = torch.tensor([ys[j][1] for j in sub], device=device)
+                with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=device == "cuda"):
+                    logits = model(batch_in)
+                loss = (torch.nn.functional.binary_cross_entropy_with_logits(logits.float(), y, reduction="none")
+                        * mask).sum() / n_active
+                loss.backward()
+                total += loss.item() * len(idx)
             opt.step()
             sched.step()
-            total += loss.item() * len(idx)
-        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 64, args.arch, args.context_first), val, space, country_region, 0.5),
+        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 16, args.arch, args.context_first), val, space, country_region, 0.5),
                           val)["mean_field_score"]
         print(f"epoch {epoch + 1}: train loss {total / len(train):.4f}; validation mean at 0.5 {val_score:.1f}")
     train_s = time.perf_counter() - t0
 
-    val_probs = predict(model, tok, val, device, args.max_len, 64, args.arch, args.context_first)
+    val_probs = predict(model, tok, val, device, args.max_len, 16, args.arch, args.context_first)
     grid = [round(0.05 * i, 2) for i in range(1, 20)]
     curve = {t: score(to_sets(val_probs, val, space, country_region, t), val)["mean_field_score"] for t in grid}
     best_t = max(t for t, v in curve.items() if v == max(curve.values()))
 
     t1 = time.perf_counter()
-    test_probs = predict(model, tok, test, device, args.max_len, 64, args.arch, args.context_first)
+    test_probs = predict(model, tok, test, device, args.max_len, 16, args.arch, args.context_first)
     infer_s = time.perf_counter() - t1
     results = {t_name: score(to_sets(test_probs, test, space, country_region, t), test)
                for t_name, t in (("at_0.5", 0.5), ("fitted", best_t))}
