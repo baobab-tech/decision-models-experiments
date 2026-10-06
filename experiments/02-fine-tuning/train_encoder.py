@@ -51,6 +51,32 @@ CONTEXT_HEADING = "## CONTEXT SECTIONS"  # `input` = excerpt block, then this he
 EXCERPTS_PER_DOC = 134.6  # dataset `excerpts` config: 191,136 excerpts over 1,420 documents
 
 
+# Per-model fine-tuning settings from model cards and papers (checked 2026-10-06; see 02 README "Training recipes").
+# pool: excerpt_mean (mean over excerpt tokens), cls (first token), excerpt_last (last excerpt token, for decoders).
+DEFAULT_RECIPE = dict(lr=5e-5, weight_decay=1e-5, warmup=0.06, betas=(0.9, 0.98), eps=1e-6, pool="excerpt_mean",
+                      context_first=False, prefix="", prefix_ids=(), trust_remote_code=False)
+RECIPES = {
+    "answerdotai/ModernBERT-base": {},  # ModernBERT paper App. E: lr 5e-5-8e-5, wd 1e-6-1e-5, betas (0.9, 0.98)
+    "jhu-clsp/ettin-encoder-150m": {},  # Ettin paper App. F: same sweep as ModernBERT
+    "jhu-clsp/ettin-encoder-32m": dict(lr=1e-4),  # smaller models take higher lr (Ettin paper App. F)
+    "jhu-clsp/mmBERT-small": dict(lr=3e-5, weight_decay=0.01),  # mmBERT paper App. B: best at 2e-5-3e-5; card wd 0.01
+    "Alibaba-NLP/gte-modernbert-base": dict(lr=3e-5, warmup=0.1, pool="cls"),  # embedding model; CLS pooling per card
+    "ibm-granite/granite-embedding-97m-multilingual-r2": dict(lr=8e-5, pool="cls"),  # CLS pooling per card; hidden 384
+    "MaziyarPanahi/ModernJEV-Decide-Preview": dict(lr=2e-5, warmup=0.03),  # its own recipe: lr 2e-5, 3% warmup
+    "LiquidAI/LFM2.5-Encoder-230M": dict(lr=3e-5, weight_decay=0.1, warmup=0.1, betas=(0.9, 0.95), eps=1e-5,
+                                         trust_remote_code=True),  # card + Liquid encoder_eval methodology
+    "Hcompany/NeoMME-260M": dict(lr=1e-4, prefix_ids=(5,)),  # text inputs start with <doc> (id 5) per card
+    "microsoft/harrier-oss-v1-270m": dict(lr=4e-5, pool="excerpt_last", context_first=True,
+                                          prefix="Instruct: Tag the excerpt with its themes, regions and methods\nQuery: "),
+    "codefuse-ai/F2LLM-v2-80M": dict(lr=4e-5, pool="excerpt_last", context_first=True,
+                                     prefix="Instruct: Tag the excerpt with its themes, regions and methods\nQuery: "),
+}
+
+
+def recipe(base: str) -> dict:
+    return {**DEFAULT_RECIPE, **RECIPES.get(base, {})}
+
+
 COUNTRY_ALIASES = {  # names pycountry does not list, or lists differently
     "vietnam": "VN", "tanzania": "TZ", "bolivia": "BO", "laos": "LA", "lao pdr": "LA", "syria": "SY", "iran": "IR",
     "russia": "RU", "south korea": "KR", "north korea": "KP", "moldova": "MD", "drc": "CD", "dr congo": "CD",
@@ -100,11 +126,13 @@ def pad_batch(seqs: list[list[int]], masks: list[list[int]], pad: int, device) -
     return {"input_ids": ids, "attention_mask": att, "pool_mask": pool}
 
 
-def encode(tok, rows, max_len: int, device, arch: str, context_first: bool = False) -> dict:
+def encode(tok, rows, max_len: int, device, arch: str, context_first: bool = False, rec: dict | None = None) -> dict:
     """joint: [start] excerpt [sep] context [sep], pooled over the excerpt's tokens only. With context_first
     (for one-directional decoders, whose tokens see only earlier tokens): [start] context [sep] excerpt [sep].
     two_tower: excerpt and context encoded separately (context once per document at inference)."""
+    rec = rec or DEFAULT_RECIPE
     start, sep, pad = special_ids(tok)
+    start = start + list(rec["prefix_ids"]) + (tok(rec["prefix"], add_special_tokens=False)["input_ids"] if rec["prefix"] else [])
     parts = [split_input(r["input"]) for r in rows]
     ex = [tok(e, add_special_tokens=False)["input_ids"][: max_len // 2] for e, _ in parts]
     cx = [tok(c, add_special_tokens=False)["input_ids"] for _, c in parts]
@@ -115,10 +143,18 @@ def encode(tok, rows, max_len: int, device, arch: str, context_first: bool = Fal
             c = c[:max(room, 0)]
             if context_first:
                 seq = start + c + sep + e + sep
-                masks.append([0] * (len(start) + len(c) + len(sep)) + [1] * len(e) + [0] * len(sep))
+                lead = len(start) + len(c) + len(sep)
             else:
                 seq = start + e + sep + c + sep
-                masks.append([0] * len(start) + [1] * len(e) + [0] * (len(seq) - len(start) - len(e)))
+                lead = len(start)
+            m = [0] * len(seq)
+            if rec["pool"] == "cls":
+                m[0] = 1
+            elif rec["pool"] == "excerpt_last":
+                m[lead + len(e) - 1] = 1
+            else:
+                m[lead:lead + len(e)] = [1] * len(e)
+            masks.append(m)
             seqs.append(seq)
         return {"joint": pad_batch(seqs, masks, pad, device)}
     exs = [start + e + sep for e in ex]
@@ -134,7 +170,10 @@ class Tagger(torch.nn.Module):
     def __init__(self, n_labels: int, base: str, revision: str, trust_remote_code: bool, arch: str):
         super().__init__()
         self.arch = arch
-        self.encoder = AutoModel.from_pretrained(base, revision=revision, trust_remote_code=trust_remote_code)
+        # fp32 master weights: transformers 5.x otherwise loads the checkpoint dtype (bf16/fp16 for some models),
+        # where AdamW updates round away. Compute runs under bf16 autocast.
+        self.encoder = AutoModel.from_pretrained(base, revision=revision, trust_remote_code=trust_remote_code,
+                                                 dtype=torch.float32)
         h = self.encoder.config.hidden_size if hasattr(self.encoder.config, "hidden_size") \
             else self.encoder.config.get_text_config().hidden_size
         self.head = torch.nn.Linear(h, n_labels) if arch == "joint" else \
@@ -175,13 +214,13 @@ def targets(row, space, source: str) -> tuple[list[float], list[float]]:
     return y, mask
 
 
-def predict(model, tok, rows, device, max_len, batch, arch, context_first=False) -> np.ndarray:
+def predict(model, tok, rows, device, max_len, batch, arch, context_first=False, rec=None) -> np.ndarray:
     model.eval()
     out = []
     with torch.no_grad():
         for i in range(0, len(rows), batch):
             with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=device == "cuda"):
-                logits = model(encode(tok, rows[i:i + batch], max_len, device, arch, context_first))
+                logits = model(encode(tok, rows[i:i + batch], max_len, device, arch, context_first, rec))
             out.append(torch.sigmoid(logits.float()).cpu().numpy())
     return np.concatenate(out)
 
@@ -231,10 +270,11 @@ def main() -> None:
     ap.add_argument("--context-first", action="store_true",
                     help="joint input with context before the excerpt, for one-directional (decoder) encoders")
     ap.add_argument("--base-revision", default=None, help="commit; resolved and recorded if omitted")
-    ap.add_argument("--trust-remote-code", action="store_true", help="needed for e.g. chandar-lab/NeoBERT")
+    ap.add_argument("--trust-remote-code", action="store_true", help="also set by the model's recipe")
     ap.add_argument("--dataset-revision", default="main")
-    ap.add_argument("--epochs", type=int, default=5)
-    ap.add_argument("--lr", type=float, default=5e-5)
+    ap.add_argument("--epochs", type=int, default=8, help="maximum; the best validation epoch is kept")
+    ap.add_argument("--patience", type=int, default=2, help="stop after this many epochs without improvement")
+    ap.add_argument("--lr", type=float, default=None, help="overrides the model's recipe")
     ap.add_argument("--batch", type=int, default=32, help="effective batch (optimizer step)")
     ap.add_argument("--micro-batch", type=int, default=8, help="examples per forward pass; gradients accumulate")
     ap.add_argument("--max-len", type=int, default=1024, help="input = excerpt + document context (~600 tokens)")
@@ -261,15 +301,37 @@ def main() -> None:
     print(f"device {device}; outputs {len(space)}; train {len(train)} val {len(val)} test {len(test)}; "
           f"labels {args.labels}")
 
+    rec = recipe(args.base)
+    if args.lr:
+        rec["lr"] = args.lr
+    rec["trust_remote_code"] = rec["trust_remote_code"] or args.trust_remote_code
+    rec["context_first"] = rec["context_first"] or args.context_first
+    print("recipe:", rec)
+    enc = lambda rows: encode(tok, rows, args.max_len, device, args.arch, rec["context_first"], rec)
+
     base_revision = HfApi().model_info(args.base, revision=args.base_revision).sha
-    tok = AutoTokenizer.from_pretrained(args.base, revision=base_revision, trust_remote_code=args.trust_remote_code)
-    model = Tagger(len(space), args.base, base_revision, args.trust_remote_code, args.arch).to(device)
-    opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
+    tok = AutoTokenizer.from_pretrained(args.base, revision=base_revision, trust_remote_code=rec["trust_remote_code"])
+    model = Tagger(len(space), args.base, base_revision, rec["trust_remote_code"], args.arch).to(device)
+    # no weight decay on norms and biases
+    decay = [p for n, p in model.named_parameters() if p.ndim >= 2 and "norm" not in n.lower()]
+    no_decay = [p for n, p in model.named_parameters() if not (p.ndim >= 2 and "norm" not in n.lower())]
+    opt = torch.optim.AdamW([{"params": decay, "weight_decay": rec["weight_decay"]},
+                             {"params": no_decay, "weight_decay": 0.0}], lr=rec["lr"], betas=rec["betas"], eps=rec["eps"])
     steps = args.epochs * -(-len(train) // args.batch)
-    sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=args.lr, total_steps=steps, pct_start=0.1)
+    warm = max(1, int(rec["warmup"] * steps))
+    sched = torch.optim.lr_scheduler.LambdaLR(  # linear warmup, then linear decay to 0
+        opt, lambda k: min((k + 1) / warm, max(0.0, (steps - k) / max(1, steps - warm))))
     ys = [targets(r, space, args.labels) for r in train]
+    grid = [round(0.05 * i, 2) for i in range(1, 20)]
+
+    def val_best(probs):
+        curve = {t: score(to_sets(probs, val, space, country_region, t, lookup), val, scored)["mean_field_score"]
+                 for t in grid}
+        best = max(curve.values())
+        return best, max(t for t, v in curve.items() if v == best), curve
 
     t0 = time.perf_counter()
+    best = (-1.0, 0, None)  # (validation score at its best threshold, epoch, state on CPU)
     for epoch in range(args.epochs):
         model.train()
         order = list(range(len(train)))
@@ -282,30 +344,32 @@ def main() -> None:
             opt.zero_grad()
             for k in range(0, len(idx), args.micro_batch):
                 sub = idx[k:k + args.micro_batch]
-                batch_in = encode(tok, [train[j] for j in sub], args.max_len, device, args.arch, args.context_first)
                 y = torch.tensor([ys[j][0] for j in sub], device=device)
                 mask = torch.tensor([ys[j][1] for j in sub], device=device)
                 with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=device == "cuda"):
-                    logits = model(batch_in)
+                    logits = model(enc([train[j] for j in sub]))
                 loss = (torch.nn.functional.binary_cross_entropy_with_logits(logits.float(), y, reduction="none")
                         * mask).sum() / n_active
                 loss.backward()
                 total += loss.item() * len(idx)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
             sched.step()
-        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 16, args.arch, args.context_first), val, space, country_region, 0.5, lookup),
-                          val, scored)["mean_field_score"]
-        print(f"epoch {epoch + 1}: train loss {total / len(train):.4f}; validation mean at 0.5 {val_score:.1f}")
+        v, t, _ = val_best(predict(model, tok, val, device, args.max_len, 16, args.arch, rec["context_first"], rec))
+        print(f"epoch {epoch + 1}: train loss {total / len(train):.4f}; validation {v:.1f} at threshold {t}")
+        if v > best[0]:
+            best = (v, epoch + 1, {k: x.detach().cpu().clone() for k, x in model.state_dict().items()})
+        elif epoch + 1 - best[1] >= args.patience:
+            print(f"early stop: best epoch {best[1]}")
+            break
     train_s = time.perf_counter() - t0
+    model.load_state_dict(best[2])
 
-    val_probs = predict(model, tok, val, device, args.max_len, 16, args.arch, args.context_first)
-    grid = [round(0.05 * i, 2) for i in range(1, 20)]
-    curve = {t: score(to_sets(val_probs, val, space, country_region, t, lookup), val, scored)["mean_field_score"]
-             for t in grid}
-    best_t = max(t for t, v in curve.items() if v == max(curve.values()))
+    val_probs = predict(model, tok, val, device, args.max_len, 16, args.arch, rec["context_first"], rec)
+    _, best_t, curve = val_best(val_probs)
 
     t1 = time.perf_counter()
-    test_probs = predict(model, tok, test, device, args.max_len, 16, args.arch, args.context_first)
+    test_probs = predict(model, tok, test, device, args.max_len, 16, args.arch, rec["context_first"], rec)
     infer_s = time.perf_counter() - t1
     results = {t_name: score(to_sets(test_probs, test, space, country_region, t, lookup), test, scored)
                for t_name, t in (("at_0.5", 0.5), ("fitted", best_t))}
@@ -317,7 +381,8 @@ def main() -> None:
     tokens = per_excerpt
     params = sum(p.numel() for p in model.parameters())
     metrics = {
-        **results, "threshold": best_t, "validation_curve": curve,
+        **results, "threshold": best_t, "validation_curve": curve, "best_epoch": best[1],
+        "validation_best": best[0],
         "compute": {"parameters": params, "tokens_per_excerpt": float(np.mean(tokens)),
                     "excerpt_tokens": float(np.mean(ex_tok)), "context_tokens": float(np.mean(cx_tok)),
                     "excerpts_per_document_assumed": EXCERPTS_PER_DOC if args.arch == "two_tower" else None,
@@ -331,6 +396,7 @@ def main() -> None:
         "reference": "test: mean agreement with glm and deepseek", "device": device,
         "gpu": torch.cuda.get_device_name() if device == "cuda" else None,
         "job_id": os.environ.get("JOB_ID"), "fields_scored": list(scored),
+        "recipe": {k: (list(v) if isinstance(v, tuple) else v) for k, v in rec.items()},
         **{k: (list(v) if isinstance(v, tuple) else v) for k, v in vars(args).items()
            if k not in ("push_to", "local_data", "no_push", "base", "base_revision")},
     }
