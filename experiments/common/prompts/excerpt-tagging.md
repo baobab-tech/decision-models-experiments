@@ -11,7 +11,7 @@ Classify-only prompts for relabelling task B excerpts with GLM-5.3-Flash, DeepSe
 
 ## Differences from the pipeline
 
-- **Input:** the excerpt alone, the same input the decision models get. The pipeline saw the whole section plus context sections, so its labels can include countries or regions named only in that context.
+- **Input:** the excerpt to classify, plus context blocks in production's layout: its main section (the window, with the excerpt marked) and context sections (Document Start, executive summary, abstract). Which blocks are included is the variant under test in 01's [context pilot](../../01-many-option-classification/README.md#context-pilot). The task line says to use the context for understanding, as production's "use context for understanding only" does.
 - **Output:** tags for one given excerpt. The JSON format is in the prompt, because Qwen3.8-Flash-Next returned empty `content` with `response_format: json_schema`.
 - **Label lists and definitions** come from the dataset's `taxonomy` config (`definition_excerpts` for themes and methods), filtered to `in_excerpts`, so every model is asked over the same codes.
 
@@ -26,7 +26,7 @@ You are an expert evaluator classifying excerpts from evaluation documents.
 
 ## Task
 
-Classify the excerpt below by themes, regions and countries.
+Classify the excerpt below by themes, regions and countries. Use the main section and context sections for understanding, e.g. which country or programme the excerpt refers to.
 
 ## Themes (select 1 to 3 maximum per excerpt)
 
@@ -59,10 +59,27 @@ User:
 ```
 Excerpt type: {type}
 
-<excerpt>
+## EXCERPT TO CLASSIFY
+
 {text}
-</excerpt>
+
+## MAIN SECTION ({section_category}; the excerpt is between <<< and >>>)
+
+{window_with_marked_excerpt}
+
+## CONTEXT SECTIONS (for understanding only)
+
+### Document Start
+{first_100_words}
+
+### Executive Summary
+{executive_summary_1500_chars}
+
+### Abstract
+{abstract_1500_chars}
 ```
+
+Blocks absent from a variant, or empty for a document, are left out.
 
 ## Methodology
 
@@ -75,7 +92,7 @@ You are an expert evaluator classifying methodology excerpts from evaluation doc
 
 ## Task
 
-Classify the methodology excerpt below with the research methods used.
+Classify the methodology excerpt below with the research methods used. Use the main section and context sections for understanding.
 
 ## Methods (select all that apply per excerpt)
 
@@ -97,10 +114,27 @@ Return only a JSON object:
 User:
 
 ```
-<excerpt>
+## EXCERPT TO CLASSIFY
+
 {text}
-</excerpt>
+
+## MAIN SECTION ({section_category}; the excerpt is between <<< and >>>)
+
+{window_with_marked_excerpt}
+
+## CONTEXT SECTIONS (for understanding only)
+
+### Document Start
+{first_100_words}
+
+### Executive Summary
+{executive_summary_1500_chars}
+
+### Abstract
+{abstract_1500_chars}
 ```
+
+Blocks absent from a variant, or empty for a document, are left out.
 
 ## Call settings
 

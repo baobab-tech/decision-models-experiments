@@ -4,8 +4,8 @@ The maintainer picks which experiment runs next; see [AGENTS.md](../AGENTS.md).
 
 | # | Experiment | Status | Question |
 |---|---|---|---|
-| 01 | [Many-option classification](01-many-option-classification/) | done (phase 1) | Can zero-shot decision models classify and tag international development evaluation reports (3–250 labels, ~50-token excerpts and ~2,000-token first pages) as well as LLMs? Phase 1: excerpt tagging. |
-| 02 | [Fine-tuning decision models](02-fine-tuning/) | planned | What is the smallest model, by compute per excerpt, that reaches 01's LLM range on excerpt tagging after fine-tuning, and with how many labels? |
+| 01 | [Many-option classification](01-many-option-classification/) | planned | Can decision models and small encoders tag and classify international development evaluation reports as well as LLMs, with the context production uses (3–250 labels)? Phase 1: excerpt tagging, starting with a context pilot. |
+| 02 | [Fine-tuning decision models](02-fine-tuning/) | planned | What is the smallest model, by compute per excerpt, that reaches 01's LLM range on excerpt tagging (with production context) after fine-tuning, and with how many labels? |
 | 03 | [Jev vs open models on document tasks](03-jev-vs-open-document-tasks/) | done (LlamaIndex) | How do Jev, Qwen3.5-4B, Laya, jeff and specialised tools compare on language, orientation, classification, splitting and parse triage of PDFs? |
 
 Statuses: `proposed` → `planned` (plan approved) → `running` → `done`.

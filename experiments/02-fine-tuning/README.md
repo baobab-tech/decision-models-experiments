@@ -1,24 +1,23 @@
 # 02 Fine-tuning decision models
 
-**Status:** planned; the main experiment after 01 (2026-10-06). Task B (excerpts) first.
+**Status:** planned; runs after 01's context pilot. Task B (excerpts) first.
 
 ## Question
 
-What is the smallest model, by compute per excerpt, that reaches 01's LLM range (84.2–85.0 `mean_field_score` against the 3-LLM majority) on excerpt tagging after fine-tuning, and how many labelled examples does it take?
+What is the smallest model, by compute per excerpt, that reaches 01's LLM range on excerpt tagging after fine-tuning, with the context the production pipeline uses, and how many labelled examples does it take?
 
-Why: 01 found no zero-shot decision model in the LLM range, and small zero-shot models scored 17–19. A cheap LLM matches decision models on cost and speed, so the case for a small model is compute and environmental impact: a ~150M encoder that reads each excerpt once would use about 1/1,000 of DeepSeek-V4.1-Flash's compute per excerpt ([01 compute table](../01-many-option-classification/README.md#phase-1-compute-per-excerpt)).
+Why: the case for a small model is compute and environmental impact. A ~150M encoder needs a small fraction of a 10B+-active-parameter LLM's compute per excerpt, if it can match its tags.
 
 ## First step
 
-1. Label a fixed sample of 10,000 train excerpts (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0; ids in `results/labels/train_sample.json`) with GLM-5.3-Flash and DeepSeek-V4.1-Flash, using [label_excerpts.py](../common/label_excerpts.py) and the production taxonomy and definitions (eval-explorer `ingestion-pipeline/lib/extract/`, identical on `main` and `staging`, checked 2026-10-06). Cost: about $3.
-   - Training targets are soft: 1 if both LLMs chose the label, 0.5 if one did, 0 if neither. No third labeller.
-   - Qwen3.8-Flash-Next was dropped for training labels: featherless-ai allows 2 concurrent requests and Qwen reasons on every excerpt, about 10 excerpts per minute, so ~17 hours for 10,000 (2026-10-06). On 01's test sample, Qwen decides 18% of the majority labels (169 of 953), all of them labels where GLM and DeepSeek disagree; soft targets mark those as uncertain instead.
-   - Evaluation is unchanged: 01's 3-LLM majority on the 600 test excerpts, Qwen included.
-2. Fine-tune two models on those labels, on this Mac:
-   - a plain ModernBERT-base classifier (150M), one sigmoid head per field, reading each excerpt once;
-   - GLiNER2.5-Decide (340M), native multi-label.
-3. Score on 01's 600 test excerpts; fit thresholds on 01's 300-excerpt validation sample; report compute per excerpt next to the score.
-4. One ModernBERT run on pipeline labels for the same 10,000 excerpts shows how much the label source matters. Pipeline labels agree with the LLM majority at 52.8 on test, so they are not the default.
+1. Input: the context variant chosen by 01's [context pilot](../01-many-option-classification/README.md#context-pilot), so the model sees what production's tagger sees. Document-level context (title, Document Start, summary) is the same for every excerpt of a report, so a model can encode it once per document.
+2. Label a fixed sample of 10,000 train excerpts (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0; ids in [results/labels/train_sample.json](results/labels/train_sample.json)) with GLM-5.3-Flash and DeepSeek-V4.1-Flash, using production's taxonomy and definitions.
+   - Training targets are soft: 1 if both LLMs chose the label, 0.5 if one did, 0 if neither.
+   - Qwen3.8-Flash-Next is not used for training labels: on featherless-ai it labels about 10 excerpts per minute (2 concurrent requests, long reasoning), ~17 hours for 10,000 (2026-10-06).
+   - Evaluation: 01's 3-LLM majority reference on its 600 test excerpts.
+3. Fine-tune small encoders on those labels as HF Jobs in the `baobabtech` namespace with [train_encoder.py](train_encoder.py), which reads everything from the Hub so others can rerun it. Candidates: encoders released since March 2026 under ~300M parameters, with ModernBERT-base and Ettin as 2025 references; label-conditioned models (GLiClass, GLiNER2.5) in a second round.
+4. Score on 01's test excerpts; fit one threshold on 01's validation sample; report compute per excerpt next to the score.
+5. One run on pipeline labels for the same excerpts shows how much the label source matters.
 
 The model list and variables below apply after the first step, if a small model gets within ~10 points of the LLM range.
 
@@ -43,7 +42,7 @@ The model list and variables below apply after the first step, if a small model 
 
 - **Splits:** the same as 01. Task A: documents, 1,148 train / 138 validation / 134 test. Task B: excerpts, 157,302 train, sampled per run. See [common/datasets.md](../common/datasets.md).
 - **Evaluation:** against 01's reference, the labels chosen by at least 2 of GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next, on the same test items. Training targets come from GLM and DeepSeek only (soft labels; see [First step](#first-step)), so zero-shot and fine-tuned scores compare directly. There is no human gold set, so scores measure agreement with LLMs, not correctness ([01](../01-many-option-classification/README.md#reference-labels)).
-- **Training labels:** soft GLM + DeepSeek labels (see [First step](#first-step)). One ModernBERT run on pipeline labels for the same excerpts shows how much the label source matters; pipeline labels agree with the LLM majority at 52.8 on 01's test sample, against 84.2–85.0 between the LLMs.
+- **Training labels:** soft GLM + DeepSeek labels (see [First step](#first-step)). One run on pipeline labels for the same excerpts shows how much the label source matters.
 
 ## Models
 
@@ -56,7 +55,7 @@ The model list and variables below apply after the first step, if a small model 
 | [Kev-4B](../../docs/models/kev.md) | 4B | LoRA + pointer head | HF Jobs (`a10g-large`) |
 | Plain ModernBERT-base classifier (control) | 150M | full, one head per field | This Mac (MPS) |
 
-- Every model has a zero-shot score from 01 except the ModernBERT control, which has no zero-shot mode.
+- Every decision model has a zero-shot score from 01; plain encoders have no zero-shot mode.
 - Kev-0.8B against Kev-4B shows the effect of size; Verdict against Laya does the same for encoders.
 - Multi-label fields are trained the way 01 asks them: one Noul per label (Kev, Laya, Verdict) or GLiNER2's native multi-label `true_label` list.
 

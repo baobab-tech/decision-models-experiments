@@ -1,265 +1,126 @@
 # 01 Many-option classification
 
-**Status:** done (phase 1, 2026-10-06). Phase 2 not run. See [conclusion](#phase-1-conclusion).
+**Status:** planned. Phase 1 (excerpt tagging) starts with a context pilot.
 
 ## Question
 
-Can zero-shot decision models classify and tag international development evaluation reports as well as LLMs, at 3 to 250 labels, on ~50-token excerpts and ~2,000-token first pages?
+Can decision models and small encoders tag and classify international development evaluation reports as well as LLMs, with the context the production ingestion pipeline uses, at 3 to 250 labels?
 
 ## What it informs
 
-- **Ingestion:** whether a decision model can replace the LLM step that classifies and tags reports in the EvalExplorer ingestion pipeline, at lower cost or latency.
-- **Public write-up:** a benchmark of decision models on a real many-option task, for outside readers.
-- Each phase also records, per model: what fine-tuning would take, limitations, opportunities and further work (see [Write-up](#write-up)).
+- **Ingestion:** whether a smaller model can replace the LLM step that tags excerpts and classifies reports in the EvalExplorer ingestion pipeline, at a fraction of the compute per item.
+- **Public write-up:** a benchmark of decision models on a real many-option task.
+- Each phase records, per model: what fine-tuning would take, limitations, opportunities and further work (see [Write-up](#write-up)).
 
 ## Phases
 
-1. **Task B, excerpt tagging.** Excerpts are short, so every model fits, including Laya (512-token context). Cheap and fast to run.
-2. **Task A, document classification.** Planned after phase 1 results are written up; the maintainer decides whether it runs.
+1. **Task B, excerpt tagging.** Starts with a [context pilot](#context-pilot).
+2. **Task A, document classification.** After phase 1 is written up; the maintainer decides whether it runs.
+
+## Input: what production sees
+
+Excerpts are tagged in context. In production ([eval-explorer](https://github.com/baobab-tech/eval-explorer) `ingestion-pipeline/lib/extract/extraction.ts` and `processor-extract.ts`, identical on `main` and `staging`, checked 2026-10-06), one LLM call per section chunk extracts and tags excerpts. The call sees:
+
+- **Main section:** the section chunk ("window") the excerpt comes from, under its section heading. Windows: median 7,481 characters, p90 12,736.
+- **Context sections**, up to 3, each cut to 1,500 characters: "Document Start" (the report's first 100 words, usually the title page), then the first two other sections in document order (often Abstract, Executive Summary or Introduction).
+
+The source data, [`baobabtech/evalexplorer-data`](https://huggingface.co/datasets/baobabtech/evalexplorer-data) revision `5315eab`, has the pieces to rebuild it:
+
+- the excerpt's window (`excerpts.window_id` → `windows.text`), with the excerpt located by its character offsets;
+- `documents.title` and `first_pages`;
+- `executive_summary_section` (45% of documents) and `abstract_section` (39%). Production takes the first two sections in document order, which the source data does not store; these two are the closest available;
+- `summary_doc`, a 300–500-word summary the pipeline writes after extraction (100% of documents). Production's tagging call does not see it.
+
+## Context pilot
+
+Which context gives the best tags for the least input? Run on 50 random test excerpts (seed 0; findings, recommendations and methodology in proportion) before labelling the full samples.
+
+| Variant | Input | Approx. tokens |
+|---|---|---:|
+| `excerpt` | the excerpt alone (control) | ~60 |
+| `doc` | excerpt + title + Document Start (first 100 words) | ~250 |
+| `doc+summary` | `doc` + executive summary or abstract (≤ 1,500 characters) | ~650 |
+| `production` | excerpt marked inside its window + Document Start + executive summary and abstract (≤ 1,500 characters each) | ~2,500 |
+| `summary_doc` | `doc` + `summary_doc` | ~900 |
+
+- Labellers: GLM-5.3-Flash and DeepSeek-V4.1-Flash (Qwen3.8-Flash-Next is slow on featherless-ai; it joins for the full samples).
+- Reported per variant: agreement between the two LLMs, agreement of each with the pipeline labels (production's own tags, made with section context), labels per excerpt, and input tokens.
+- A sample of disagreements is read by hand to see which variant gets geography and themes right.
+- The chosen variant must also work for a small encoder or classifier: one input sequence of context plus the marked excerpt, with outputs that tag only the excerpt. It has to fit the encoder's window (8,192 tokens for ModernBERT, Ettin and mmBERT) at an acceptable compute per excerpt. Document-level blocks are the same for every excerpt of a report, so they can be encoded once per document; the window is not.
+- The variant with the best agreement per input token, within those limits, becomes the input for the reference labels, the decision models and the training data in [02](../02-fine-tuning/).
 
 ## Data
 
-1,420 public international development evaluation reports: [`baobabtech/decision-models-evaluation-docs`](https://huggingface.co/datasets/baobabtech/decision-models-evaluation-docs) (public); see [common/datasets.md](../common/datasets.md). Test splits only, split by document.
+1,420 public international development evaluation reports: [`baobabtech/decision-models-evaluation-docs`](https://huggingface.co/datasets/baobabtech/decision-models-evaluation-docs); see [common/datasets.md](../common/datasets.md). Split by document.
 
-| Task | Input | n | Field | Labels | Type |
+| Task | Unit | n (test) | Field | Labels | Type |
 |---|---|---|---|---:|---|
-| **B. Excerpt tagging** (phase 1) | Finding, recommendation or methodology excerpt: median 34 words, p90 107 | 600: `eval_sample` (300 findings, 150 recommendations, 150 methodology) | `themes` (findings, recommendations) | 22 | multi, median 2 |
+| **B. Excerpt tagging** (phase 1) | Finding, recommendation or methodology excerpt (median 34 words) in its context | 600: `eval_sample` (300 findings, 150 recommendations, 150 methodology) | `themes` (findings, recommendations) | 22 | multi |
 | | | | `regions` (findings, recommendations) | 17 | multi |
-| | | | `methods` (methodology only) | 24 | multi |
-| | | | `countries` (findings, recommendations) | 121 in test, 198 in all excerpts; 250 ISO codes | multi |
-| **A. Document classification** (phase 2) | First pages: median 1,935 tokens, p99 5,267 | 134 docs | `evaluation_approach` | 6 | single |
+| | | | `countries` (findings, recommendations) | 198 seen in excerpts; 250 ISO codes | multi |
+| | | | `methods` (methodology) | 24 | multi |
+| **A. Document classification** (phase 2) | First pages: median 1,935 tokens | 134 docs | `evaluation_approach` | 6 | single |
 | | | | `evaluation_type` | 4 | single |
 | | | | `temporality` | 3 | single |
-| | | | `themes` | 18 | multi, 1–4 |
+| | | | `themes` | 18 | multi |
 | | | | `countries` | 54 seen; ~250 ISO codes | multi |
 
-Option counts come from the real taxonomy. `countries` is the 100+ case: ask over the codes seen, and over all ~250 ISO codes.
+- A 300-excerpt validation sample (150 findings, 75 recommendations, 75 methodology, seed 0; [results/labels/validation_sample.json](results/labels/validation_sample.json)) is used to fit thresholds.
+- Labels, names and definitions are production's: `ingestion-pipeline/lib/extract/prompts.ts` and `definitions_themes.json` ([prompts](../common/prompts/excerpt-tagging.md)).
 
 ## Reference labels
 
-There is no human gold set. No person labelled the test items, and no decision model is checked against human answers. The reference is the agreement of three LLMs, so every score here measures **agreement with LLMs, not correctness**. A decision model that beats the LLMs on a label they all get wrong scores lower, not higher. The only human check is the 36 hand-corrected documents in task A.
+No human gold set exists beyond 36 hand-corrected documents (task A). The reference is the agreement of three LLMs, so scores measure **agreement with LLMs, not correctness**.
 
-| Label set | Input | Task B (excerpts) | Task A (documents) |
-|---|---|---|---|
-| GLM-5.3-Flash | excerpt alone | generated 2026-10-03 | in dataset (default columns) |
-| DeepSeek-V4.1-Flash | excerpt alone | generated 2026-10-03 | to generate |
-| Qwen3.8-Flash-Next | excerpt alone | generated 2026-10-03 | to generate |
-| Pipeline (gpt-oss-120b; fallbacks Gemini 2.5 Flash, Qwen 3 235B) | whole section, tagged while extracting | in dataset | in dataset (`*_pipeline`; 36 corrected by hand) |
-
-- The reference sets are GLM, DeepSeek and Qwen. They see the same input as the decision models.
-- The pipeline is not a reference. It saw the whole section, and on task B it agrees with the other three at 51.8–54.0 against their 83.5–85.1 with each other ([results](#phase-1-reference-labels)). Its scores are reported as a separate comparison.
-- Generated sets use classify-only prompts rebuilt from the pipeline's extract-and-classify prompts ([common/prompts/excerpt-tagging.md](../common/prompts/excerpt-tagging.md)), temperature 0, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)), with the provider pinned: GLM and DeepSeek on deepinfra, Qwen on featherless-ai.
-- Qwen3.8-Flash-Next is a reasoning model. It returned empty `content` with `response_format: json_schema` (2 of 2 calls, 2026-10-02), so the JSON format goes in the prompt, and `max_tokens` is 16,384.
-- The generated sets are in the dataset as `<field>_glm`, `<field>_deepseek`, `<field>_qwen`, with the reference as `<field>_majority` (revision `5017706`). Per-call records: [results/labels/](results/labels/).
-
-Scoring:
-
-- **Reference:** labels chosen by at least 2 of the 3 LLMs. For a single-label field with no majority, the item is excluded from that field.
-- **LLM range:** each LLM's mean agreement with the other two. A decision model is also scored against each LLM separately and averaged, so its score compares directly with the range.
-- Decision models get both scores: against the majority reference (headline), and the mean against each LLM (for the range).
-- Scores against the pipeline labels are reported too, for comparison with the earlier classifier runs.
+- GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next tag each test and validation excerpt with the pilot's chosen context and production's classification rules ([prompts](../common/prompts/excerpt-tagging.md)), temperature 0, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)). Providers: GLM and DeepSeek on deepinfra, Qwen on featherless-ai.
+- **Reference:** labels chosen by at least 2 of the 3 LLMs.
+- **LLM range:** each LLM's mean agreement with the other two.
+- **Pipeline labels** (gpt-oss-120b, fallbacks Gemini 2.5 Flash and Qwen 3 235B; in the dataset) are scored against the reference as a fourth LLM.
 
 ## Models
 
-| Model | Where | Why |
+| Model | Where | Size |
 |---|---|---|
-| [Jev](../../docs/models/jev.md) | Vercel AI Gateway (`typesafe-ai/jev`) | Reference model; 255 options |
-| [Liquid d1](../../docs/models/liquid-d1.md) | Vercel AI Gateway (`liquid/d1`) | Vendor-reported Decision Index leader |
-| [GLiDE](../../docs/models/glide.md) | Fastino API | 255 options; 40k tokens per question |
-| [GLiNER2.5-Decide](../../docs/models/gliner-decide.md) | This Mac | Only model with native multi-label; earlier zero-shot runs used GLiNER2.5 small/base |
-| [Kev-4B](../../docs/models/kev.md) | This Mac (MLX) | Open, Jev-compatible, 255 options |
-| [Kev-0.8B](../../docs/models/kev.md) | This Mac (MLX) | Zero-shot score for 02's size comparison |
-| [openJev Verdict](../../docs/models/rlcd-modernbert.md) | This Mac (MPS) | Zero-shot score for 02; 151M encoder; max 24 options, so Noul-per-label only for fields above 24 |
-| [Laya](../../docs/models/laya.md) | This Mac | Small encoder; context 512 (en), so task A only after chunking |
+| [Jev](../../docs/models/jev.md) | Vercel AI Gateway (`typesafe-ai/jev`, pinned to provider `typesafe-ai`) | n/d |
+| [Liquid d1](../../docs/models/liquid-d1.md) | Vercel AI Gateway (`liquid/d1`) | n/d |
+| [GLiDE](../../docs/models/glide.md) | Fastino API | n/d |
+| [GLiNER2.5-Decide](../../docs/models/gliner-decide.md) | This Mac | 340M |
+| [Kev-4B](../../docs/models/kev.md), Kev-0.8B | This Mac (MLX) | 4B, 0.8B |
+| [openJev Verdict](../../docs/models/rlcd-modernbert.md) | This Mac | 151M |
+| [Laya](../../docs/models/laya.md) | This Mac | 421M |
 
-- Jev and d1 use `AI_GATEWAY_API_KEY`. The gateway documents only the AI SDK `experimental_evaluate` path (TypeScript), so [gateway/evaluate.mjs](gateway/evaluate.mjs) (Node 22, `ai` 7.0.127) bridges Jev-format JSONL to it. Providers are pinned: Jev to `typesafe-ai`, d1 to `liquid`.
-- Runner: [run.py](run.py) builds the requests and [score.py](score.py) scores them. One request per (excerpt, field), split into chunks of at most 128 questions, because d1 rejects more (2026-10-04). Every model gets the same chunks.
-- Noul wording: themes "The excerpt is about {label}: {definition}" (`definitions` variant) or without the definition (`labels`); regions "The excerpt substantively discusses {region} or countries in it, not just a passing mention"; countries the same without the region clause; methods "The excerpt describes a {method} method used in the evaluation".
-- Country option sets: the 198 codes seen in any excerpt split (`in_excerpts`), or all 250 taxonomy codes.
-- GLiNER2.5-Decide, Kev and Laya have no HF Inference Providers mapping (checked 2026-10-02), so they run locally, as does Verdict.
-
-## Question formats
-
-- Single-label fields: one Choice.
-- Multi-label fields: one Noul per label in one request, thresholded at 0.5. GLiNER2.5-Decide also uses its native multi-label mode.
-- `countries`: flat Choice/Noul over all codes vs staged (region first, then countries within it).
-- Label names only vs names with one-line definitions (the `definitions` prompt variant from the classify experiments).
-
-## Null answers (phase 2)
-
-`evaluation_approach`, `evaluation_type` and `temporality` can be `null`. A Choice always returns one of its options, so `null` comes from one of two methods, and we test both:
-
-1. **Threshold:** the field is `null` when the top option's probability is below a threshold *t*.
-2. **Gate:** a Noul asks whether the report states the field (e.g. "The report states its evaluation approach"). The field is `null` when the Noul is below a threshold *g*; otherwise the Choice answer is used.
-
-Calibrating the thresholds:
-
-- *t* and *g* are fitted per model and per field on the validation split (138 documents), then frozen for the test split.
-- The objective is field accuracy with `null` counted as its own class.
-- Grid: 0.05 to 0.95 in steps of 0.05. Ties go to the higher threshold, which gives fewer `null`s.
-- Reported for each field:
-  - the fitted threshold
-  - the `null` precision and recall on test
-  - the accuracy curve across thresholds on validation, so we can see whether a plateau or a sharp peak drove the choice
-- 138 validation documents give a coarse fit, especially for rare `null`s, so the 95% bootstrap interval of the test accuracy is reported. If the interval is wide, the fit is repeated with 5-fold cross-validation over train + validation.
-- A third run with no `null` handling, where the Choice is always taken, shows what each method adds.
-
-## Baselines
-
-- **The three reference LLMs**, as the LLM range above.
-- **The pipeline labels**, scored against the majority reference.
-- **Embeddings + logistic regression** trained on the train split, for task B.
-- **Earlier Baobab Tech classifier runs** on the task A test split (phase 2; not re-run; results in `baobabtech/evalexplorer-classify-experiments`, private):
-
-  | Model | Zero-shot vs GLM | After SFT vs GLM | After SFT vs pipeline |
-  |---|---:|---:|---:|
-  | Gemma 4 26B-A4B | 72.9 | 80.3 | 84.4 |
-  | Qwen3.5-4B | 66.2 | 77.8 | 84.7 |
-  | Gemma 4 E4B | 72.1 | 76.8 | 83.0 |
-  | GLiNER2.5 base | 45.2 | 57.2 | 58.4 |
-
-  The SFT models were trained on pipeline labels. Pipeline and GLM agree at 76.2 on test.
+- Zero-shot, one Noul per label, with the chosen context as `state`.
+- Clients: [run.py](run.py) builds requests and [score.py](score.py) scores them; [gateway/evaluate.mjs](gateway/evaluate.mjs) bridges Jev-format requests to the Vercel AI Gateway; [local/](local/) bridges GLiNER2 and Verdict. Requests are split into chunks of at most 128 questions (d1's limit) or 64 (Laya's).
+- Regions: direct region Nouls ∪ regions of predicted countries (taxonomy country → region map).
 
 ## Metrics
 
 From [common/metrics.md](../common/metrics.md):
 
-- **Main score:** `mean_field_score`, the mean of per-field accuracy and F1.
-- **Per field:** `accuracy` for single-label fields; `micro_f1` and `macro_f1` for multi-label fields.
-- **Calibration:** `ece_15`, `brier`, `coverage_at_5`.
-- **Speed and cost:** `latency_p50_ms` and `p95`, `cost_per_1k`, `tokens_per_request`. LLM labelling cost and latency are recorded too, as the ingestion comparison.
+- **Main score:** `mean_field_score`, micro-F1 per field against the reference, averaged over fields.
+- **Per field:** `micro_f1`, `macro_f1`, labels per item.
+- **Compute per item:** estimated as 2 × active parameters × tokens processed, next to measured tokens, latency and cost.
+- Thresholds: one per model, fitted on the validation sample (grid 0.05–0.95; ties go higher), and at 0.5.
 
-## Results
+## Null answers (phase 2)
 
-### Phase 1: reference labels
-
-Run 2026-10-03 on the 600 `eval_sample` excerpts, dataset revision `fcd40f8`. Fields: `themes`, `regions` and `countries` on 450 findings and recommendations; `methods` on 150 methodology excerpts. Scores are micro-F1 × 100; the mean is over the four fields.
-
-LLM range (each LLM's mean agreement with the other two):
-
-| LLM | Provider | Themes | Regions | Countries | Methods | Mean |
-|---|---|---:|---:|---:|---:|---:|
-| GLM-5.3-Flash | deepinfra | 79.7 | 85.6 | 86.7 | 84.9 | 84.2 |
-| DeepSeek-V4.1-Flash | deepinfra | 80.9 | 85.1 | 89.2 | 82.0 | 84.3 |
-| Qwen3.8-Flash-Next | featherless-ai | 81.2 | 86.3 | 87.9 | 84.5 | 85.0 |
-
-Pipeline labels against the majority reference: themes 67.3, regions 44.3, countries 45.6, methods 54.2; mean 52.8.
-
-Labels per excerpt:
-
-| | Themes | Regions | Countries | Methods |
-|---|---:|---:|---:|---:|
-| Pipeline | 2.37 | 0.60 | 0.68 | 1.06 |
-| GLM / DeepSeek / Qwen | 1.36 / 1.62 / 1.62 | 0.24 / 0.20 / 0.21 | 0.30 / 0.24 / 0.25 | 0.55 / 0.43 / 0.55 |
-| Majority reference | 1.48 | 0.21 | 0.25 | 0.51 |
-
-- All three LLMs agree on 75% of the majority's theme and method labels, 82% of region labels and 88% of country labels.
-- The pipeline tags 2–3 times more regions and countries. In a 9-excerpt pilot, 3 of its 6 country tags on findings and recommendations named a country absent from the excerpt (Tanzania, Syria, Pakistan), which fits its section-level input.
-- Calls: 600 per model, no errors or truncations after retries. GLM 0.86M tokens (p50 3.8 s); DeepSeek 0.84M (p50 1.4 s); Qwen 1.09M, including 216k reasoning tokens (p50 7 s; up to 6,906 output tokens).
-- Two codes outside the label lists were dropped: one DeepSeek, one Qwen.
-
-### Phase 1: decision models, threshold 0.5
-
-Run 2026-10-04 and 2026-10-05 on the 600 `eval_sample` excerpts, dataset revision `5017706`; `definitions` variant; 198 country codes; one Noul per label, label kept when p ≥ 0.5. Scores are micro-F1 × 100 against the 3-LLM majority; they measure agreement with LLMs, not correctness. LLM range: 84.2–85.0.
-
-| Model | Provider | Themes | Regions | Countries | Methods | Mean | Mean vs each LLM | Vs pipeline |
-|---|---|---:|---:|---:|---:|---:|---:|---:|
-| Jev | `typesafe-ai` (gateway) | 66.2 | 78.2 | 71.1 | 68.3 | **71.0** | 69.8 | 43.6 |
-| GLiDE | Fastino API | 59.5 | 56.7 | 41.0 | 52.2 | **52.4** | 51.1 | 37.5 |
-| d1 | `liquid` (gateway) | 64.5 | 27.4 | 15.3 | 51.0 | **39.5** | 38.9 | 35.7 |
-| GLiNER2.5-Decide | this Mac (MPS), native multi-label | 21.1 | 12.3 | 9.6 | 33.3 | **19.1** | 18.9 | 14.6 |
-| Laya 0.3.27 | this Mac (MPS), `laya-serve` | 23.1 | 22.1 | 10.8 | 14.1 | **17.5** | 17.5 | 18.6 |
-
-Labels per excerpt (reference: themes 1.48, regions 0.21, countries 0.25, methods 0.51):
-
-| Model | Themes | Regions | Countries | Methods |
-|---|---:|---:|---:|---:|
-| Jev | 1.28 | 0.19 | 0.19 | 0.85 |
-| GLiDE | 1.53 | 0.40 | 0.39 | 1.15 |
-| d1 | 2.05 | 0.94 | 1.78 | 1.45 |
-| GLiNER2.5-Decide | 11.56 | 0.04 | 0.03 | 0.17 |
-| Laya | 5.24 | 0.74 | 1.32 | 3.55 |
-
-Regions are the union of the direct region Nouls and the regions of predicted countries. Each part alone:
-
-| Model | Direct only | From countries only | Union |
-|---|---:|---:|---:|
-| Jev | 76.2 | 73.5 | 78.2 |
-| GLiDE | 77.3 | 48.0 | 56.7 |
-| d1 | 65.5 | 25.5 | 27.4 |
-
-Speed and cost (1,950 requests, 110,250 Nouls):
-
-| Model | p50 per request | Wall time | Input tokens | Cost |
-|---|---:|---:|---:|---:|
-| Jev | 340 ms | 95 s (8 concurrent) | 3.5M | $0.15 (gateway) |
-| d1 | 663 ms | 183 s (8 concurrent) | 12.5M | $0.50 (gateway) |
-| GLiDE | 1,136 ms | 242 s (16 concurrent) | 15.5M | $4.64 (list price × tokens) |
-
-- At p = 0.5, d1 and GLiDE over-tag: d1 gives 7× the reference's countries per excerpt. Their scores depend on the threshold, so these are not their best scores.
-- Regions: 88 of the reference's 95 region labels follow from its countries; 7 name a region with no country. The union keeps both. For d1 and GLiDE, the union scores below the direct Nouls because their over-tagged countries add wrong regions.
-- Jev is the closest to the LLM range: 13–14 points below it.
-
-- Not run: Kev-4B, Kev-0.8B and openJev Verdict. Their full runs hit the 2-hour background limit on 2026-10-05 while four local models shared the Mac, and the runner saves results only at the end. Kev-4B's 9-excerpt smoke test scored 51.0.
-- Local latencies are not comparable: GLiNER and Laya ran while other models shared the Mac (GLiNER p50 1.8 s, Laya 3.7 s per request).
-
-### Phase 1: thresholds
-
-Thresholds per model and field were fitted on a 300-excerpt validation sample (150 findings, 75 recommendations, 75 methodology, seed 0; labelled by the same three LLMs; [results/labels/](results/labels/)), with [fit.py](fit.py).
-
-| Model | Test at 0.5 | Fitted per field | One threshold per model |
-|---|---:|---:|---:|
-| Jev | 71.0 | 66.7 | 70.1 (0.55) |
-| GLiDE | 52.4 | 58.5 | 60.1 (0.60) |
-| d1 | 39.5 | 56.2 | 49.6 (0.85) |
-
-Fitting raises d1 and GLiDE by 6–17 points and does not help Jev; no model reaches the LLM range. 300 validation excerpts give unstable per-field fits (Jev scores 59.2 on validation and 71.0 on test at 0.5). Thresholds were not fitted for the local models.
-
-### Phase 1: compute per excerpt
-
-Estimated compute ≈ 2 × active parameters × tokens processed per excerpt. Token counts come from API usage where reported; others are estimates. Jev, d1 and GLiDE do not disclose their size.
-
-| Model | Active parameters | Tokens per excerpt | Compute vs DeepSeek | Score |
-|---|---:|---:|---:|---:|
-| DeepSeek-V4.1-Flash (labeller) | 8–16B of 552B ([card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)) | ~1,400 (measured) | 1× | in LLM range |
-| Jev | n/d | ~5,800 (measured) | n/d | 71.0 |
-| d1 | n/d | ~20,800 (measured) | n/d | 39.5 |
-| GLiDE | n/d | ~25,800 (measured; includes reasoning passes) | n/d | 52.4 |
-| Laya | 421M | ~18,000 (est.: 237 Nouls × ~75 tokens) | ~1/3 (est.) | 17.5 |
-| GLiNER2.5-Decide | 340M | ~1,500 (est.: excerpt + label list) | ~1/45 (est.) | 19.1 |
-| Fine-tuned encoder with label heads (experiment 02) | ~150M | ~100 (est.: excerpt once) | ~1/1,000 (est.) | to test |
-
-- One Noul per label costs most of a small model's advantage: Laya processes about 13× more tokens per excerpt than DeepSeek.
-- Measured energy is not available for API models. Local runs can be measured with `powermetrics` (needs sudo).
-
-### Phase 1: conclusion
-
-- No zero-shot decision model reaches the LLM range (84.2–85.0) on excerpt tagging. Jev comes closest at 71.0; the small local models score 17–19.
-- Per excerpt, DeepSeek-V4.1-Flash cost $0.0003 at list price, about the same as Jev ($0.0002) and below GLiDE ($0.008).
-- The case for small models is compute and environmental impact, and it rests on fine-tuning: a ~150M encoder that reads each excerpt once would use about 1/1,000 of DeepSeek's compute. Experiment [02](../02-fine-tuning/) tests whether it reaches the LLM range.
-- Phase 2 (task A, ~2,000-token first pages) was not run: longer inputs do not change this conclusion for zero-shot models.
+`evaluation_approach`, `evaluation_type` and `temporality` can be `null`. A Choice always returns one of its options, so `null` comes from a threshold on the top probability or from a gate Noul ("The report states its evaluation approach"). Both are fitted on the 138 validation documents and reported with `null` precision and recall.
 
 ## Write-up
 
-Results go in this README per phase. Besides scores, each phase records per model:
-
-- **Fine-tuning:** whether it can be fine-tuned (open weights, vendor service or neither), the data format, the hardware and time it would take, and what experiment [02](../02-fine-tuning/) should test.
-- **Limitations:** option and context caps, multi-label handling, failure modes seen in errors.
-- **Opportunities:** fields or excerpt types where it matches the LLMs.
-- **Further work:** follow-up experiments, added to [../README.md](../README.md) as `proposed`.
+Results go in this README per phase, with, per model: fine-tuning options, limitations, opportunities and further work (added to [../README.md](../README.md) as `proposed`).
 
 ## Data governance
 
 - Local models run on this Mac.
-- These models send document text to third parties:
-  - Jev via Vercel AI Gateway, pinned to the `typesafe-ai` provider (TypeSafe: no training on inputs, US); no ZDR; no EU region.
-  - d1 via Vercel AI Gateway: served by `liquid`; no ZDR; Liquid's terms let it use inputs to improve its models; no EU region.
-  - GLiDE: Fastino API, US.
-  - GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next via HF Inference Providers: the region depends on the provider; record the pinned provider and its region.
-- The reports and dataset are public; the maintainer approved sending them to these APIs (2026-10-02).
+- Text sent to third parties:
+  - Jev via Vercel AI Gateway, pinned to `typesafe-ai` (TypeSafe: no training on inputs, US); no ZDR; no EU region.
+  - d1 via Vercel AI Gateway, served by `liquid`; no ZDR; Liquid's terms let it use inputs to improve its models.
+  - GLiDE: Fastino API, US; `/v1/systemone` rejects `store: false`.
+  - GLM, DeepSeek and Qwen via HF Inference Providers; record the pinned provider.
+- The reports are public; the maintainer approved sending them to these APIs (2026-10-02).
 
 ## What would change a decision
 
-- **Replace the LLM in ingestion:** on both tasks, a decision model scores within the LLM range, or within 3 points of its lowest score, at lower cost or latency.
-- **Use one for excerpt tagging only:** it reaches the LLM range on task B but not task A, which points to input length as the limit.
-- **Keep LLMs, try fine-tuning:** every decision model stays below the LLM range; experiment 02 tests whether fine-tuning closes the gap.
+- **Replace the LLM in ingestion:** a model scores within the LLM range at a fraction of the LLM's compute per item.
+- **Fine-tune instead:** no zero-shot model reaches the range; experiment [02](../02-fine-tuning/) tests fine-tuned small models on the same input.

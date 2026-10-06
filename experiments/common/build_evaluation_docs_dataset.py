@@ -11,9 +11,7 @@ Configs pushed to --target:
   documents  first pages (as the classify_codes config truncated them) + silver labels (GLM-5.3-Flash)
              + pipeline labels (`*_pipeline`), train/validation/test
   excerpts   findings, recommendations and methodology excerpts + tags, train/validation/test;
-             `eval_sample` marks the fixed 600-excerpt test sample (300 findings, 150 recommendations, 150 methodology, seed 0);
-             on those rows, `<field>_glm`, `<field>_deepseek`, `<field>_qwen` hold the experiment-01 LLM labels
-             (excerpt-only input) and `<field>_majority` the labels chosen by at least 2 of the 3
+             `eval_sample` marks the fixed 600-excerpt test sample (300 findings, 150 recommendations, 150 methodology, seed 0)
   taxonomy   one row per (field, code): label, definition (document prompt), definition_excerpts (excerpt
              prompt: themes and methods), region (countries only), and whether the code occurs in the
              documents / excerpts gold labels (the label sets the experiments ask over)
@@ -41,9 +39,6 @@ TARGET = "baobabtech/decision-models-evaluation-docs"
 SPLITS = ("train", "validation", "test")
 SAMPLE = {"findings": 300, "recommendations": 150, "methodology": 150}
 SEED = 0
-EXCERPT_FIELDS = ("themes", "regions", "countries", "methods")
-LLM_LABELS = Path(__file__).resolve().parents[1] / "01-many-option-classification/results/labels"
-LLMS = ("glm", "deepseek", "qwen")
 
 
 def ts_record(source: str, name: str) -> dict[str, str]:
@@ -147,27 +142,6 @@ def documents() -> DatasetDict:
     return DatasetDict(out)
 
 
-def add_llm_labels(df: pd.DataFrame) -> None:
-    """Add experiment-01 LLM labels and their 2-of-3 majority to the eval_sample rows (None elsewhere)."""
-    sample = df.index[df["eval_sample"]]
-    per_llm = {m: {} for m in LLMS}
-    for m in LLMS if len(sample) else ():
-        recs = {r["excerpt_id"]: r["labels"] for r in map(json.loads, (LLM_LABELS / f"excerpts_{m}.jsonl").open())}
-        assert set(df.loc[sample, "excerpt_id"]) == set(recs), f"{m} labels do not match eval_sample"
-        per_llm[m] = recs
-    for f in EXCERPT_FIELDS:
-        for m in LLMS:
-            col = [None] * len(df)
-            for i in sample:
-                col[i] = sorted(per_llm[m][df.at[i, "excerpt_id"]].get(f, []))
-            df[f"{f}_{m}"] = col
-        maj = [None] * len(df)
-        for i in sample:
-            votes = [c for m in LLMS for c in per_llm[m][df.at[i, "excerpt_id"]].get(f, [])]
-            maj[i] = sorted({c for c in votes if votes.count(c) >= 2})
-        df[f"{f}_majority"] = maj
-
-
 def excerpts() -> DatasetDict:
     out = {}
     cols = ["excerpt_id", "document_id", "type", "section_category", "page", "text",
@@ -181,10 +155,8 @@ def excerpts() -> DatasetDict:
             for kind, n in SAMPLE.items():
                 idx = df[df["type"] == kind].sample(n=n, random_state=SEED).index
                 df.loc[idx, "eval_sample"] = True
-        add_llm_labels(df)
         out[split] = Dataset.from_pandas(df.reset_index(drop=True), preserve_index=False)
-    # train/validation have no eval_sample rows, so their LLM-label columns infer as null; use the test schema
-    return DatasetDict({k: v.cast(out["test"].features) for k, v in out.items()})
+    return DatasetDict(out)
 
 
 def main() -> None:
