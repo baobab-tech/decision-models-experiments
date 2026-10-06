@@ -73,6 +73,8 @@ All training excerpts are real excerpts labelled by GLM-5.3-Flash and DeepSeek-V
 - **Random sample:** 10,000 excerpts (seed 0). Agreed positives per label: themes median 333 (national security 4, multilateral 4, diplomacy 5); regions median 54; methods median **19** (outcome mapping, most significant change, synthetic control: 1 each).
 - **Balanced extra sample** ([select_balanced.py](select_balanced.py)): all 11,979 remaining methodology excerpts, plus up to 300 excerpts per theme and region that the pipeline tagged with it; 18,666 excerpts. Pipeline labels only choose excerpts; the LLMs label them.
 - **Learning curve:** Ettin-32M trained on 1,000, 2,500, 5,000 and 10,000 random excerpts, and on random + balanced.
+- **Published:** `llm_labels` config, dataset revision `e191ae3` (28,664 training excerpts: 9,998 random + 18,666 balanced; column `sample`). Agreed positives per label, random → all: themes median 333 → 760 (rarest 4 → 38); regions 54 → 257 (1 → 2); methods 19 → 173 (1 → 4). Some labels stay rare in the whole corpus (synthetic control 4, outcome harvesting 5, Micronesia 2).
+- Sweep 2 job ids: [results/jobs_sweep2.tsv](results/jobs_sweep2.tsv). Sweep 2 overwrites the sweep 1 Ettin lookup repos; sweep 1 numbers are in [results/sweep_summary.json](results/sweep_summary.json).
 
 ## What we already know
 

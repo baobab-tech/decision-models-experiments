@@ -1,0 +1,16 @@
+2026-10-06T23:38:46Z	6ac58686404719ba37664101	answerdotai/ModernBERT-base	
+2026-10-06T23:38:47Z	6ac58687fbc85ba6823baa88	jhu-clsp/ettin-encoder-150m	
+2026-10-06T23:38:49Z	6ac58689fbc85ba6823baa8a	jhu-clsp/ettin-encoder-32m	
+2026-10-06T23:38:51Z	6ac5868b404719ba37664103	jhu-clsp/mmBERT-small	
+2026-10-06T23:38:52Z	6ac5868c404719ba37664105	Alibaba-NLP/gte-modernbert-base	
+2026-10-06T23:38:54Z	6ac5868e404719ba37664107	ibm-granite/granite-embedding-97m-multilingual-r2	
+2026-10-06T23:38:56Z	6ac58690fbc85ba6823baa8f	MaziyarPanahi/ModernJEV-Decide-Preview	
+2026-10-06T23:38:57Z	6ac58691fbc85ba6823baa91	LiquidAI/LFM2.5-Encoder-230M	
+2026-10-06T23:39:00Z	6ac58694404719ba37664109	Hcompany/NeoMME-260M	
+2026-10-06T23:39:02Z	6ac58696fbc85ba6823baa93	microsoft/harrier-oss-v1-270m	
+2026-10-06T23:39:03Z	6ac58697fbc85ba6823baa96	codefuse-ai/F2LLM-v2-80M	
+2026-10-06T23:39:05Z	6ac58699fbc85ba6823baa98	jhu-clsp/ettin-encoder-150m	--arch two_tower
+2026-10-06T23:39:07Z	6ac5869b404719ba37664110	jhu-clsp/ettin-encoder-32m	--train-sample random --limit-train 1000
+2026-10-06T23:39:09Z	6ac5869dfbc85ba6823baa9d	jhu-clsp/ettin-encoder-32m	--train-sample random --limit-train 2500
+2026-10-06T23:39:10Z	6ac5869e404719ba37664112	jhu-clsp/ettin-encoder-32m	--train-sample random --limit-train 5000
+2026-10-06T23:39:12Z	6ac586a0404719ba37664114	jhu-clsp/ettin-encoder-32m	--train-sample random
