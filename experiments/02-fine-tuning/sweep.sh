@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Experiment 02, first step: fine-tune each small encoder as an HF Job in the baobabtech namespace.
 # Every job reads the llm_labels config from the Hub and pushes its model and metrics to a private
-# baobabtech/evaldocs-tagger-<encoder>-llm repo, so anyone with access can rerun a single line.
+# baobabtech/evaldocs-excerpt-tagger-<encoder>-llm repo, so anyone with access can rerun a single line.
 # Encoders: released since March 2026, <= ~300M parameters, context >= 8k tokens; ModernBERT-base and
 # Ettin as 2025 references. Job ids are appended to results/jobs.tsv.
 set -euo pipefail

@@ -205,7 +205,7 @@ def main() -> None:
     ap.add_argument("--local-data", help="load llm_labels from a save_to_disk folder (smoke tests)")
     ap.add_argument("--limit-train", type=int, help="smoke tests: first N training excerpts")
     ap.add_argument("--no-push", action="store_true")
-    ap.add_argument("--push-to", default="baobabtech/evaldocs-tagger", help="repo prefix; base and labels appended")
+    ap.add_argument("--push-to", default="baobabtech/evaldocs-excerpt-tagger", help="repo prefix; base and labels appended")
     args = ap.parse_args()
 
     random.seed(args.seed), np.random.seed(args.seed), torch.manual_seed(args.seed)
