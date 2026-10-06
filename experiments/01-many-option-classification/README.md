@@ -1,6 +1,6 @@
 # 01 Many-option classification
 
-**Status:** planned. Context pilot done (2026-10-06); reference labels next.
+**Status:** running. Context pilot and reference labels done (2026-10-06); model runs next.
 
 ## Question
 
@@ -43,7 +43,7 @@ Which context gives the best tags for the least input? Run on 50 random test exc
 | `production` | excerpt marked inside its window + Document Start + executive summary and abstract (≤ 1,500 characters each) | ~2,500 |
 | `summary_doc` | `doc` + `summary_doc` | ~900 |
 
-- Labellers: GLM-5.3-Flash and DeepSeek-V4.1-Flash (Qwen3.8-Flash-Next is slow on featherless-ai; it joins for the full samples).
+- Labellers: GLM-5.3-Flash and DeepSeek-V4.1-Flash.
 - Reported per variant: agreement between the two LLMs, agreement of each with the pipeline labels (production's own tags, made with section context), labels per excerpt, and input tokens.
 - A sample of disagreements is read by hand to see which variant gets geography and themes right.
 - The chosen variant must also work for a small encoder or classifier: one input sequence of context plus the marked excerpt, with outputs that tag only the excerpt. It has to fit the encoder's window (at least 8,192 tokens; DeBERTa-v3 (512) and NeoBERT (4,096) are excluded) at an acceptable compute per excerpt. Document-level blocks are the same for every excerpt of a report, so they can be encoded once per document; the window is not.
@@ -87,12 +87,24 @@ Run 2026-10-06 on 50 random test excerpts (seed 0: 25 findings, 10 recommendatio
 
 ## Reference labels
 
-No human gold set exists beyond 36 hand-corrected documents (task A). The reference is the agreement of three LLMs, so scores measure **agreement with LLMs, not correctness**.
+No human gold set exists beyond 36 hand-corrected documents (task A). The reference is two LLMs' labels, so scores measure **agreement with LLMs, not correctness**.
 
-- GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next tag each test and validation excerpt with the pilot's chosen context and production's classification rules ([prompts](../common/prompts/excerpt-tagging.md)), temperature 0, through HF Inference Providers billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)). Providers: GLM and DeepSeek on deepinfra, Qwen on featherless-ai.
-- **Reference:** labels chosen by at least 2 of the 3 LLMs.
-- **LLM range:** each LLM's mean agreement with the other two.
-- **Pipeline labels** (gpt-oss-120b, fallbacks Gemini 2.5 Flash and Qwen 3 235B; in the dataset) are scored against the reference as a fourth LLM.
+- GLM-5.3-Flash and DeepSeek-V4.1-Flash tag each test and validation excerpt with the pilot's chosen context and production's classification rules ([prompts](../common/prompts/excerpt-tagging.md)), temperature 0, through HF Inference Providers on deepinfra, billed to `baobabtech` ([common/README.md](../common/README.md#hf-inference-providers)).
+- **Score:** a model's mean micro-F1 against GLM and against DeepSeek.
+- **LLM range:** GLM's agreement with DeepSeek. A model at that level agrees with each LLM as much as they agree with each other.
+- **Pipeline labels** (gpt-oss-120b, fallbacks Gemini 2.5 Flash and Qwen 3 235B; in the dataset) are scored the same way, as a third tagger.
+
+### Reference labels: result
+
+Run 2026-10-06 with the `doc+summary` context ([labels](results/labels/)); GLM-5.3-Flash and DeepSeek-V4.1-Flash on deepinfra. Micro-F1 × 100.
+
+| | Themes | Regions | Countries | Methods | Mean |
+|---|---:|---:|---:|---:|---:|
+| LLM range: GLM vs DeepSeek, test (600) | 82.4 | 94.9 | 89.8 | 88.1 | **88.8** |
+| LLM range: GLM vs DeepSeek, validation (300) | 81.3 | 92.8 | 88.9 | 81.6 | 86.1 |
+| Pipeline vs the two LLMs, test | 67.5 | 77.1 | 73.6 | 52.0 | 67.5 |
+
+Labels per excerpt on test (GLM / DeepSeek / pipeline): themes 1.84 / 2.09 / 2.37; regions 0.78 / 0.74 / 0.60; countries 0.97 / 0.90 / 0.68; methods 0.84 / 0.78 / 1.06.
 
 ## Models
 
@@ -134,7 +146,7 @@ Results go in this README per phase, with, per model: fine-tuning options, limit
   - Jev via Vercel AI Gateway, pinned to `typesafe-ai` (TypeSafe: no training on inputs, US); no ZDR; no EU region.
   - d1 via Vercel AI Gateway, served by `liquid`; no ZDR; Liquid's terms let it use inputs to improve its models.
   - GLiDE: Fastino API, US; `/v1/systemone` rejects `store: false`.
-  - GLM, DeepSeek and Qwen via HF Inference Providers; record the pinned provider.
+  - GLM and DeepSeek via HF Inference Providers on deepinfra.
 - The reports are public; the maintainer approved sending them to these APIs (2026-10-02).
 
 ## What would change a decision

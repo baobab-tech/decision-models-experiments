@@ -14,7 +14,7 @@
 | `cost_per_1k` | USD per 1,000 decisions | API: list price at run date. Local: n/a (record hardware) |
 | `tokens_per_request` | Input tokens per request as reported by the API or tokenizer | State plus question text |
 
-- Reference labels are the majority of three LLMs (GLM-5.3-Flash, DeepSeek-V4.1-Flash, Qwen3.8-Flash-Next) unless a result says otherwise. There is no human gold set, so scores measure agreement with LLMs, not correctness.
+- Reference labels are those of two LLMs, GLM-5.3-Flash and DeepSeek-V4.1-Flash, unless a result says otherwise. A model's score is its mean agreement with each of them; the LLM range is their agreement with each other. There is no human gold set, so scores measure agreement with LLMs, not correctness.
 - Multi-label with one Noul per label: threshold each Noul at 0.5 unless the plan says otherwise. Report the threshold.
 - Staged Choices (coarse then fine): the probability of a leaf label is the product of the stage probabilities.
 - Report `n` and a 95% bootstrap interval (1,000 resamples) for `accuracy`, `macro_f1` and `ece_15`.

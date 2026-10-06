@@ -19,7 +19,7 @@ Written only when an approved experiment needs it:
 ## HF Inference Providers
 
 - Call `https://router.huggingface.co/v1` with `HF_TOKEN` and the header `X-HF-Bill-To: baobabtech`, so usage bills to the Baobab Tech org.
-- Pin the provider with a model suffix, e.g. `Qwen/Qwen3.8-Flash-Next:featherless-ai`, and record it in `run.json`.
+- Pin the provider with a model suffix, e.g. `deepseek-ai/DeepSeek-V4.1-Flash:deepinfra`, and record it in `run.json`.
 
 ```python
 client = OpenAI(

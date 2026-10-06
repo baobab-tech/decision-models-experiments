@@ -1,7 +1,7 @@
 """Fit per-model, per-field Noul thresholds on the validation sample, then re-score the test run with them.
 
 Reads the latest validation and test runs of a model from results/raw/ (no new model calls).
-Objective: micro-F1 against the 3-LLM majority. Grid 0.05-0.95 step 0.05; ties go to the higher threshold.
+Objective: micro-F1, mean over the two labelling LLMs. Grid 0.05-0.95 step 0.05; ties go to the higher threshold.
 Countries are fitted first; regions are then fitted as direct region Nouls ∪ regions of countries at the
 fitted country threshold.
 
@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from run import HERE, add_regions, load
-from score import FIELDS, items, micro_f1, references, score
+from score import FIELDS, LLMS, items, micro_f1, references, score
 
 GRID = [round(0.05 * i, 2) for i in range(1, 20)]
 
@@ -49,7 +49,7 @@ def predict(probs: dict, thresholds: dict, tax) -> dict:
 
 
 def fit(probs: dict, sample, tax) -> tuple[dict, dict]:
-    refs = references(sample)["majority"]
+    refs = references(sample)
     thresholds = {f: 0.5 for f in FIELDS}
     curves = {}
     for f in ("themes", "countries", "methods", "regions"):  # regions last: depends on the country threshold
@@ -57,7 +57,7 @@ def fit(probs: dict, sample, tax) -> tuple[dict, dict]:
         curve = {}
         for t in GRID:
             preds = predict(probs, {**thresholds, f: t}, tax)
-            curve[t] = micro_f1(preds, refs, ids, f)
+            curve[t] = sum(micro_f1(preds, refs[m], ids, f) for m in LLMS) / len(LLMS)
         best = max(curve.values())
         thresholds[f] = max(t for t, v in curve.items() if v == best)
         curves[f] = curve
@@ -84,7 +84,7 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     (out / "thresholds.json").write_text(json.dumps({
         "model": args.model, "date": datetime.now(timezone.utc).isoformat(), "thresholds": thresholds,
-        "objective": "micro-F1 vs 3-LLM majority on the validation sample", "grid": [GRID[0], GRID[-1], 0.05],
+        "objective": "micro-F1, mean vs glm and deepseek, on the validation sample", "grid": [GRID[0], GRID[-1], 0.05],
         "ties": "higher threshold", "validation_run": val_path.parent.name, "test_run": test_path.parent.name,
         "validation_curves": curves}, indent=1) + "\n")
     (out / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")

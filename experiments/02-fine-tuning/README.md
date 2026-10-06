@@ -13,8 +13,7 @@ Why: the case for a small model is compute and environmental impact. A ~150M enc
 1. Input: `doc+summary`, the context chosen by 01's [context pilot](../01-many-option-classification/README.md#pilot-result) (title, Document Start, executive summary and abstract, then the excerpt), so the model sees what production's tagger sees. Document-level context (title, Document Start, summary) is the same for every excerpt of a report, so a model can encode it once per document.
 2. Label a fixed sample of 10,000 train excerpts (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0; ids in [results/labels/train_sample.json](results/labels/train_sample.json)) with GLM-5.3-Flash and DeepSeek-V4.1-Flash, using production's taxonomy and definitions.
    - Training targets are soft: 1 if both LLMs chose the label, 0.5 if one did, 0 if neither.
-   - Qwen3.8-Flash-Next is not used for training labels: on featherless-ai it labels about 10 excerpts per minute (2 concurrent requests, long reasoning), ~17 hours for 10,000 (2026-10-06).
-   - Evaluation: 01's 3-LLM majority reference on its 600 test excerpts.
+   - Evaluation: 01's test excerpts, scored as mean agreement with GLM and DeepSeek.
 3. Fine-tune small encoders on those labels as HF Jobs in the `baobabtech` namespace with [train_encoder.py](train_encoder.py), which reads everything from the Hub so others can rerun it. Candidates: encoders released since March 2026 under ~300M parameters with a context window of at least 8,192 tokens, with ModernBERT-base and Ettin as 2025 references; label-conditioned models (GLiClass, GLiNER2.5) in a second round.
 4. Score on 01's test excerpts; fit one threshold on 01's validation sample; report compute per excerpt next to the score.
 5. One run on pipeline labels for the same excerpts shows how much the label source matters.
@@ -32,7 +31,7 @@ The model list and variables below apply after the first step, if a small model 
   | LFM2.5-350M | 350M | 20.3 | 70.9 | 79.2 | 0.58 |
   | GLiNER2.5 small | 74M | 47.1 | 52.7 | 57.3 | 0.04 |
 
-  Those models were fine-tuned on pipeline labels. The scores are task A only, against single label sets: GLM-5.3-Flash or the pipeline. They are rescored against 01's majority reference if their predictions are available.
+  Those models were fine-tuned on pipeline labels. The scores are task A only, against single label sets: GLM-5.3-Flash or the pipeline. They are rescored against 01's reference if their predictions are available.
 
 - GLiNER2.5 base and small plateaued at 57–58 after fine-tuning (52–57 against GLM). Approach and type accuracy stayed at 25–60%.
 - Jev, d1 and GLiDE cannot be fine-tuned.
@@ -41,7 +40,7 @@ The model list and variables below apply after the first step, if a small model 
 ## Data
 
 - **Splits:** the same as 01. Task A: documents, 1,148 train / 138 validation / 134 test. Task B: excerpts, 157,302 train, sampled per run. See [common/datasets.md](../common/datasets.md).
-- **Evaluation:** against 01's reference, the labels chosen by at least 2 of GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next, on the same test items. Training targets come from GLM and DeepSeek only (soft labels; see [First step](#first-step)), so zero-shot and fine-tuned scores compare directly. There is no human gold set, so scores measure agreement with LLMs, not correctness ([01](../01-many-option-classification/README.md#reference-labels)).
+- **Evaluation:** 01's reference on the same test items: mean agreement with GLM-5.3-Flash and DeepSeek-V4.1-Flash. Training targets come from the same two LLMs (soft labels; see [First step](#first-step)), so zero-shot and fine-tuned scores compare directly. There is no human gold set, so scores measure agreement with LLMs, not correctness ([01](../01-many-option-classification/README.md#reference-labels)).
 - **Training labels:** soft GLM + DeepSeek labels (see [First step](#first-step)). One run on pipeline labels for the same excerpts shows how much the label source matters.
 
 ## Models

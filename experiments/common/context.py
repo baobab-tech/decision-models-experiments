@@ -32,13 +32,18 @@ def load_source(split: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     return ex, win, doc
 
 
+def _s(x) -> str:
+    """pandas gives NaN for missing strings."""
+    return x.strip() if isinstance(x, str) else ""
+
+
 def _cut(text, n=CONTEXT_MAX_CHARS) -> str:
-    text = (text or "").strip()
+    text = _s(text)
     return text if len(text) <= n else text[:n] + "\n\n[... truncated for context ...]"
 
 
 def _first_words(text, n=100) -> str:
-    return " ".join((text or "").split()[:n])
+    return " ".join(_s(text).split()[:n])
 
 
 def user_prompt(excerpt: pd.Series, windows: pd.DataFrame, docs: pd.DataFrame, variant: str) -> str:
@@ -57,13 +62,13 @@ def user_prompt(excerpt: pd.Series, windows: pd.DataFrame, docs: pd.DataFrame, v
         parts.append(f"## MAIN SECTION ({w['section_category']}; the excerpt is between <<< and >>>)\n\n{marked}")
     ctx = []
     if variant in ("doc", "doc_summary", "summary_doc"):
-        ctx.append(f"### Title\n{(doc['title'] or '').strip()}")
+        ctx.append(f"### Title\n{_s(doc['title'])}")
     ctx.append(f"### Document Start\n{_first_words(doc['first_pages'])}")
     if variant in ("doc_summary", "production"):
         for name, col in (("Executive Summary", "executive_summary_section"), ("Abstract", "abstract_section")):
-            if (doc[col] or "").strip():
+            if _s(doc[col]):
                 ctx.append(f"### {name}\n{_cut(doc[col])}")
-    if variant == "summary_doc" and (doc["summary_doc"] or "").strip():
-        ctx.append(f"### Document Summary\n{doc['summary_doc'].strip()}")
+    if variant == "summary_doc" and _s(doc["summary_doc"]):
+        ctx.append(f"### Document Summary\n{_s(doc['summary_doc'])}")
     parts.append("## CONTEXT SECTIONS (for understanding only)\n\n" + "\n\n".join(ctx))
     return "\n\n".join(parts)

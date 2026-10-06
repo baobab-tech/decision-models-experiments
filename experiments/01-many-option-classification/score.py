@@ -1,7 +1,8 @@
-"""Task B scoring: micro-F1 per field against the 3-LLM majority and against each LLM.
+"""Task B scoring: micro-F1 x 100 per field against each labelling LLM (GLM-5.3-Flash, DeepSeek-V4.1-Flash).
 
 Predictions are {excerpt_id: {field: set(codes)}}. Fields: themes, regions, countries on findings and
-recommendations; methods on methodology. No human gold exists, so scores measure agreement with LLMs.
+recommendations; methods on methodology. The main score is the mean over the two LLMs; the LLM range is their
+agreement with each other. No human gold exists, so scores measure agreement with LLMs, not correctness.
 """
 
 from __future__ import annotations
@@ -9,7 +10,7 @@ from __future__ import annotations
 import pandas as pd
 
 FIELDS = ("themes", "regions", "countries", "methods")
-LLMS = ("glm", "deepseek", "qwen")
+LLMS = ("glm", "deepseek")
 
 
 def items(sample: pd.DataFrame, field: str) -> list[str]:
@@ -25,23 +26,10 @@ def micro_f1(pred: dict, ref: dict, ids: list[str], field: str) -> float:
     return 100 * 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else 100.0
 
 
-def macro_f1(pred: dict, ref: dict, ids: list[str], field: str) -> float:
-    codes = {c for e in ids for c in ref[e][field]}
-    scores = []
-    for c in codes:
-        tp = sum(c in pred.get(e, {}).get(field, ()) and c in ref[e][field] for e in ids)
-        fp = sum(c in pred.get(e, {}).get(field, ()) and c not in ref[e][field] for e in ids)
-        fn = sum(c not in pred.get(e, {}).get(field, ()) and c in ref[e][field] for e in ids)
-        scores.append(2 * tp / (2 * tp + fp + fn))
-    return 100 * sum(scores) / len(scores) if scores else float("nan")
-
-
 def references(sample: pd.DataFrame) -> dict[str, dict]:
-    """Label sets keyed by name: majority, each LLM, and pipeline."""
-    refs = {}
-    for name, suffix in [("majority", "_majority"), *[(m, f"_{m}") for m in LLMS], ("pipeline", "")]:
-        refs[name] = {e: {f: set(sample.at[e, f + suffix]) for f in FIELDS} for e in sample.index}
-    return refs
+    """Label sets keyed by name: each LLM, and the pipeline."""
+    return {name: {e: {f: set(sample.at[e, f + suffix] or []) for f in FIELDS} for e in sample.index}
+            for name, suffix in [*[(m, f"_{m}") for m in LLMS], ("pipeline", "_pipeline")]}
 
 
 def score(pred: dict, sample: pd.DataFrame, fields: tuple[str, ...] = FIELDS) -> dict:
@@ -49,16 +37,21 @@ def score(pred: dict, sample: pd.DataFrame, fields: tuple[str, ...] = FIELDS) ->
     out = {"n": {f: len(items(sample, f)) for f in fields}, "fields": {}}
     for f in fields:
         ids = items(sample, f)
+        vs = {m: micro_f1(pred, refs[m], ids, f) for m in LLMS}
         out["fields"][f] = {
-            "micro_f1": micro_f1(pred, refs["majority"], ids, f),
-            "macro_f1": macro_f1(pred, refs["majority"], ids, f),
-            "micro_f1_mean_vs_llms": sum(micro_f1(pred, refs[m], ids, f) for m in LLMS) / len(LLMS),
+            "micro_f1": sum(vs.values()) / len(LLMS),
+            **{f"micro_f1_vs_{m}": v for m, v in vs.items()},
             "micro_f1_vs_pipeline": micro_f1(pred, refs["pipeline"], ids, f),
             "labels_per_item": sum(len(pred.get(e, {}).get(f, ())) for e in ids) / len(ids),
         }
-    if not fields:
-        return out
-    for key in ("micro_f1", "micro_f1_mean_vs_llms", "micro_f1_vs_pipeline"):
-        out[f"mean_field_score{'' if key == 'micro_f1' else key.removeprefix('micro_f1')}"] = (
-            sum(out["fields"][f][key] for f in fields) / len(fields))
+    if fields:
+        out["mean_field_score"] = sum(out["fields"][f]["micro_f1"] for f in fields) / len(fields)
+        out["mean_field_score_vs_pipeline"] = sum(out["fields"][f]["micro_f1_vs_pipeline"] for f in fields) / len(fields)
     return out
+
+
+def llm_range(sample: pd.DataFrame) -> dict:
+    """GLM vs DeepSeek agreement per field and mean: the level a model needs to count as LLM-level."""
+    refs = references(sample)
+    per = {f: micro_f1(refs["glm"], refs["deepseek"], items(sample, f), f) for f in FIELDS}
+    return {"fields": per, "mean_field_score": sum(per.values()) / len(per)}

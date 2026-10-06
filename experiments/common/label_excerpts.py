@@ -18,6 +18,7 @@ import asyncio
 import json
 import os
 import re
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,16 +27,18 @@ from datasets import load_dataset
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from context import VARIANTS, load_source, user_prompt  # noqa: E402
+
 DATASET = "baobabtech/decision-models-evaluation-docs"
 DATASET_REVISION = "fcd40f8785aa0e8e6e87f0931dd762368e5c602f"
 MODELS = {  # short name -> router model id with pinned provider
     "glm": "zai-org/GLM-5.3-Flash:deepinfra",
     "deepseek": "deepseek-ai/DeepSeek-V4.1-Flash:deepinfra",
-    "qwen": "Qwen/Qwen3.8-Flash-Next:featherless-ai",
 }
 MAX_TOKENS = 16384  # high cap so reasoning never truncates; billing is per token used
 TIMEOUT_S = 180
-CONCURRENCY = {"glm": 8, "deepseek": 8, "qwen": 2}  # featherless-ai caps concurrent requests per user
+CONCURRENCY = {"glm": 24, "deepseek": 24}
 ROOT = Path(__file__).resolve().parents[2]
 
 FINDINGS_SYSTEM = """You are an expert evaluator classifying excerpts from evaluation documents.
@@ -69,12 +72,6 @@ Return only a JSON object:
 {{"themes": ["theme_code"], "regions": ["region_code"], "countries": ["XX"]}}
 ```"""
 
-FINDINGS_USER = """Excerpt type: {type}
-
-<excerpt>
-{text}
-</excerpt>"""
-
 METHODS_SYSTEM = """You are an expert evaluator classifying methodology excerpts from evaluation documents.
 
 ## Task
@@ -96,10 +93,6 @@ Return only a JSON object:
 ```json
 {{"methods": ["method_code"]}}
 ```"""
-
-METHODS_USER = """<excerpt>
-{text}
-</excerpt>"""
 
 
 def build_prompts() -> tuple[str, str, dict[str, set[str]]]:
@@ -177,11 +170,11 @@ def parse(content: str, fields: tuple[str, ...], valid: dict[str, set[str]]) -> 
 
 async def label_one(client, model, row, prompts, valid, sem) -> dict:
     findings_sys, methods_sys = prompts
+    user = row["user"]  # built by context.user_prompt for the chosen context variant
     if row["type"] == "methodology":
-        system, user, fields = methods_sys, METHODS_USER.format(text=row["text"]), ("methods",)
+        system, fields = methods_sys, ("methods",)
     else:
-        system, user, fields = findings_sys, FINDINGS_USER.format(type=row["type"], text=row["text"]), (
-            "themes", "regions", "countries")
+        system, fields = findings_sys, ("themes", "regions", "countries")
     async with sem:
         for attempt in range(6):
             t0 = time.perf_counter()
@@ -222,6 +215,8 @@ async def main() -> None:
                          "(150 findings, 75 recommendations, 75 methodology, seed 0); train: the experiment-02 "
                          "training sample (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0)")
     ap.add_argument("--concurrency", type=int, help="default: per-model value in CONCURRENCY")
+    ap.add_argument("--context", choices=VARIANTS, default="doc_summary",
+                    help="context variant (experiment 01 context pilot chose doc_summary)")
     ap.add_argument("--out", type=Path, help="default: experiments/01-many-option-classification/results/raw/labels_<model>.jsonl")
     args = ap.parse_args()
 
@@ -229,7 +224,7 @@ async def main() -> None:
     model = MODELS[args.model]
     suffix = "" if args.split == "test" else f"_{args.split}"
     exp = "02-fine-tuning" if args.split == "train" else "01-many-option-classification"
-    out = args.out or ROOT / f"experiments/{exp}/results/raw/labels_{args.model}{suffix}.jsonl"
+    out = args.out or ROOT / f"experiments/{exp}/results/raw/labels_{args.model}_{args.context}{suffix}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     findings_sys, methods_sys, valid = build_prompts()
@@ -241,6 +236,9 @@ async def main() -> None:
     else:
         rows = train_sample()
     rows.sort(key=lambda r: r["excerpt_id"])
+    src_ex, src_win, src_doc = load_source(args.split)
+    for r in rows:
+        r["user"] = user_prompt(src_ex.loc[r["excerpt_id"]], src_win, src_doc, args.context)
     if args.limit:
         # spread the pilot over the three excerpt types
         by_type = {t: [r for r in rows if r["type"] == t] for t in ("findings", "recommendations", "methodology")}
@@ -269,6 +267,7 @@ async def main() -> None:
             rec = await coro
             rec["date"] = started
             rec["dataset_revision"] = DATASET_REVISION
+            rec["context"] = args.context
             f.write(json.dumps(rec) + "\n")
             f.flush()
 

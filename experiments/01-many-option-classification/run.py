@@ -60,19 +60,16 @@ MODELS = {
 
 
 LABELS = HERE / "results/labels"
-LLMS = ("glm", "deepseek", "qwen")
+LLMS = ("glm", "deepseek")
 
 
 def attach_llm_labels(sample, suffix: str) -> None:
-    """Add <field>_<llm> and <field>_majority (2 of 3) columns from results/labels/excerpts_<llm><suffix>.jsonl."""
-    per_llm = {m: {r["excerpt_id"]: r["labels"] for r in map(json.loads, (LABELS / f"excerpts_{m}{suffix}.jsonl").open())}
+    """Add <field>_<llm> columns from results/labels/excerpts_<llm>_doc_summary<suffix>.jsonl."""
+    per_llm = {m: {r["excerpt_id"]: r["labels"] for r in map(json.loads, (LABELS / f"excerpts_{m}_doc_summary{suffix}.jsonl").open())}
                for m in LLMS}
     for f in FIELDS:
         for m in LLMS:
             sample[f"{f}_{m}"] = [sorted(per_llm[m][e].get(f, [])) for e in sample.index]
-        sample[f"{f}_majority"] = [
-            sorted({c for c in sum((per_llm[m][e].get(f, []) for m in LLMS), []) if
-                    sum(c in per_llm[m][e].get(f, []) for m in LLMS) >= 2}) for e in sample.index]
 
 
 def load(limit: int | None, split: str = "test"):
@@ -274,7 +271,7 @@ def main() -> None:
         "subset": "eval_sample" if args.split == "test" else "results/labels/validation_sample.json",
         "n": len(sample), "question_format": "noul-per-label", "threshold": THRESHOLD,
         "variant": args.variant, "countries": args.countries,
-        "regions": "direct region Nouls ∪ regions of predicted countries (taxonomy map); variants in metrics.json", "reference": "majority of glm, deepseek, qwen",
+        "regions": "direct region Nouls ∪ regions of predicted countries (taxonomy map); variants in metrics.json", "reference": "mean agreement with glm and deepseek",
         "hardware": f"{platform.machine()} {platform.system()} (client)" if backend == "gateway" or opts.get("url", "").startswith("https")
         else "Apple M5 Max, 128 GB", "revision": opts.get("revision"), "serving": opts.get("serving"),
         "max_questions_per_request": opts.get("max_questions", MAX_QUESTIONS), "concurrency": args.concurrency,
@@ -284,14 +281,13 @@ def main() -> None:
 
     print(f"errors {metrics['errors']}, wall {metrics['wall_s']} s, p50 {metrics['latency_p50_ms']} ms, "
           f"cost ${metrics['cost_usd']}")
-    print(f"{'field':10} {'n':>4} {'vsMaj':>6} {'macro':>6} {'vsLLMs':>6} {'vsPipe':>6} {'lab/it':>6}")
+    print(f"{'field':10} {'n':>4} {'vsLLMs':>6} {'vsGLM':>6} {'vsDS':>6} {'vsPipe':>6} {'lab/it':>6}")
     for f, m in metrics["fields"].items():
-        print(f"{f:10} {metrics['n'][f]:4} {m['micro_f1']:6.1f} {m['macro_f1']:6.1f} {m['micro_f1_mean_vs_llms']:6.1f} "
+        print(f"{f:10} {metrics['n'][f]:4} {m['micro_f1']:6.1f} {m['micro_f1_vs_glm']:6.1f} {m['micro_f1_vs_deepseek']:6.1f} "
               f"{m['micro_f1_vs_pipeline']:6.1f} {m['labels_per_item']:6.2f}")
     for k, v in metrics.get("regions_variants", {}).items():
-        print(f"  {k:16} vsMaj {v['micro_f1']:5.1f}  lab/it {v['labels_per_item']:.2f}")
-    print(f"mean_field_score {metrics['mean_field_score']:.1f} (vs LLMs {metrics['mean_field_score_mean_vs_llms']:.1f}, "
-          f"vs pipeline {metrics['mean_field_score_vs_pipeline']:.1f})")
+        print(f"  {k:16} vsLLMs {v['micro_f1']:5.1f}  lab/it {v['labels_per_item']:.2f}")
+    print(f"mean_field_score {metrics['mean_field_score']:.1f} (vs pipeline {metrics['mean_field_score_vs_pipeline']:.1f})")
 
 
 if __name__ == "__main__":

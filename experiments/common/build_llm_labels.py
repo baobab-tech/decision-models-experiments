@@ -2,12 +2,16 @@
 # requires-python = ">=3.11"
 # dependencies = ["datasets>=3", "pandas", "huggingface_hub"]
 # ///
-"""Push the `llm_labels` config of baobabtech/decision-models-evaluation-docs: excerpt text plus LLM labels.
+"""Push the `llm_labels` config of baobabtech/decision-models-evaluation-docs: excerpt, its context, and LLM labels.
+
+`input` is the text every labeller saw: the excerpt, then the report's title, first 100 words, and executive
+summary and abstract (each cut to 1,500 characters) -- the `doc_summary` context chosen by experiment 01's pilot.
 
 Splits:
-  test        the 600 eval_sample excerpts: GLM-5.3-Flash, DeepSeek-V4.1-Flash, Qwen3.8-Flash-Next, 2-of-3 majority
-  validation  the 300-excerpt threshold-fitting sample: same three LLMs and majority
-  train       the 10,000-excerpt experiment-02 sample: GLM and DeepSeek only (qwen and majority are null)
+  test        the 600 eval_sample excerpts
+  validation  the 300-excerpt threshold-fitting sample
+  train       the 10,000-excerpt experiment-02 sample
+Labels from GLM-5.3-Flash and DeepSeek-V4.1-Flash in every split.
 Every row also has the pipeline labels as <field>_pipeline. Label files come from this repo:
 experiments/01-many-option-classification/results/labels/ and experiments/02-fine-tuning/results/labels/.
 
@@ -20,14 +24,20 @@ import argparse
 import json
 from pathlib import Path
 
+import sys
+
 import pandas as pd
 from datasets import Dataset, DatasetDict, Features, List, Value, load_dataset
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from context import load_source, user_prompt  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 DATASET = "baobabtech/decision-models-evaluation-docs"
-SOURCE_REVISION = "5017706"
+SOURCE_REVISION = "bfaf706"
+CONTEXT = "doc_summary"  # chosen by the experiment-01 context pilot
 FIELDS = ("themes", "regions", "countries", "methods")
-LLMS = ("glm", "deepseek", "qwen")
+LLMS = ("glm", "deepseek")
 SAMPLES = {  # split -> (dataset split, label dir, file suffix, ids file or None for eval_sample)
     "test": ("test", "01-many-option-classification", "", None),
     "validation": ("validation", "01-many-option-classification", "_validation", "validation_sample.json"),
@@ -36,7 +46,7 @@ SAMPLES = {  # split -> (dataset split, label dir, file suffix, ids file or None
 
 
 def labels(dir_: Path, model: str, suffix: str) -> dict | None:
-    path = dir_ / f"excerpts_{model}{suffix}.jsonl"
+    path = dir_ / f"excerpts_{model}_{CONTEXT}{suffix}.jsonl"
     return {r["excerpt_id"]: r["labels"] for r in map(json.loads, path.open())} if path.exists() else None
 
 
@@ -51,29 +61,27 @@ def build(split: str, partial: bool = False) -> Dataset:
         df = df[df.excerpt_id.isin(ids)]
     per = {m: labels(dir_, m, suffix) for m in LLMS}
     have = [m for m in LLMS if per[m] is not None]
+    assert len(have) == len(LLMS), f"{split}: missing labels from {set(LLMS) - set(have)}"
     for m in have:
         missing = set(df.excerpt_id) - set(per[m])
         if partial:  # smoke tests only: keep excerpts every labeller has done
             df = df[~df.excerpt_id.isin(missing)]
         else:
             assert not missing, f"{split}: {m} has no labels for {len(missing)} excerpts"
+    src_ex, src_win, src_doc = load_source(source_split)
     rows = []
     for r in df.sort_values("excerpt_id").itertuples():
-        row = {"excerpt_id": r.excerpt_id, "document_id": r.document_id, "type": r.type, "text": r.text}
+        row = {"excerpt_id": r.excerpt_id, "document_id": r.document_id, "type": r.type, "text": r.text,
+               "input": user_prompt(src_ex.loc[r.excerpt_id], src_win, src_doc, CONTEXT)}
         for f in FIELDS:
             row[f"{f}_pipeline"] = sorted(getattr(r, f)) if getattr(r, f) is not None else []
             for m in LLMS:
-                row[f"{f}_{m}"] = sorted(per[m][r.excerpt_id].get(f, [])) if m in have else None
-            if len(have) == 3:
-                votes = [c for m in LLMS for c in per[m][r.excerpt_id].get(f, [])]
-                row[f"{f}_majority"] = sorted({c for c in votes if votes.count(c) >= 2})
-            else:
-                row[f"{f}_majority"] = None
+                row[f"{f}_{m}"] = sorted(per[m][r.excerpt_id].get(f, []))
         rows.append(row)
     features = Features({"excerpt_id": Value("string"), "document_id": Value("string"), "type": Value("string"),
-                         "text": Value("string"),
+                         "text": Value("string"), "input": Value("string"),
                          **{f"{f}_{s}": List(Value("string")) for f in FIELDS
-                            for s in ("pipeline", *LLMS, "majority")}})
+                            for s in ("pipeline", *LLMS)}})
     print(f"{split}: {len(rows)} rows; labellers {have}")
     return Dataset.from_pandas(pd.DataFrame(rows), features=features, preserve_index=False)
 

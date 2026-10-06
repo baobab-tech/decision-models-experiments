@@ -1,6 +1,6 @@
 # Excerpt tagging prompts
 
-Classify-only prompts for relabelling task B excerpts with GLM-5.3-Flash, DeepSeek-V4.1-Flash and Qwen3.8-Flash-Next (experiments [01](../../01-many-option-classification/) and [02](../../02-fine-tuning/)).
+Classify-only prompts for relabelling task B excerpts with GLM-5.3-Flash and DeepSeek-V4.1-Flash (experiments [01](../../01-many-option-classification/) and [02](../../02-fine-tuning/)).
 
 ## Source
 
@@ -12,7 +12,7 @@ Classify-only prompts for relabelling task B excerpts with GLM-5.3-Flash, DeepSe
 ## Differences from the pipeline
 
 - **Input:** the excerpt to classify, plus context blocks in production's layout: its main section (the window, with the excerpt marked) and context sections (Document Start, executive summary, abstract). Which blocks are included is the variant under test in 01's [context pilot](../../01-many-option-classification/README.md#context-pilot). The task line says to use the context for understanding, as production's "use context for understanding only" does.
-- **Output:** tags for one given excerpt. The JSON format is in the prompt, because Qwen3.8-Flash-Next returned empty `content` with `response_format: json_schema`.
+- **Output:** tags for one given excerpt. The JSON format is in the prompt rather than a `response_format` schema, which not every provider supports.
 - **Label lists and definitions** come from the dataset's `taxonomy` config (`definition_excerpts` for themes and methods), filtered to `in_excerpts`, so every model is asked over the same codes.
 
 ## Findings and recommendations
@@ -138,7 +138,6 @@ Blocks absent from a variant, or empty for a document, are left out.
 
 ## Call settings
 
-- Temperature 0. `max_tokens` 16,384, so reasoning never truncates; billing is per token used. Qwen3.8-Flash-Next used up to 1,462 output tokens per excerpt (2026-10-02).
-- featherless-ai caps concurrent requests per user: 8 parallel Qwen requests returned HTTP 429, so Qwen runs 2 at a time.
+- Temperature 0. `max_tokens` 16,384, so reasoning never truncates; billing is per token used.
 - Parse the first JSON object in `content`. Drop codes not in the label list and record how many were dropped.
 - HF Inference Providers, billed to `baobabtech` ([../README.md](../README.md#hf-inference-providers)); pin and record the provider.

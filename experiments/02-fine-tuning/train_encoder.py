@@ -10,10 +10,11 @@
 # ///
 """Experiment 02, first step: fine-tune a small encoder (default ModernBERT-base) to tag evaluation-report excerpts.
 
-One forward pass per excerpt; one sigmoid output per label (themes 22, regions 17, countries 198, methods 24).
+Input: the excerpt followed by its document context (title, first 100 words, executive summary and abstract),
+the same text the labelling LLMs saw. One forward pass per excerpt; one sigmoid output per label (themes 22, regions 17, countries 198, methods 24).
 Findings and recommendations supervise themes, regions and countries; methodology excerpts supervise methods.
 Targets are soft: the share of labelling LLMs (GLM-5.3-Flash, DeepSeek-V4.1-Flash) that chose the label.
-Scoring matches experiment 01: micro-F1 x 100 per field against the 3-LLM majority on the 600 test excerpts,
+Scoring matches experiment 01: micro-F1 x 100 per field against each labelling LLM, averaged, on the 600 test excerpts,
 regions = predicted regions ∪ regions of predicted countries. One threshold is fitted on the 300-excerpt
 validation sample (grid 0.05-0.95; ties go higher). Everything is read from the Hub, so anyone can rerun it:
 
@@ -86,7 +87,7 @@ def predict(model, tok, rows, device, max_len, batch) -> np.ndarray:
     out = []
     with torch.no_grad():
         for i in range(0, len(rows), batch):
-            enc = tok([r["text"] for r in rows[i:i + batch]], truncation=True, max_length=max_len, padding=True,
+            enc = tok([r["input"] for r in rows[i:i + batch]], truncation=True, max_length=max_len, padding=True,
                       return_tensors="pt").to(device)
             out.append(torch.sigmoid(model(enc["input_ids"], enc["attention_mask"])).float().cpu().numpy())
     return np.concatenate(out)
@@ -104,15 +105,18 @@ def to_sets(probs, rows, space, country_region, t) -> dict:
 
 
 def score(preds, rows) -> dict:
-    """Micro-F1 x 100 per field against <field>_majority; mean over fields."""
+    """Micro-F1 x 100 per field against each labelling LLM, averaged over LLMs; mean over fields."""
     out = {}
     for f in FIELDS:
-        tp = fp = fn = 0
         ids = [r for r in rows if (r["type"] == "methodology") == (f == "methods")]
-        for r in ids:
-            p, ref = preds[r["excerpt_id"]].get(f, set()), set(r[f"{f}_majority"] or [])
-            tp, fp, fn = tp + len(p & ref), fp + len(p - ref), fn + len(ref - p)
-        out[f] = {"micro_f1": 100 * 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else 100.0, "n": len(ids),
+        vs = []
+        for m in LABELLERS:
+            tp = fp = fn = 0
+            for r in ids:
+                p, ref = preds[r["excerpt_id"]].get(f, set()), set(r[f"{f}_{m}"] or [])
+                tp, fp, fn = tp + len(p & ref), fp + len(p - ref), fn + len(ref - p)
+            vs.append(100 * 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else 100.0)
+        out[f] = {"micro_f1": sum(vs) / len(vs), "n": len(ids),
                   "labels_per_item": sum(len(preds[r["excerpt_id"]].get(f, ())) for r in ids) / len(ids)}
     return {"fields": out, "mean_field_score": sum(v["micro_f1"] for v in out.values()) / len(FIELDS)}
 
@@ -127,7 +131,7 @@ def main() -> None:
     ap.add_argument("--epochs", type=int, default=5)
     ap.add_argument("--lr", type=float, default=5e-5)
     ap.add_argument("--batch", type=int, default=32)
-    ap.add_argument("--max-len", type=int, default=256)
+    ap.add_argument("--max-len", type=int, default=1024, help="input = excerpt + document context (~600 tokens)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--local-data", help="load llm_labels from a save_to_disk folder (smoke tests)")
     ap.add_argument("--limit-train", type=int, help="smoke tests: first N training excerpts")
@@ -165,7 +169,7 @@ def main() -> None:
         total = 0.0
         for i in range(0, len(order), args.batch):
             idx = order[i:i + args.batch]
-            enc = tok([train[j]["text"] for j in idx], truncation=True, max_length=args.max_len, padding=True,
+            enc = tok([train[j]["input"] for j in idx], truncation=True, max_length=args.max_len, padding=True,
                       return_tensors="pt").to(device)
             y = torch.tensor([ys[j][0] for j in idx], device=device)
             mask = torch.tensor([ys[j][1] for j in idx], device=device)
@@ -192,7 +196,7 @@ def main() -> None:
     infer_s = time.perf_counter() - t1
     results = {t_name: score(to_sets(test_probs, test, space, country_region, t), test)
                for t_name, t in (("at_0.5", 0.5), ("fitted", best_t))}
-    tokens = [len(tok(r["text"], truncation=True, max_length=args.max_len)["input_ids"]) for r in test]
+    tokens = [len(tok(r["input"], truncation=True, max_length=args.max_len)["input_ids"]) for r in test]
     params = sum(p.numel() for p in model.parameters())
     metrics = {
         **results, "threshold": best_t, "validation_curve": curve,
@@ -204,7 +208,7 @@ def main() -> None:
         "experiment": "02-fine-tuning", "step": "first", "date": started.isoformat(), "base": args.base,
         "base_revision": base_revision, "dataset": DATASET, "dataset_revision": args.dataset_revision,
         "training_labels": "soft share of glm, deepseek" if args.labels == "llm" else "pipeline",
-        "reference": "test: majority of glm, deepseek, qwen", "device": device,
+        "reference": "test: mean agreement with glm and deepseek", "device": device,
         "gpu": torch.cuda.get_device_name() if device == "cuda" else None,
         "job_id": os.environ.get("JOB_ID"), **{k: v for k, v in vars(args).items() if k not in ("push_to", "local_data", "no_push", "base", "base_revision")},
     }
