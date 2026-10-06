@@ -210,7 +210,7 @@ async def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", choices=MODELS, required=True)
     ap.add_argument("--limit", type=int, help="label only the first N excerpts of eval_sample")
-    ap.add_argument("--split", choices=("test", "validation", "train"), default="test",
+    ap.add_argument("--split", choices=("test", "validation", "train", "train_extra"), default="test",
                     help="test: the 600 eval_sample excerpts; validation: the threshold-fitting sample "
                          "(150 findings, 75 recommendations, 75 methodology, seed 0); train: the experiment-02 "
                          "training sample (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0)")
@@ -223,7 +223,7 @@ async def main() -> None:
     load_dotenv(ROOT / ".env")
     model = MODELS[args.model]
     suffix = "" if args.split == "test" else f"_{args.split}"
-    exp = "02-fine-tuning" if args.split == "train" else "01-many-option-classification"
+    exp = "02-fine-tuning" if args.split.startswith("train") else "01-many-option-classification"
     out = args.out or ROOT / f"experiments/{exp}/results/raw/labels_{args.model}_{args.context}{suffix}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
 
@@ -233,10 +233,14 @@ async def main() -> None:
         rows = [r for r in ds if r["eval_sample"]]
     elif args.split == "validation":
         rows = validation_sample()
+    elif args.split == "train_extra":  # experiment-02 balanced extra sample (select_balanced.py)
+        ids = set(json.loads((ROOT / "experiments/02-fine-tuning/results/labels/train_extra_sample.json").read_text())["excerpt_ids"])
+        df = load_dataset(DATASET, "excerpts", split="train", revision=DATASET_REVISION).to_pandas()
+        rows = df[df.excerpt_id.isin(ids)][["excerpt_id", "type", "text"]].to_dict("records")
     else:
         rows = train_sample()
     rows.sort(key=lambda r: r["excerpt_id"])
-    src_ex, src_win, src_doc = load_source(args.split)
+    src_ex, src_win, src_doc = load_source("train" if args.split == "train_extra" else args.split)
     for r in rows:
         r["user"] = user_prompt(src_ex.loc[r["excerpt_id"]], src_win, src_doc, args.context)
     if args.limit:

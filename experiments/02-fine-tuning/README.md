@@ -47,7 +47,32 @@ Run 2026-10-06 as HF Jobs in `baobabtech` (A10G; bf16; effective batch 32; 5 epo
 - **Size matters little in that setup:** Ettin-32M scores 74.7 against Ettin-150M's 75.3 with a fifth of the parameters.
 - **Themes and regions approach the LLMs** (best 80.6 vs 82.4, and 89.7 vs 94.9). **Methods are furthest** (best 68.2 vs 88.1); the training sample has ~2,500 methodology excerpts for 24 methods.
 - **The two-tower model** reads document context once per report: ~90 tokens per excerpt instead of ~540, for 6.3 points less than the joint Ettin-150M.
-- **Not reported as results, pending a check:** gte-modernbert-base (collapsed to no predictions), and harrier-oss-v1-270m, granite-embedding-97m-multilingual-r2 and NeoMME-260M (33–43; no country predictions). The first three are embedding models and NeoMME is multimodal; their training settings were not tuned.
+
+### Training recipes
+
+Settings per model come from each model's card or paper (checked 2026-10-06) and live in `RECIPES` in [train_encoder.py](train_encoder.py).
+
+- **All models:** fp32 master weights with bf16 compute. transformers 5.x otherwise loads a checkpoint in its stored dtype; models stored in bf16 or fp16 then train in that dtype, and small AdamW updates round away. AdamW with betas (0.9, 0.98), eps 1e-6, no weight decay on norms and biases, gradient clipping at 1.0, linear warmup and decay; up to 8 epochs, keeping the epoch with the best validation score (patience 2).
+
+| Model | lr | Weight decay | Warmup | Pooling | Input | Source |
+|---|---:|---:|---:|---|---|---|
+| ModernBERT-base, Ettin-150M | 5e-5 | 1e-5 | 6% | mean over excerpt tokens | — | ModernBERT paper App. E; Ettin paper App. F |
+| Ettin-32M | 1e-4 | 1e-5 | 6% | mean over excerpt tokens | — | Ettin paper App. F (smaller models take higher lr) |
+| mmBERT-small | 3e-5 | 0.01 | 6% | mean over excerpt tokens | — | mmBERT paper App. B; card |
+| gte-modernbert-base | 3e-5 | 1e-5 | 10% | CLS | — | card (CLS pooling) |
+| granite-embedding-97m-multilingual-r2 | 8e-5 | 1e-5 | 6% | CLS | — | card (CLS pooling) |
+| ModernJEV-Decide-Preview | 2e-5 | 1e-5 | 3% | mean over excerpt tokens | — | its training recipe |
+| LFM2.5-Encoder-230M | 3e-5 | 0.1 | 10% | mean over excerpt tokens | betas (0.9, 0.95), eps 1e-5 | card; Liquid `encoder_eval` |
+| NeoMME-260M | 1e-4 | 1e-5 | 6% | mean over excerpt tokens | `<doc>` token first | card; paper |
+| harrier-oss-v1-270m, F2LLM-v2-80M | 4e-5 | 1e-5 | 6% | last excerpt token | instruction, context, then excerpt (one-directional decoders) | cards (last-token pooling, `Instruct:` prefix) |
+
+### Training data
+
+All training excerpts are real excerpts labelled by GLM-5.3-Flash and DeepSeek-V4.1-Flash with the `doc+summary` context; no synthetic text.
+
+- **Random sample:** 10,000 excerpts (seed 0). Agreed positives per label: themes median 333 (national security 4, multilateral 4, diplomacy 5); regions median 54; methods median **19** (outcome mapping, most significant change, synthetic control: 1 each).
+- **Balanced extra sample** ([select_balanced.py](select_balanced.py)): all 11,979 remaining methodology excerpts, plus up to 300 excerpts per theme and region that the pipeline tagged with it; 18,666 excerpts. Pipeline labels only choose excerpts; the LLMs label them.
+- **Learning curve:** Ettin-32M trained on 1,000, 2,500, 5,000 and 10,000 random excerpts, and on random + balanced.
 
 ## What we already know
 

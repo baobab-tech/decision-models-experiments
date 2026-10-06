@@ -280,7 +280,9 @@ def main() -> None:
     ap.add_argument("--max-len", type=int, default=1024, help="input = excerpt + document context (~600 tokens)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--local-data", help="load llm_labels from a save_to_disk folder (smoke tests)")
-    ap.add_argument("--limit-train", type=int, help="smoke tests: first N training excerpts")
+    ap.add_argument("--limit-train", type=int, help="first N training excerpts (smoke tests, learning curves)")
+    ap.add_argument("--train-sample", choices=("all", "random", "balanced"), default="all",
+                    help="random: the 10,000-excerpt random sample only; all: plus the balanced extra sample")
     ap.add_argument("--no-push", action="store_true")
     ap.add_argument("--push-to", default="baobabtech/evaldocs-excerpt-tagger", help="repo prefix; base and labels appended")
     args = ap.parse_args()
@@ -293,6 +295,8 @@ def main() -> None:
     data = load_from_disk(args.local_data) if args.local_data else \
         load_dataset(DATASET, "llm_labels", revision=args.dataset_revision)
     train, val, test = (list(data[s]) for s in ("train", "validation", "test"))
+    if args.train_sample != "all":
+        train = [r for r in train if r.get("sample", "random") == args.train_sample]
     if args.limit_train:
         train = train[:args.limit_train]
     space, country_region = label_space(tax, args.exclude_fields)
@@ -406,7 +410,8 @@ def main() -> None:
     if args.no_push:
         return
     repo = f"{args.push_to}-{args.base.split('/')[-1].lower()}-{args.labels}" + ("-2tower" if args.arch == "two_tower" else "") \
-        + ("-no" + "-".join(args.exclude_fields) if args.exclude_fields else "") + ("-lookup" if args.country_lookup else "")
+        + ("-no" + "-".join(args.exclude_fields) if args.exclude_fields else "") + ("-lookup" if args.country_lookup else "") \
+        + ("" if args.train_sample == "all" else f"-{args.train_sample}") + (f"-n{args.limit_train}" if args.limit_train else "")
     api = HfApi()
     api.create_repo(repo, private=True, exist_ok=True)
     os.makedirs("out", exist_ok=True)

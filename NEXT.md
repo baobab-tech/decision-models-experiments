@@ -22,7 +22,7 @@ Publication: `experiments/README.md` holds the story outline. Leave internal ite
 3. **01 zero-shot runs:** rerun Jev, d1, GLiDE (and local models one at a time) with the `doc_summary` context (`run.py` state = `input`). Needed for step 5 of the story in `experiments/README.md`.
 4. **02 first step:** label 10,000 train excerpts (GLM + DeepSeek, soft targets) with the chosen context; publish as the `llm_labels` config; sweep small encoders as HF Jobs (`train_encoder.py`).
    - Sweep done 2026-10-06 (results in the 02 README; repos renamed to `evaldocs-excerpt-tagger-*`). Best: Ettin-150M + country lookup 75.3, Ettin-32M + lookup 74.7 (LLM range 88.8).
-   - Next in 02: lookup hybrid for ModernJEV, mmBERT and LFM2.5 (LFM2.5 running); more methodology training excerpts (methods 64–68 vs 88); two-tower + lookup; check the failed runs (gte, harrier, granite, NeoMME).
+   - Sweep 2 (per-model recipes, fp32 fix, countries from lookup, random + balanced data, learning curve): launch with `REV=<llm_labels revision> experiments/02-fine-tuning/sweep.sh` once the balanced sample is labelled (`label_excerpts.py --split train_extra`) and published (`build_llm_labels.py --push`).
 5. **Taxonomy:** production theme definitions overlap (cash transfers, renewable energy, refugees, mediation, technology transfer each under 2–3 themes; Growth lists only trade terms; Conflict reads as humanitarian practice), and the prompt says 1–3 themes while the zod schema says 1–4. Raise with the taxonomy owner; experiments keep production's version.
 6. **Dataset viewer:** check that it renders for `decision-models-evaluation-docs`.
 7. **Baselines:** decide whether to publish the earlier classifier leaderboard; `evalexplorer-classify-experiments` is private.
