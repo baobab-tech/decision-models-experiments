@@ -70,8 +70,9 @@ def pad_batch(seqs: list[list[int]], masks: list[list[int]], pad: int, device) -
     return {"input_ids": ids, "attention_mask": att, "pool_mask": pool}
 
 
-def encode(tok, rows, max_len: int, device, arch: str) -> dict:
-    """joint: [start] excerpt [sep] context [sep], pooled over the excerpt's tokens only.
+def encode(tok, rows, max_len: int, device, arch: str, context_first: bool = False) -> dict:
+    """joint: [start] excerpt [sep] context [sep], pooled over the excerpt's tokens only. With context_first
+    (for one-directional decoders, whose tokens see only earlier tokens): [start] context [sep] excerpt [sep].
     two_tower: excerpt and context encoded separately (context once per document at inference)."""
     start, sep, pad = special_ids(tok)
     parts = [split_input(r["input"]) for r in rows]
@@ -81,9 +82,14 @@ def encode(tok, rows, max_len: int, device, arch: str) -> dict:
         seqs, masks = [], []
         for e, c in zip(ex, cx):
             room = max_len - len(start) - len(e) - 2 * len(sep)
-            seq = start + e + sep + c[:max(room, 0)] + sep
+            c = c[:max(room, 0)]
+            if context_first:
+                seq = start + c + sep + e + sep
+                masks.append([0] * (len(start) + len(c) + len(sep)) + [1] * len(e) + [0] * len(sep))
+            else:
+                seq = start + e + sep + c + sep
+                masks.append([0] * len(start) + [1] * len(e) + [0] * (len(seq) - len(start) - len(e)))
             seqs.append(seq)
-            masks.append([0] * len(start) + [1] * len(e) + [0] * (len(seq) - len(start) - len(e)))
         return {"joint": pad_batch(seqs, masks, pad, device)}
     exs = [start + e + sep for e in ex]
     cxs = [start + c[: max_len - len(start) - len(sep)] + sep for c in cx]
@@ -139,12 +145,12 @@ def targets(row, space, source: str) -> tuple[list[float], list[float]]:
     return y, mask
 
 
-def predict(model, tok, rows, device, max_len, batch, arch) -> np.ndarray:
+def predict(model, tok, rows, device, max_len, batch, arch, context_first=False) -> np.ndarray:
     model.eval()
     out = []
     with torch.no_grad():
         for i in range(0, len(rows), batch):
-            out.append(torch.sigmoid(model(encode(tok, rows[i:i + batch], max_len, device, arch))).float().cpu().numpy())
+            out.append(torch.sigmoid(model(encode(tok, rows[i:i + batch], max_len, device, arch, context_first))).float().cpu().numpy())
     return np.concatenate(out)
 
 
@@ -183,6 +189,8 @@ def main() -> None:
     ap.add_argument("--arch", choices=("joint", "two_tower"), default="joint",
                     help="joint: excerpt + context in one pass, pooled over the excerpt; "
                          "two_tower: context encoded once per document")
+    ap.add_argument("--context-first", action="store_true",
+                    help="joint input with context before the excerpt, for one-directional (decoder) encoders")
     ap.add_argument("--base-revision", default=None, help="commit; resolved and recorded if omitted")
     ap.add_argument("--trust-remote-code", action="store_true", help="needed for e.g. chandar-lab/NeoBERT")
     ap.add_argument("--dataset-revision", default="main")
@@ -227,7 +235,7 @@ def main() -> None:
         total = 0.0
         for i in range(0, len(order), args.batch):
             idx = order[i:i + args.batch]
-            batch_in = encode(tok, [train[j] for j in idx], args.max_len, device, args.arch)
+            batch_in = encode(tok, [train[j] for j in idx], args.max_len, device, args.arch, args.context_first)
             y = torch.tensor([ys[j][0] for j in idx], device=device)
             mask = torch.tensor([ys[j][1] for j in idx], device=device)
             logits = model(batch_in)
@@ -238,18 +246,18 @@ def main() -> None:
             opt.step()
             sched.step()
             total += loss.item() * len(idx)
-        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 64, args.arch), val, space, country_region, 0.5),
+        val_score = score(to_sets(predict(model, tok, val, device, args.max_len, 64, args.arch, args.context_first), val, space, country_region, 0.5),
                           val)["mean_field_score"]
         print(f"epoch {epoch + 1}: train loss {total / len(train):.4f}; validation mean at 0.5 {val_score:.1f}")
     train_s = time.perf_counter() - t0
 
-    val_probs = predict(model, tok, val, device, args.max_len, 64, args.arch)
+    val_probs = predict(model, tok, val, device, args.max_len, 64, args.arch, args.context_first)
     grid = [round(0.05 * i, 2) for i in range(1, 20)]
     curve = {t: score(to_sets(val_probs, val, space, country_region, t), val)["mean_field_score"] for t in grid}
     best_t = max(t for t, v in curve.items() if v == max(curve.values()))
 
     t1 = time.perf_counter()
-    test_probs = predict(model, tok, test, device, args.max_len, 64, args.arch)
+    test_probs = predict(model, tok, test, device, args.max_len, 64, args.arch, args.context_first)
     infer_s = time.perf_counter() - t1
     results = {t_name: score(to_sets(test_probs, test, space, country_region, t), test)
                for t_name, t in (("at_0.5", 0.5), ("fitted", best_t))}

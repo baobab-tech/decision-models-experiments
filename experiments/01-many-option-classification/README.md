@@ -106,6 +106,19 @@ Run 2026-10-06 with the `doc+summary` context ([labels](results/labels/)); GLM-5
 
 Labels per excerpt on test (GLM / DeepSeek / pipeline): themes 1.84 / 2.09 / 2.37; regions 0.78 / 0.74 / 0.60; countries 0.97 / 0.90 / 0.68; methods 0.84 / 0.78 / 1.06.
 
+### Country lookup baseline
+
+Countries and regions are mostly a lookup. A country-name lookup (pycountry names plus common variants; regions from the taxonomy's country → region map), with no model, scored against the two LLMs on test (2026-10-06):
+
+| Text searched | Countries | Regions | Countries per excerpt |
+|---|---:|---:|---:|
+| Excerpt only | 27.8 | 24.3 | 0.15 |
+| Excerpt + title + Document Start | 71.6 | 74.7 | 0.97 |
+| Excerpt + all context (+ summaries) | 69.7 | 69.6 | 1.53 |
+| LLM range (GLM vs DeepSeek) | 89.8 | 94.9 | 0.90–0.97 |
+
+The gap to the LLMs is which mentioned countries count (author affiliations, donors and comparison countries are mentioned but not "substantively discussed") and region names with no country ("Sub-Saharan Africa"). Geography is lookup plus a filter; themes and methods need a model.
+
 ## Models
 
 | Model | Where | Size |

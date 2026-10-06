@@ -25,8 +25,8 @@ run jhu-clsp/ettin-encoder-32m
 run ibm-granite/granite-embedding-97m-multilingual-r2
 run LiquidAI/LFM2.5-Encoder-230M --trust-remote-code
 run Hcompany/NeoMME-260M --trust-remote-code
-run microsoft/harrier-oss-v1-270m
-run codefuse-ai/F2LLM-v2-80M
+run microsoft/harrier-oss-v1-270m --context-first   # one-directional (Gemma 3 decoder)
+run codefuse-ai/F2LLM-v2-80M --context-first        # one-directional (Qwen3 decoder)
 run MaziyarPanahi/ModernJEV-Decide-Preview
 # Two-tower: document context encoded once per report, excerpt encoded alone (~6x fewer tokens per excerpt)
 run jhu-clsp/ettin-encoder-150m --arch two_tower
