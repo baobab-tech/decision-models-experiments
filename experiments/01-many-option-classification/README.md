@@ -119,6 +119,19 @@ Countries and regions are mostly a lookup. A country-name lookup (pycountry name
 
 The gap to the LLMs is which mentioned countries count (author affiliations, donors and comparison countries are mentioned but not "substantively discussed") and region names with no country ("Sub-Saharan Africa"). Geography is lookup plus a filter; themes and methods need a model.
 
+### Zero-shot decision models
+
+Run 2026-10-07 with the `doc+summary` context as `state`, one Noul per label, on the 600 test excerpts ([run.py](run.py); [fit.py](fit.py) fits one threshold on the 300 validation excerpts). Mean micro-F1 × 100 against GLM and DeepSeek; LLM range 88.8. "Lookup" takes countries from the country-name lookup and regions from the model ∪ the looked-up countries.
+
+| Model | Where | Own countries, fitted | Lookup, fitted | Themes | Regions | Countries | Methods | Cost (test) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Jev | Vercel AI Gateway (`typesafe-ai`) | 72.5 | **72.5** | 69.0 | 79.2 | 72.3 | 69.6 | $0.19 |
+| d1 | Vercel AI Gateway (`liquid`) | 55.2 | 69.0 | 68.3 | 74.7 | 72.3 | 60.8 | $2.54 |
+
+Per-field scores are for the lookup setup. At p ≥ 0.5 with its own countries, Jev scores 71.2 on methods, above every fine-tuned encoder in [02](../02-fine-tuning/)'s first sweep (best 68.2).
+
+GLiDE was not run: it bills every question as a separate pass, ~$40 for the test set with context. GLiNER2.5-Decide, Laya, Verdict, Kev-0.8B and Kev-4B run as HF Jobs ([zeroshot_job.py](zeroshot_job.py)) on the same exported requests (at most 64 questions per request); job ids in [results/jobs_zeroshot.tsv](results/jobs_zeroshot.tsv).
+
 ## Models
 
 | Model | Where | Size |

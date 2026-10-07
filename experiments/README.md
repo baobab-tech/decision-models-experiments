@@ -20,7 +20,7 @@ For outside readers; each step links to the experiment README with the numbers.
 2. **Context decides the answer.** Tagged alone, an excerpt rarely says which country it is about. Adding the report's title, first 100 words and executive summary raises agreement with the pipeline from 44 to 68; adding the whole section lowers it ([01 context pilot](01-many-option-classification/README.md#pilot-result)).
 3. **The bar.** No human gold set exists. Two LLMs (GLM-5.3-Flash, DeepSeek-V4.1-Flash) given that context agree at 88.8 micro-F1; a model at that level agrees with each LLM as much as they agree with each other ([01 reference](01-many-option-classification/README.md#reference-labels-result)).
 4. **Geography is mostly a lookup.** Matching country names in the excerpt, title and first 100 words scores 71.6 on countries and 74.7 on regions with no model at all ([01 lookup](01-many-option-classification/README.md#country-lookup-baseline)).
-5. **Zero-shot decision models** (Jev, d1, GLiDE, GLiNER2.5-Decide, Kev, Laya, Verdict): to be rerun with the chosen context.
+5. **Zero-shot decision models** with the same context: Jev reaches 72.5 and d1 69.0 (countries from the lookup); the open models run as HF Jobs ([01 zero-shot](01-many-option-classification/README.md#zero-shot-decision-models)).
 6. **Fine-tuned small encoders** (trained on 10,000 LLM-labelled excerpts) reach 75.3 against the LLMs' 88.8 when countries come from the lookup; a 32M-parameter encoder reaches 74.7. Themes come within 2 points of the LLMs; methods are furthest ([02 results](02-fine-tuning/README.md#first-step-encoder-sweep)).
 7. **What to deploy:** after 5 and 6.
 

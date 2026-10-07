@@ -19,7 +19,7 @@ Publication: `experiments/README.md` holds the story outline. Leave internal ite
 
 1. **01 context pilot:** done 2026-10-06; chosen input `doc+summary` (title + Document Start + executive summary/abstract + excerpt): LLM agreement 90.2, pipeline agreement 68–69, +440 tokens.
 2. **01 reference labels:** done 2026-10-06 with GLM + DeepSeek (Qwen dropped: too slow on featherless-ai). LLM range 88.8 on test; pipeline 67.5. Publish with the `llm_labels` config.
-3. **01 zero-shot runs:** rerun Jev, d1, GLiDE (and local models one at a time) with the `doc_summary` context (`run.py` state = `input`). Needed for step 5 of the story in `experiments/README.md`.
+3. **01 zero-shot runs:** Jev 72.5, d1 69.0 done 2026-10-07; GLiDE skipped (~$40). GLiNER2.5-Decide, Laya, Verdict, Kev-0.8B, Kev-4B running as HF Jobs (`results/jobs_zeroshot.tsv`); when done, download `baobabtech/decision-models-zeroshot-runs` `<model>/<split>/responses.jsonl` into `results/raw/<model>-definitions-excerpts-<date>/` and run `fit.py --model <model>`.
 4. **02 first step:** label 10,000 train excerpts (GLM + DeepSeek, soft targets) with the chosen context; publish as the `llm_labels` config; sweep small encoders as HF Jobs (`train_encoder.py`).
    - Sweep done 2026-10-06 (results in the 02 README; repos renamed to `evaldocs-excerpt-tagger-*`). Best: Ettin-150M + country lookup 75.3, Ettin-32M + lookup 74.7 (LLM range 88.8).
    - Sweep 2 (per-model recipes, fp32 fix, countries from lookup, random + balanced data, learning curve): launch with `REV=<llm_labels revision> experiments/02-fine-tuning/sweep.sh` once the balanced sample is labelled (`label_excerpts.py --split train_extra`) and published (`build_llm_labels.py --push`).
