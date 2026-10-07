@@ -16,7 +16,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from run import HERE, add_regions, load
-from score import FIELDS, LLMS, items, micro_f1, references, score
+from score import FIELDS, score
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+from country_lookup import country_lookup  # noqa: E402
 
 GRID = [round(0.05 * i, 2) for i in range(1, 20)]
 
@@ -41,27 +45,26 @@ def probabilities(path: Path) -> dict:
     return out
 
 
-def predict(probs: dict, thresholds: dict, tax) -> dict:
-    preds = {e: {f: {c for c, p in codes.items() if p >= thresholds[f]} for f, codes in fields.items()}
-             for e, fields in probs.items()}
-    add_regions(preds, tax)
+def predict(probs: dict, t: float, tax, sample=None, find=None) -> dict:
+    """Labels at one threshold t. With find (country lookup), countries come from the lookup and
+    regions = direct region Nouls ∪ regions of looked-up countries (experiment 02's hybrid)."""
+    preds = {e: {f: {c for c, p in codes.items() if p >= t} for f, codes in fields.items()} for e, fields in probs.items()}
+    if find is None:
+        add_regions(preds, tax)
+        return preds
+    c2r = dict(tax[tax.field == "countries"][["code", "region"]].itertuples(index=False))
+    for e, fs in preds.items():
+        if "countries" in fs or "regions" in fs:
+            fs["countries"] = find(sample.at[e, "input"])
+            fs["regions"] = fs.get("regions", set()) | {c2r[c] for c in fs["countries"] if c2r.get(c)}
     return preds
 
 
-def fit(probs: dict, sample, tax) -> tuple[dict, dict]:
-    refs = references(sample)
-    thresholds = {f: 0.5 for f in FIELDS}
-    curves = {}
-    for f in ("themes", "countries", "methods", "regions"):  # regions last: depends on the country threshold
-        ids = items(sample, f)
-        curve = {}
-        for t in GRID:
-            preds = predict(probs, {**thresholds, f: t}, tax)
-            curve[t] = sum(micro_f1(preds, refs[m], ids, f) for m in LLMS) / len(LLMS)
-        best = max(curve.values())
-        thresholds[f] = max(t for t, v in curve.items() if v == best)
-        curves[f] = curve
-    return thresholds, curves
+def fit(probs, sample, tax, find=None) -> tuple[float, dict]:
+    """One threshold for all fields: the best validation mean (ties go higher)."""
+    curve = {t: score(predict(probs, t, tax, sample, find), sample)["mean_field_score"] for t in GRID}
+    best = max(curve.values())
+    return max(t for t, v in curve.items() if v == best), curve
 
 
 def main() -> None:
@@ -75,26 +78,26 @@ def main() -> None:
     _, test = load(None, "test")
     val_path = latest_raw(args.model, "validation", args.variant, args.countries)
     test_path = latest_raw(args.model, "test", args.variant, args.countries)
-    thresholds, curves = fit(probabilities(val_path), val, tax)
-
-    metrics = {"fitted": score(predict(probabilities(test_path), thresholds, tax), test),
-               "at_0.5": score(predict(probabilities(test_path), {f: 0.5 for f in FIELDS}, tax), test),
-               "validation_fitted": score(predict(probabilities(val_path), thresholds, tax), val)}
-    out = HERE / "results" / f"{args.model}-{args.variant}-{args.countries}-thresholds"
+    pv, pt, find = probabilities(val_path), probabilities(test_path), country_lookup()
+    metrics, fitted = {}, {}
+    for name, f in (("model_countries", None), ("country_lookup", find)):
+        t, curve = fit(pv, val, tax, f)
+        fitted[name] = {"threshold": t, "validation_curve": curve}
+        metrics[name] = {"threshold": t, "fitted": score(predict(pt, t, tax, test, f), test),
+                         "at_0.5": score(predict(pt, 0.5, tax, test, f), test)}
+    out = HERE / "results" / f"{args.model}-context-thresholds"
     out.mkdir(parents=True, exist_ok=True)
     (out / "thresholds.json").write_text(json.dumps({
-        "model": args.model, "date": datetime.now(timezone.utc).isoformat(), "thresholds": thresholds,
-        "objective": "micro-F1, mean vs glm and deepseek, on the validation sample", "grid": [GRID[0], GRID[-1], 0.05],
-        "ties": "higher threshold", "validation_run": val_path.parent.name, "test_run": test_path.parent.name,
-        "validation_curves": curves}, indent=1) + "\n")
+        "model": args.model, "date": datetime.now(timezone.utc).isoformat(), "fitted": fitted,
+        "objective": "mean micro-F1 vs glm and deepseek on the validation sample; one threshold for all fields",
+        "grid": [GRID[0], GRID[-1], 0.05], "ties": "higher threshold",
+        "validation_run": val_path.parent.name, "test_run": test_path.parent.name}, indent=1) + "\n")
     (out / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-
-    print(f"{args.model}: thresholds {thresholds}")
-    for k in ("at_0.5", "fitted"):
-        m = metrics[k]
-        print(f"  test {k:7} mean {m['mean_field_score']:5.1f} | " + " ".join(
-            f"{f} {v['micro_f1']:5.1f} ({v['labels_per_item']:.2f}/it)" for f, v in m["fields"].items()))
-    print(f"  validation fitted mean {metrics['validation_fitted']['mean_field_score']:.1f}")
+    for name, m in metrics.items():
+        for k in ("at_0.5", "fitted"):
+            r = m[k]
+            print(f"{args.model} {name:15} {k:6} t={m['threshold'] if k == 'fitted' else 0.5:<4} mean {r['mean_field_score']:5.1f} | "
+                  + " ".join(f"{f} {v['micro_f1']:5.1f}" for f, v in r["fields"].items()))
 
 
 if __name__ == "__main__":

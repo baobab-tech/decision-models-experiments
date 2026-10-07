@@ -17,6 +17,7 @@ import json
 import os
 import platform
 import subprocess
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,10 +28,13 @@ from dotenv import load_dotenv
 
 from score import FIELDS, score
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+from country_lookup import country_lookup  # noqa: E402
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DATASET = "baobabtech/decision-models-evaluation-docs"
-DATASET_REVISION = "5017706"
+DATASET_REVISION = "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4"
 THRESHOLD = 0.5
 MAX_QUESTIONS = 128  # d1 rejects requests with more than 128 questions (2026-10-04); default chunk size
 # Per-model caps: laya-serve rejects more than 64 questions (HTTP 413). Nouls are answered independently,
@@ -63,26 +67,15 @@ LABELS = HERE / "results/labels"
 LLMS = ("glm", "deepseek")
 
 
-def attach_llm_labels(sample, suffix: str) -> None:
-    """Add <field>_<llm> columns from results/labels/excerpts_<llm>_doc_summary<suffix>.jsonl."""
-    per_llm = {m: {r["excerpt_id"]: r["labels"] for r in map(json.loads, (LABELS / f"excerpts_{m}_doc_summary{suffix}.jsonl").open())}
-               for m in LLMS}
-    for f in FIELDS:
-        for m in LLMS:
-            sample[f"{f}_{m}"] = [sorted(per_llm[m][e].get(f, [])) for e in sample.index]
+LLM_LABELS_REVISION = "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4"  # llm_labels config: input + GLM/DeepSeek labels
 
 
 def load(limit: int | None, split: str = "test"):
+    """Taxonomy and the test or validation sample from the llm_labels config, indexed by excerpt_id.
+    `input` is the doc_summary context the labelling LLMs saw: excerpt, title, Document Start, summaries."""
     tax = load_dataset(DATASET, "taxonomy", split="train", revision=DATASET_REVISION).to_pandas()
-    exc = load_dataset(DATASET, "excerpts", split=split, revision=DATASET_REVISION).to_pandas()
-    if split == "test":
-        sample = exc[exc.eval_sample].set_index("excerpt_id").sort_index()
-    else:  # threshold-fitting sample; LLM labels come from results/labels, not the dataset
-        ids = json.loads((LABELS / "validation_sample.json").read_text())["excerpt_ids"]
-        sample = exc.set_index("excerpt_id").loc[sorted(ids)].copy()
-        for f in FIELDS:
-            sample[f] = sample[f].map(lambda v: list(v) if v is not None else [])
-        attach_llm_labels(sample, "_validation")
+    sample = load_dataset(DATASET, "llm_labels", split=split, revision=LLM_LABELS_REVISION).to_pandas()
+    sample = sample.set_index("excerpt_id").sort_index()
     if limit:  # spread over the three excerpt types
         sample = sample.groupby("type").head(-(-limit // 3)).iloc[:limit]
     return tax, sample
@@ -122,7 +115,7 @@ def build_requests(tax, sample, variant: str, countries: str, max_questions: int
                     for code, label, d in opts}
             for i in range(0, len(questions), max_questions):
                 chunk = dict(questions[i:i + max_questions])
-                reqs.append({"id": f"{eid}::{f}::{i // max_questions}", "state": row["text"], "questions": chunk,
+                reqs.append({"id": f"{eid}::{f}::{i // max_questions}", "state": row["input"], "questions": chunk,
                              "labels": {k: meta[k] for k in chunk}})
     return reqs
 
@@ -212,12 +205,20 @@ def main() -> None:
     ap.add_argument("--split", choices=("test", "validation"), default="test",
                     help="validation: the 300-excerpt threshold-fitting sample")
     ap.add_argument("--concurrency", type=int, default=8)
+    ap.add_argument("--export", type=Path, help="write the requests (JSONL) and exit; for zeroshot_job.py on HF Jobs")
+    ap.add_argument("--max-questions", type=int, help="questions per request; default: the model's cap or 128")
     args = ap.parse_args()
 
     load_dotenv(ROOT / ".env")
     backend, model_id, opts = MODELS[args.model]
     tax, sample = load(args.limit, args.split)
-    reqs = build_requests(tax, sample, args.variant, args.countries, opts.get("max_questions", MAX_QUESTIONS))
+    reqs = build_requests(tax, sample, args.variant, args.countries,
+                          args.max_questions or opts.get("max_questions", MAX_QUESTIONS))
+    if args.export:
+        args.export.parent.mkdir(parents=True, exist_ok=True)
+        args.export.write_text("".join(json.dumps(r) + "\n" for r in reqs))
+        print(f"wrote {len(reqs)} requests to {args.export}")
+        return
 
     started = datetime.now(timezone.utc)
     run_id = f"{args.model}-{args.variant}-{args.countries}-{'val-' if args.split == 'validation' else ''}" \
@@ -245,6 +246,18 @@ def main() -> None:
     if "regions" in fields:
         metrics["regions_variants"] = {k: score(v, sample, ("regions",))["fields"]["regions"]
                                        for k, v in variants.items()}
+        # Hybrid, as in experiment 02: countries from the country-name lookup, regions = direct ∪ lookup countries
+        find = country_lookup()
+        c2r = dict(tax[tax.field == "countries"][["code", "region"]].itertuples(index=False))
+        hybrid = {}
+        for eid, fs in preds.items():
+            fs = dict(fs)
+            if "countries" in fs:
+                fs["countries"] = find(sample.at[eid, "input"])
+                fs["regions"] = variants["regions_direct"].get(eid, {}).get("regions", set()) | \
+                    {c2r[c] for c in fs["countries"] if c2r.get(c)}
+            hybrid[eid] = fs
+        metrics["with_country_lookup"] = score(hybrid, sample, fields)
     ok = [r for r in responses if "error" not in r]
     lat = sorted(r["latency_ms"] for r in ok)
     cost = sum(float((r.get("provider_metadata") or {}).get("gateway", {}).get("cost", 0) or 0) for r in ok)
@@ -267,7 +280,7 @@ def main() -> None:
         "date": started.isoformat(), "model": args.model, "model_id": model_id,
         "where": "gateway" if backend == "gateway" else ("api" if opts.get("url", "").startswith("https") else "local"),
         "provider": sorted({r.get("provider") for r in ok if r.get("provider")}) or None,
-        "dataset": DATASET, "dataset_version": DATASET_REVISION, "split": args.split,
+        "dataset": DATASET, "dataset_version": LLM_LABELS_REVISION, "context": "doc_summary (llm_labels input)", "split": args.split,
         "subset": "eval_sample" if args.split == "test" else "results/labels/validation_sample.json",
         "n": len(sample), "question_format": "noul-per-label", "threshold": THRESHOLD,
         "variant": args.variant, "countries": args.countries,
@@ -288,6 +301,10 @@ def main() -> None:
     for k, v in metrics.get("regions_variants", {}).items():
         print(f"  {k:16} vsLLMs {v['micro_f1']:5.1f}  lab/it {v['labels_per_item']:.2f}")
     print(f"mean_field_score {metrics['mean_field_score']:.1f} (vs pipeline {metrics['mean_field_score_vs_pipeline']:.1f})")
+    if "with_country_lookup" in metrics:
+        h = metrics["with_country_lookup"]
+        print(f"with country lookup: mean {h['mean_field_score']:.1f} | " +
+              " ".join(f"{f} {v['micro_f1']:.1f}" for f, v in h["fields"].items()))
 
 
 if __name__ == "__main__":

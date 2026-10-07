@@ -1,0 +1,5 @@
+2026-10-07T00:20:56Z	6ac59068404719ba37664344	gliner-decide	gliner2[local]==2.0.0
+2026-10-07T00:20:58Z	6ac5906a404719ba37664346	laya	laya==0.3.27
+2026-10-07T00:21:00Z	6ac5906cfbc85ba6823bae1a	verdict	rlcd @ git+https://github.com/Heman10x-NGU/Verdict-open-jev@30f15564821626ca5c1ad5b2638c4eb7078787dd
+2026-10-07T00:22:56Z	6ac590e0404719ba37664353	kev-0.8b	kev[serve] @ git+https://github.com/jaredpalmer/kev@fe64b1274ea7f80d4095866df90666abb03e9cf6
+2026-10-07T00:22:58Z	6ac590e2fbc85ba6823bae2e	kev-4b	kev[serve] @ git+https://github.com/jaredpalmer/kev@fe64b1274ea7f80d4095866df90666abb03e9cf6

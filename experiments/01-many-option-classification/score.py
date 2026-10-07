@@ -26,9 +26,14 @@ def micro_f1(pred: dict, ref: dict, ids: list[str], field: str) -> float:
     return 100 * 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else 100.0
 
 
+def _codes(v) -> list:
+    """Label lists arrive as lists, numpy arrays (pandas) or None."""
+    return [] if v is None else list(v)
+
+
 def references(sample: pd.DataFrame) -> dict[str, dict]:
     """Label sets keyed by name: each LLM, and the pipeline."""
-    return {name: {e: {f: set(sample.at[e, f + suffix] or []) for f in FIELDS} for e in sample.index}
+    return {name: {e: {f: set(_codes(sample.at[e, f + suffix])) for f in FIELDS} for e in sample.index}
             for name, suffix in [*[(m, f"_{m}") for m in LLMS], ("pipeline", "_pipeline")]}
 
 
