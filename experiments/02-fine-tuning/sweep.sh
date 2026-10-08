@@ -4,7 +4,8 @@
 # to a private baobabtech/evaldocs-excerpt-tagger-* repo, so anyone with access can rerun a single line.
 # Setup: countries from the country-name lookup; the encoder tags themes, regions and methods.
 # Sweep 1 job ids: results/jobs.tsv. Sweep 2 job ids: results/jobs_sweep2.tsv; runs already listed are skipped.
-# Usage: REV=<decision-models-evaluation-docs revision> ./sweep.sh
+# Usage: REV=<decision-models-evaluation-docs revision> [TIMEOUT=6h] ./sweep.sh
+# NeoMME and harrier need TIMEOUT=6h on the full data (3 h stops them after epoch 8).
 set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p results
@@ -16,10 +17,10 @@ run() {  # run <base> [extra args...]
   local base=$1; shift
   if grep -qxF "$(printf '%s\t%s' "$base" "$*")" <<<"$done_runs"; then echo "skip $base $*"; return; fi
   local id
-  id=$(hf jobs uv run --flavor a10g-small --timeout 3h --namespace baobabtech --secrets HF_TOKEN --detach \
+  id=$(hf jobs uv run --flavor a10g-small --timeout "${TIMEOUT:-3h}" --namespace baobabtech --secrets HF_TOKEN --detach \
         --label experiment=02 --label base="$(echo "$base" | tr -c "a-zA-Z0-9_\n-" "_")" \
         train_encoder.py -- --labels llm --dataset-revision "$REV" --base "$base" \
-        --exclude-fields countries --country-lookup "$@" | grep -oE '[0-9a-f]{24}' | head -1)
+        --exclude-fields countries --country-lookup "$@" | grep -oE "ID: [0-9a-f]{24}" | grep -oE "[0-9a-f]{24}" | head -1)
   printf '%s\t%s\t%s\t%s\n' "$(date -u +%FT%TZ)" "$id" "$base" "$*" | tee -a "$JOBS"
 }
 

@@ -79,7 +79,13 @@ All 255 models in Han Xiao's [All about Jev](https://hanxiao.io/all-about-jev/) 
 
 ## Findings so far
 
-These come from published sources; we haven't run anything yet.
+**From our experiments** (excerpt tagging of 600 evaluation-report excerpts; reference: two LLMs that agree at 88.8; [story](experiments/README.md#the-story)):
+
+- Zero-shot decision models fall short of the LLM range. Jev scores 72.5 and d1 69.0; the open decision models score 38–65 ([01](experiments/01-many-option-classification/README.md#conclusion)).
+- Fine-tuned small general encoders score 79.7–81.4, including a 31M-parameter Ettin at 80.4. A fine-tuned decision-model backbone (ModernJEV-Decide) did no better than general encoders ([02](experiments/02-fine-tuning/README.md#conclusion)).
+- For a fixed task with LLM labels to train on, fine-tune a small encoder. Without training data, zero-shot decision models remain the option (not tested beyond this task).
+
+**From published sources:**
 
 - On Decision Index 0.2.1, Liquid AI reports d1 at 58.9 and Jev 1.13 at 57.9 from its own run of the suite ([KuCoin/BlockBeats](https://www.kucoin.com/news/flash/liquid-ai-s-d1-decision-model-surpasses-jev-in-hugging-face-evaluation), 2026-09-29). The public board, generated 2026-09-28 before d1's release, lists Jev first at 57.91 and has no d1 row ([Space](https://huggingface.co/spaces/multimodalart/jev-decision-index), checked 2026-09-30). Every BERT-family encoder scores below 12 ([benchmarks](docs/benchmarks.md#reading-the-leaderboards-across-models)).
 - On JevBench v1.5.4, which also scores speed and cost, two open Gemma-4-12B models (Cygnet 73.7, Winnow-12B Q8 73.2) lead Jev 1.13 (72.1) in a statistical tie, and 4B models follow within 0.5 points ([live board](https://benchmarkheaven.com/jev-models), checked 2026-09-30).
@@ -91,8 +97,8 @@ These come from published sources; we haven't run anything yet.
 
 | # | Experiment | Status |
 |---|---|---|
-| 01 | [Many-option classification](experiments/01-many-option-classification/): 10–200+ labels, tags, document types; ~100 vs ~2,000-token inputs | proposed |
-| 02 | [Fine-tuning](experiments/02-fine-tuning/): which models, how, and how many labels it takes to beat zero-shot | proposed |
+| 01 | [Many-option classification](experiments/01-many-option-classification/): zero-shot decision models tagging evaluation-report excerpts (17–198 labels per field), with production context | done (excerpt tagging) |
+| 02 | [Fine-tuning](experiments/02-fine-tuning/): small encoders and a decision-model backbone fine-tuned on LLM labels; learning curve; per-label scores | done |
 | 03 | [Jev vs open models on document tasks](experiments/03-jev-vs-open-document-tasks/): language, orientation, RVL-CDIP classes, bundle splitting and parse triage on PDFs; by [LlamaIndex](https://github.com/run-llama/jev_vs_oss) | done |
 
 Each experiment starts as a written plan. Results, code and run metadata are published in its folder ([index](experiments/README.md)).

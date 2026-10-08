@@ -1,6 +1,27 @@
 # 01 Many-option classification
 
-**Status:** running. Context pilot and reference labels done (2026-10-06); model runs next.
+**Status:** done (2026-10-08). Phase 1 (excerpt tagging) done; phase 2 (document classification) not run.
+
+## Conclusion
+
+- **No zero-shot decision model reaches the LLM range on excerpt tagging.** Two LLMs agree with each other at 88.8 on 600 test excerpts. With production's context and countries from a name lookup:
+
+  | Model | Score |
+  |---|---:|
+  | Jev | 72.5 |
+  | d1 | 69.0 |
+  | Kev-4B | 64.8 |
+  | GLiNER2.5-Decide | 59.4 |
+  | Kev-0.8B | 54.7 |
+  | Laya | 45.6 |
+  | Verdict | 38.1 |
+
+  Jev is above the production pipeline's own labels (67.5) for $0.19 per 600 excerpts.
+- **Context decides the answer.** Adding the report's title, first 100 words and summaries to the excerpt raises agreement from 44 to 68 ([pilot](#pilot-result)).
+- **Country names are a lookup, not a model task.** A country-name match scores 71.6 on countries with no model ([lookup](#country-lookup-baseline)).
+- **Fine-tuned small encoders beat every zero-shot decision model:** 79.7–81.4 in [02](../02-fine-tuning/README.md#conclusion).
+- Phase 2 (document classification) was not run here. A separate Baobab Tech experiment fine-tuned small generative models for that task.
+
 
 ## Question
 
@@ -15,7 +36,7 @@ Can decision models and small encoders tag and classify international developmen
 ## Phases
 
 1. **Task B, excerpt tagging.** Starts with a [context pilot](#context-pilot).
-2. **Task A, document classification.** After phase 1 is written up; the maintainer decides whether it runs.
+2. **Task A, document classification.** Not run (see Conclusion).
 
 ## Input: what production sees
 
@@ -127,10 +148,15 @@ Run 2026-10-07 with the `doc+summary` context as `state`, one Noul per label, on
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | Jev | Vercel AI Gateway (`typesafe-ai`) | 72.5 | **72.5** | 69.0 | 79.2 | 72.3 | 69.6 | $0.19 |
 | d1 | Vercel AI Gateway (`liquid`) | 55.2 | 69.0 | 68.3 | 74.7 | 72.3 | 60.8 | $2.54 |
+| Kev-4B | HF Jobs, A10G | 62.8 | 64.8 | 59.5 | 74.2 | 72.3 | 53.1 | 28 GPU-min |
+| GLiNER2.5-Decide | HF Jobs, A10G | 36.5 | 59.4 | 56.7 | 74.1 | 72.3 | 34.3 | 9 GPU-min |
+| Kev-0.8B | HF Jobs, A10G | 40.6 | 54.7 | 23.8 | 73.0 | 72.3 | 49.7 | 9 GPU-min |
+| Laya | HF Jobs, A10G | 35.1 | 45.6 | 27.5 | 72.5 | 72.3 | 10.1 | 24 GPU-min |
+| Verdict | HF Jobs, A10G | 12.3 | 38.1 | 5.9 | 67.4 | 72.3 | 7.0 | 23 GPU-min |
 
 Per-field scores are for the lookup setup. At p ≥ 0.5 with its own countries, Jev scores 71.2 on methods, above every fine-tuned encoder in [02](../02-fine-tuning/)'s first sweep (best 68.2).
 
-GLiDE was not run: it bills every question as a separate pass, ~$40 for the test set with context. GLiNER2.5-Decide, Laya, Verdict, Kev-0.8B and Kev-4B run as HF Jobs ([zeroshot_job.py](zeroshot_job.py)) on the same exported requests (at most 64 questions per request); job ids in [results/jobs_zeroshot.tsv](results/jobs_zeroshot.tsv).
+GLiDE was not run: it bills every question as a separate pass, ~$40 for the test set with context. GLiNER2.5-Decide, Laya, Verdict, Kev-0.8B and Kev-4B ran as HF Jobs ([zeroshot_job.py](zeroshot_job.py)) on one A10G each, on the same exported requests (at most 64 questions per request); job ids in [results/jobs_zeroshot.tsv](results/jobs_zeroshot.tsv). Their cost column is wall time for the 600 test excerpts (2,850 requests). Responses: private dataset `baobabtech/decision-models-zeroshot-runs`.
 
 ## Models
 

@@ -14,3 +14,5 @@
 2026-10-06T23:39:09Z	6ac5869dfbc85ba6823baa9d	jhu-clsp/ettin-encoder-32m	--train-sample random --limit-train 2500
 2026-10-06T23:39:10Z	6ac5869e404719ba37664112	jhu-clsp/ettin-encoder-32m	--train-sample random --limit-train 5000
 2026-10-06T23:39:12Z	6ac586a0404719ba37664114	jhu-clsp/ettin-encoder-32m	--train-sample random
+2026-10-08T21:02:50Z	6ac804f3095c5780892fe0cf	Hcompany/NeoMME-260M	--epochs 12
+2026-10-08T21:02:50Z	6ac804f4095c5780892fe0d1	microsoft/harrier-oss-v1-270m	--epochs 12

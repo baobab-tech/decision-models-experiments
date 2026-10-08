@@ -411,7 +411,8 @@ def main() -> None:
         return
     repo = f"{args.push_to}-{args.base.split('/')[-1].lower()}-{args.labels}" + ("-2tower" if args.arch == "two_tower" else "") \
         + ("-no" + "-".join(args.exclude_fields) if args.exclude_fields else "") + ("-lookup" if args.country_lookup else "") \
-        + ("" if args.train_sample == "all" else f"-{args.train_sample}") + (f"-n{args.limit_train}" if args.limit_train else "")
+        + ("" if args.train_sample == "all" else f"-{args.train_sample}") + (f"-n{args.limit_train}" if args.limit_train else "") \
+        + (f"-e{args.epochs}" if args.epochs != 8 else "")
     api = HfApi()
     api.create_repo(repo, private=True, exist_ok=True)
     os.makedirs("out", exist_ok=True)
@@ -420,6 +421,10 @@ def main() -> None:
     json.dump({"labels": [f"{f}:{c}" for f, c in space]}, open("out/labels.json", "w"))
     json.dump(run, open("out/run.json", "w"), indent=1)
     json.dump(metrics, open("out/metrics.json", "w"), indent=1)
+    # per-excerpt probabilities, for per-label scoring without re-running the model
+    np.savez_compressed("out/probs.npz", val=val_probs, test=test_probs,
+                        val_ids=np.array([r["excerpt_id"] for r in val]),
+                        test_ids=np.array([r["excerpt_id"] for r in test]))
     api.upload_folder(folder_path="out", repo_id=repo, commit_message=f"Run {started:%Y-%m-%dT%H:%M}Z")
     print(f"pushed to {repo}")
 

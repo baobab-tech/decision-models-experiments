@@ -1,0 +1,962 @@
+{
+ "ettin-encoder-150m-llm-2tower-nocountries-lookup": {
+  "base": "jhu-clsp/ettin-encoder-150m",
+  "base_revision": "45d08642849e5c5701b162671ac811b7654bfd9f",
+  "arch": "two_tower",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58699fbc85ba6823baa98",
+  "best_epoch": 7,
+  "threshold": 0.25,
+  "parameters": 149164095,
+  "tokens_per_excerpt": 89.9,
+  "test_micro": {
+   "themes": 81.4,
+   "regions": 84.0,
+   "countries": 72.3,
+   "methods": 80.1
+  },
+  "test_mean": 79.4,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 77.0,
+    "ci": [
+     74.8,
+     78.6
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 84.2,
+    "ci": [
+     77.1,
+     89.2
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 72.3,
+    "ci": [
+     57.2,
+     80.9
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "ettin-encoder-150m-llm-nocountries-lookup": {
+  "base": "jhu-clsp/ettin-encoder-150m",
+  "base_revision": "45d08642849e5c5701b162671ac811b7654bfd9f",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58687fbc85ba6823baa88",
+  "best_epoch": 3,
+  "threshold": 0.3,
+  "parameters": 149062719,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 81.3,
+   "regions": 84.7,
+   "countries": 72.3,
+   "methods": 82.0
+  },
+  "test_mean": 80.1,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 77.4,
+    "ci": [
+     75.1,
+     79.2
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 85.2,
+    "ci": [
+     77.4,
+     90.4
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 77.6,
+    "ci": [
+     66.7,
+     84.4
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "ettin-encoder-32m-llm-nocountries-lookup-random-n1000": {
+  "base": "jhu-clsp/ettin-encoder-32m",
+  "base_revision": "1b8ba06455dd44f80fc9c1ca9e22806157a57379",
+  "arch": "joint",
+  "train_sample": "random",
+  "limit_train": 1000,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac5869b404719ba37664110",
+  "best_epoch": 5,
+  "threshold": 0.2,
+  "parameters": 31907391,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 64.7,
+   "regions": 70.2,
+   "countries": 72.3,
+   "methods": 57.8
+  },
+  "test_mean": 66.2,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 45.1,
+    "ci": [
+     42.6,
+     46.9
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 73.7,
+    "ci": [
+     65.5,
+     79.0
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 31.2,
+    "ci": [
+     23.1,
+     39.1
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "ettin-encoder-32m-llm-nocountries-lookup-random-n2500": {
+  "base": "jhu-clsp/ettin-encoder-32m",
+  "base_revision": "1b8ba06455dd44f80fc9c1ca9e22806157a57379",
+  "arch": "joint",
+  "train_sample": "random",
+  "limit_train": 2500,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac5869dfbc85ba6823baa9d",
+  "best_epoch": 6,
+  "threshold": 0.25,
+  "parameters": 31907391,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 72.3,
+   "regions": 81.6,
+   "countries": 72.3,
+   "methods": 64.2
+  },
+  "test_mean": 72.6,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 61.8,
+    "ci": [
+     58.7,
+     63.8
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 80.2,
+    "ci": [
+     72.2,
+     85.6
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 33.9,
+    "ci": [
+     21.7,
+     45.6
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "ettin-encoder-32m-llm-nocountries-lookup-random-n5000": {
+  "base": "jhu-clsp/ettin-encoder-32m",
+  "base_revision": "1b8ba06455dd44f80fc9c1ca9e22806157a57379",
+  "arch": "joint",
+  "train_sample": "random",
+  "limit_train": 5000,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac5869e404719ba37664112",
+  "best_epoch": 7,
+  "threshold": 0.35,
+  "parameters": 31907391,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 77.7,
+   "regions": 83.7,
+   "countries": 72.3,
+   "methods": 68.7
+  },
+  "test_mean": 75.6,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 67.1,
+    "ci": [
+     63.3,
+     70.0
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 83.0,
+    "ci": [
+     74.9,
+     88.3
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 46.3,
+    "ci": [
+     31.9,
+     58.5
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "ettin-encoder-32m-llm-nocountries-lookup-random": {
+  "base": "jhu-clsp/ettin-encoder-32m",
+  "base_revision": "1b8ba06455dd44f80fc9c1ca9e22806157a57379",
+  "arch": "joint",
+  "train_sample": "random",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac586a0404719ba37664114",
+  "best_epoch": 4,
+  "threshold": 0.35,
+  "parameters": 31907391,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 77.6,
+   "regions": 83.4,
+   "countries": 72.3,
+   "methods": 74.6
+  },
+  "test_mean": 77.0,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 71.5,
+    "ci": [
+     68.0,
+     73.8
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 83.6,
+    "ci": [
+     75.7,
+     88.8
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 58.8,
+    "ci": [
+     43.5,
+     69.1
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "ettin-encoder-32m-llm-nocountries-lookup": {
+  "base": "jhu-clsp/ettin-encoder-32m",
+  "base_revision": "1b8ba06455dd44f80fc9c1ca9e22806157a57379",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58689fbc85ba6823baa8a",
+  "best_epoch": 5,
+  "threshold": 0.25,
+  "parameters": 31907391,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 79.2,
+   "regions": 84.3,
+   "countries": 72.3,
+   "methods": 85.6
+  },
+  "test_mean": 80.4,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 75.2,
+    "ci": [
+     72.5,
+     77.1
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 83.6,
+    "ci": [
+     76.1,
+     88.9
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 77.8,
+    "ci": [
+     66.0,
+     85.7
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "f2llm-v2-80m-llm-nocountries-lookup": {
+  "base": "codefuse-ai/F2LLM-v2-80M",
+  "base_revision": "ad88d7a126711f1490cd4bad645dc9d3acc2af6a",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58697fbc85ba6823baa96",
+  "best_epoch": 3,
+  "threshold": 0.25,
+  "parameters": 80104511,
+  "tokens_per_excerpt": 531.3,
+  "test_micro": {
+   "themes": 79.7,
+   "regions": 84.5,
+   "countries": 72.3,
+   "methods": 82.9
+  },
+  "test_mean": 79.9,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 75.2,
+    "ci": [
+     72.5,
+     77.3
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 84.5,
+    "ci": [
+     77.4,
+     89.5
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 76.9,
+    "ci": [
+     66.3,
+     84.0
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "granite-embedding-97m-multilingual-r2-llm-nocountries-lookup": {
+  "base": "ibm-granite/granite-embedding-97m-multilingual-r2",
+  "base_revision": "835ad14087e140460703cf0fae09f97d469d65c2",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac5868e404719ba37664107",
+  "best_epoch": 5,
+  "threshold": 0.3,
+  "parameters": 97465407,
+  "tokens_per_excerpt": 513.9,
+  "test_micro": {
+   "themes": 82.5,
+   "regions": 84.7,
+   "countries": 72.3,
+   "methods": 86.2
+  },
+  "test_mean": 81.4,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 76.8,
+    "ci": [
+     74.3,
+     78.5
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 84.7,
+    "ci": [
+     77.6,
+     89.8
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 76.4,
+    "ci": [
+     64.2,
+     83.5
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "gte-modernbert-base-llm-nocountries-lookup": {
+  "base": "Alibaba-NLP/gte-modernbert-base",
+  "base_revision": "e7f32e3c00f91d699e8c43b53106206bcc72bb22",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac5868c404719ba37664105",
+  "best_epoch": 6,
+  "threshold": 0.45,
+  "parameters": 149062719,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 80.8,
+   "regions": 85.0,
+   "countries": 72.3,
+   "methods": 84.6
+  },
+  "test_mean": 80.7,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 75.8,
+    "ci": [
+     73.5,
+     77.5
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 84.8,
+    "ci": [
+     77.6,
+     89.8
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 75.5,
+    "ci": [
+     63.9,
+     83.2
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "harrier-oss-v1-270m-llm-nocountries-lookup": {
+  "base": "microsoft/harrier-oss-v1-270m",
+  "base_revision": "31de22b673913c7d658c0f03f792d77c2dcf8ebd",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58696fbc85ba6823baa93",
+  "best_epoch": 8,
+  "threshold": 0.15,
+  "parameters": 268138559,
+  "tokens_per_excerpt": 528.3,
+  "test_micro": {
+   "themes": 83.0,
+   "regions": 84.6,
+   "countries": 72.3,
+   "methods": 85.0
+  },
+  "test_mean": 81.2,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 78.2,
+    "ci": [
+     76.1,
+     79.8
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 83.7,
+    "ci": [
+     75.6,
+     89.4
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 78.8,
+    "ci": [
+     68.8,
+     85.4
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "lfm2.5-encoder-230m-llm-nocountries-lookup": {
+  "base": "LiquidAI/LFM2.5-Encoder-230M",
+  "base_revision": "0b649ad0c684378b03d4d8304f7577a662ab89bc",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58691fbc85ba6823baa91",
+  "best_epoch": 4,
+  "threshold": 0.3,
+  "parameters": 229757759,
+  "tokens_per_excerpt": 548.2,
+  "test_micro": {
+   "themes": 76.0,
+   "regions": 80.7,
+   "countries": 72.3,
+   "methods": 79.2
+  },
+  "test_mean": 77.1,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 69.0,
+    "ci": [
+     65.6,
+     71.3
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 81.2,
+    "ci": [
+     73.7,
+     86.2
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 68.7,
+    "ci": [
+     54.0,
+     77.9
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "mmbert-small-llm-nocountries-lookup": {
+  "base": "jhu-clsp/mmBERT-small",
+  "base_revision": "abc32620dd4f6ab06f5fbe905dc25f310618e09f",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac5868b404719ba37664103",
+  "best_epoch": 3,
+  "threshold": 0.35,
+  "parameters": 140517951,
+  "tokens_per_excerpt": 521.4,
+  "test_micro": {
+   "themes": 81.2,
+   "regions": 84.6,
+   "countries": 72.3,
+   "methods": 83.0
+  },
+  "test_mean": 80.3,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 75.1,
+    "ci": [
+     72.5,
+     77.1
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 84.3,
+    "ci": [
+     76.7,
+     89.5
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 70.6,
+    "ci": [
+     55.5,
+     79.6
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "modernbert-base-llm-nocountries-lookup": {
+  "base": "answerdotai/ModernBERT-base",
+  "base_revision": "8949b909ec900327062f0ebf497f51aef5e6f0c8",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58686404719ba37664101",
+  "best_epoch": 6,
+  "threshold": 0.35,
+  "parameters": 149062719,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 81.7,
+   "regions": 84.7,
+   "countries": 72.3,
+   "methods": 85.4
+  },
+  "test_mean": 81.0,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 77.3,
+    "ci": [
+     75.1,
+     78.9
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 84.7,
+    "ci": [
+     77.6,
+     89.7
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 77.5,
+    "ci": [
+     66.5,
+     84.6
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "modernjev-decide-preview-llm-nocountries-lookup": {
+  "base": "MaziyarPanahi/ModernJEV-Decide-Preview",
+  "base_revision": "d5b398ed03de073a00bc4e53acf53afda409445e",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58690fbc85ba6823baa8f",
+  "best_epoch": 6,
+  "threshold": 0.25,
+  "parameters": 149062719,
+  "tokens_per_excerpt": 540.6,
+  "test_micro": {
+   "themes": 77.8,
+   "regions": 84.6,
+   "countries": 72.3,
+   "methods": 84.0
+  },
+  "test_mean": 79.7,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 72.4,
+    "ci": [
+     69.8,
+     74.2
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 85.0,
+    "ci": [
+     77.7,
+     90.0
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 73.9,
+    "ci": [
+     61.8,
+     81.8
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ },
+ "neomme-260m-llm-nocountries-lookup": {
+  "base": "Hcompany/NeoMME-260M",
+  "base_revision": "5ba79fb246e23776d2c2fcead975eae2775ed94b",
+  "arch": "joint",
+  "train_sample": "all",
+  "limit_train": null,
+  "dataset_revision": "e191ae3f5665781f5e1a1ca9a68d035c1868a2b4",
+  "job_id": "6ac58694404719ba37664109",
+  "best_epoch": 8,
+  "threshold": 0.4,
+  "parameters": 263002481,
+  "tokens_per_excerpt": 533.6,
+  "test_micro": {
+   "themes": 83.3,
+   "regions": 84.2,
+   "countries": 72.3,
+   "methods": 83.8
+  },
+  "test_mean": 80.9,
+  "valtest_macro": {
+   "themes": {
+    "macro_f1": 76.9,
+    "ci": [
+     74.5,
+     78.8
+    ],
+    "labels_scored": 18
+   },
+   "regions": {
+    "macro_f1": 85.5,
+    "ci": [
+     77.9,
+     90.7
+    ],
+    "labels_scored": 7
+   },
+   "countries": {
+    "macro_f1": 81.5,
+    "ci": [
+     79.3,
+     83.0
+    ],
+    "labels_scored": 25
+   },
+   "methods": {
+    "macro_f1": 73.1,
+    "ci": [
+     60.0,
+     81.3
+    ],
+    "labels_scored": 4
+   }
+  },
+  "llm_macro": {
+   "themes": 77.5,
+   "regions": 93.6,
+   "countries": 91.3,
+   "methods": 77.7
+  }
+ }
+}

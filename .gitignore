@@ -11,6 +11,7 @@ node_modules/
 *.gguf
 *.bin
 **/results/raw/
+**/results/probs/
 data/all-about-jev/*.jsonl
 
 # Third-party model code and environments for local runs (not ours; not committed)

@@ -18,3 +18,4 @@
 - Multi-label with one Noul per label: threshold each Noul at 0.5 unless the plan says otherwise. Report the threshold.
 - Staged Choices (coarse then fine): the probability of a leaf label is the product of the stage probabilities.
 - Report `n` and a 95% bootstrap interval (1,000 resamples) for `accuracy`, `macro_f1` and `ece_15`.
+- Per-label scores ([per_label.py](per_label.py)): F1 and recall per label against each labelling LLM, averaged, next to the two LLMs' F1 against each other on that label. `macro_f1` there covers labels with at least 5 reference positives; labels with fewer positives are listed as unmeasured.

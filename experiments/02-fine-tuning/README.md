@@ -1,6 +1,6 @@
-# 02 Fine-tuning decision models
+# 02 Fine-tuning small encoders and decision models
 
-**Status:** running. First step done (2026-10-06).
+**Status:** done (2026-10-08).
 
 ## Question
 
@@ -8,7 +8,33 @@ What is the smallest model, by compute per excerpt, that reaches 01's LLM range 
 
 Why: the case for a small model is compute and environmental impact. A ~150M encoder needs a small fraction of a 10B+-active-parameter LLM's compute per excerpt, if it can match its tags.
 
-## First step
+## Conclusion
+
+- **Fine-tuned small encoders tag excerpts at 79.7–81.4** against the LLMs' 88.8, on 600 test excerpts.
+  - For comparison: the production pipeline's own labels score 67.5, and the best zero-shot decision model (Jev, [01](../01-many-option-classification/README.md#zero-shot-decision-models)) 72.5.
+  - The best model is Granite-embedding-97M-r2 at 81.4.
+  - Ettin-32M scores 80.4 with 31M parameters, at about 3.4 × 10¹⁰ FLOPs per excerpt (2 × parameters × 541 tokens).
+- **The choice of encoder matters little.** The top 10 of 12 are within 1.7 points.
+- **The training data matters more:**
+  - Ettin-32M goes from 66.2 at 1,000 random excerpts to 77.0 at 10,000.
+  - Adding 18,666 excerpts selected for rare labels takes it to 80.4.
+  - On the four methods with enough test positives, that raises the macro-F1 from 58.8 to 77.8.
+- **Averages hide weak labels, and the weak labels are where the references disagree.**
+  - The weakest themes are science and technology (model F1 16–29), global partnerships (45–49) and civil society (63–67). The two LLMs agree with each other on these at 6, 36 and 65.
+  - On themes, the best models' macro-F1 (75–78) equals the LLMs' agreement with each other (77.5).
+  - The remaining gap is mostly label ambiguity in the taxonomy, not model capacity.
+- **The test set can't measure most labels.** In 900 validation and test excerpts, only 18 of 22 themes, 7 of 17 regions and 4 of 24 methods have at least 5 positives.
+- **Decision models:**
+  - The one decision-model backbone fine-tuned here (ModernJEV-Decide-Preview) scores 79.7, no better than general encoders.
+  - Zero-shot decision models score 38–72 ([01](../01-many-option-classification/README.md#zero-shot-decision-models)).
+  - For a fixed, high-volume task with LLM-labelled training data, a fine-tuned small general encoder is the better choice. Without training data, zero-shot decision models remain the option (not tested beyond this task).
+- **Inheriting the document's tags is not enough.** Excerpts given their document's tags score 64–66 on themes and 52–61 on countries (test).
+- **What this means for production:** production extracts excerpts and tags them in the same LLM call. Replacing the tagging alone removes part of each prompt but not the call. The follow-on work, extracting excerpts with small models, continues in EvalExplorer's own repository.
+- **Limits:**
+  - Scores measure agreement with two LLMs, not correctness. There is no human gold set.
+  - The country lookup also matches donor countries named in report titles (the UK in 79 of 675 validation + test excerpts; the LLMs agree in 7). Keeping such countries only when the excerpt names them raises countries from 72.3 to 78.4 on test. The numbers here use the lookup as published.
+
+## Method
 
 1. Input: `doc+summary`, the context chosen by 01's [context pilot](../01-many-option-classification/README.md#pilot-result) (title, Document Start, executive summary and abstract, then the excerpt), so the model sees what production's tagger sees. Document-level context (title, Document Start, summary) is the same for every excerpt of a report, so a model can encode it once per document.
 2. Label a fixed sample of 10,000 train excerpts (5,000 findings, 2,500 recommendations, 2,500 methodology, seed 0; ids in [results/labels/train_sample.json](results/labels/train_sample.json)) with GLM-5.3-Flash and DeepSeek-V4.1-Flash, using production's taxonomy and definitions.
@@ -21,7 +47,7 @@ Why: the case for a small model is compute and environmental impact. A ~150M enc
 4. Score on 01's test excerpts; fit one threshold on 01's validation sample; report compute per excerpt next to the score.
 5. One run on pipeline labels for the same excerpts shows how much the label source matters.
 
-The model list and variables below apply after the first step, if a small model gets within ~10 points of the LLM range.
+Second step: every encoder with its own training recipe, on the random sample plus a balanced sample for rare labels, with countries from the lookup; a learning curve; per-label scoring.
 
 ## Results
 
@@ -47,6 +73,68 @@ Run 2026-10-06 as HF Jobs in `baobabtech` (A10G; bf16; effective batch 32; 5 epo
 - **Size matters little in that setup:** Ettin-32M scores 74.7 against Ettin-150M's 75.3 with a fifth of the parameters.
 - **Themes and regions approach the LLMs** (best 80.6 vs 82.4, and 89.7 vs 94.9). **Methods are furthest** (best 68.2 vs 88.1); the training sample has ~2,500 methodology excerpts for 24 methods.
 - **The two-tower model** reads document context once per report: ~90 tokens per excerpt instead of ~540, for 6.3 points less than the joint Ettin-150M.
+
+### Second step: per-model recipes and balanced data
+
+Run 2026-10-06 as HF Jobs in `baobabtech` (A10G).
+- **Settings:** fp32 weights with bf16 compute, up to 8 epochs keeping the best validation epoch, one threshold fitted on validation. Countries come from the lookup; the encoder tags themes, regions and methods.
+- **Training data:** 28,664 excerpts (random 9,998 + balanced 18,666; dataset revision `e191ae3`).
+- **Scoring:** micro-F1 on the 600 test excerpts, as in the first step. Macro-F1 is the mean F1 over labels with at least 5 reference positives in validation + test (900 excerpts), with a 95% bootstrap interval ([common/per_label.py](../common/per_label.py)). Methods macro covers only 4 labels.
+- **LLM vs LLM:** micro 88.8 (themes 82.4, regions 94.9, methods 88.1); macro themes 77.5, regions 93.6, methods 77.7.
+- **Files:** per-run metrics in [results/sweep2_summary.json](results/sweep2_summary.json); per-label scores in [results/per_label/](results/per_label/). Every test score was reproduced to within 0.1 by re-predicting from the saved model ([predict_saved.py](predict_saved.py), [score_per_label.py](score_per_label.py)).
+
+| Model | Params | Tokens per excerpt | Mean (micro) | Themes | Regions | Methods | Macro themes | Macro methods |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Granite-embedding-97M-r2 | 97M | 514 | **81.4** | 82.5 | 84.7 | **86.2** | 76.8 [74.3, 78.5] | 76.4 [64.2, 83.5] |
+| harrier-oss-v1-270m | 268M | 528 | 81.2 | 83.0 | 84.6 | 85.0 | **78.2** [76.1, 79.8] | **78.8** [68.8, 85.4] |
+| ModernBERT-base | 149M | 541 | 81.0 | 81.7 | 84.7 | 85.4 | 77.3 [75.1, 78.9] | 77.5 [66.5, 84.6] |
+| NeoMME-260M | 263M | 534 | 80.9 | **83.3** | 84.2 | 83.8 | 76.9 [74.5, 78.8] | 73.1 [60.0, 81.3] |
+| gte-modernbert-base | 149M | 541 | 80.7 | 80.8 | **85.0** | 84.6 | 75.8 [73.5, 77.5] | 75.5 [63.9, 83.2] |
+| Ettin-32M | 31M | 541 | 80.4 | 79.2 | 84.3 | 85.6 | 75.2 [72.5, 77.1] | 77.8 [66.0, 85.7] |
+| mmBERT-small | 140M | 521 | 80.3 | 81.2 | 84.6 | 83.0 | 75.1 [72.5, 77.1] | 70.6 [55.5, 79.6] |
+| Ettin-150M | 149M | 541 | 80.1 | 81.3 | 84.7 | 82.0 | 77.4 [75.1, 79.2] | 77.6 [66.7, 84.4] |
+| F2LLM-v2-80M | 80M | 531 | 79.9 | 79.7 | 84.5 | 82.9 | 75.2 [72.5, 77.3] | 76.9 [66.3, 84.0] |
+| ModernJEV-Decide-Preview | 149M | 541 | 79.7 | 77.8 | 84.6 | 84.0 | 72.4 [69.8, 74.2] | 73.9 [61.8, 81.8] |
+| Ettin-150M, two-tower | 149M | **90** | 79.4 | 81.4 | 84.0 | 80.1 | 77.0 [74.8, 78.6] | 72.3 [57.2, 80.9] |
+| LFM2.5-Encoder-230M | 229M | 548 | 77.1 | 76.0 | 80.7 | 79.2 | 69.0 [65.6, 71.3] | 68.7 [54.0, 77.9] |
+
+Countries (lookup) score 72.3 in every row.
+
+- **Against the first step** (10,000 random excerpts, one shared recipe), the best mean rises from 75.3 to 81.4.
+- **The two-tower model** now trails the joint Ettin-150M by 0.7 points (6.3 in the first step), for about 6× fewer tokens per excerpt.
+- **Per label** (the best five models, validation + test):
+  - Labels with clear definitions reach F1 85–96, close to the LLMs' agreement: education, gender, humanitarian, health, climate, sub-Saharan Africa, RCTs.
+  - The low labels are those the LLMs also disagree on:
+
+    | Label | Model F1 | LLM vs LLM |
+    |---|---:|---:|
+    | science and technology | 16–29 | 6 |
+    | global partnerships | 45–49 | 36 |
+    | civil society | 63–67 | 65 |
+    | case-based methods | 54–65 | 67 |
+
+  - Conflict is the one theme clearly below the LLMs: 64–73 against 77.
+
+**Learning curve** (Ettin-32M; test micro mean; macro over the same labels):
+
+| Training excerpts | Mean | Themes | Methods | Macro themes | Macro methods |
+|---|---:|---:|---:|---:|---:|
+| 1,000 random | 66.2 | 64.7 | 57.8 | 45.1 | 31.2 |
+| 2,500 random | 72.6 | 72.3 | 64.2 | 61.8 | 33.9 |
+| 5,000 random | 75.6 | 77.7 | 68.7 | 67.1 | 46.3 |
+| 10,000 random | 77.0 | 77.6 | 74.6 | 71.5 | 58.8 |
+| + 18,666 balanced | 80.4 | 79.2 | 85.6 | 75.2 | 77.8 |
+
+![Ettin-32M learning curve](results/learning_curve.png)
+
+**Document-tag inheritance baseline:** each excerpt takes its document's tags.
+
+| Document tags used | Themes | Regions | Countries |
+|---|---:|---:|---:|
+| Pipeline's tags | 63.8 | 58.5 | 51.5 |
+| GLM's document-level tags | 65.5 | 76.8 | 60.7 |
+
+Test, findings and recommendations. Both rows are below the encoders (themes about 80) and the country lookup (72.3).
 
 ### Training recipes
 
@@ -97,39 +185,11 @@ All training excerpts are real excerpts labelled by GLM-5.3-Flash and DeepSeek-V
 
 - **Splits:** the same as 01. Task A: documents, 1,148 train / 138 validation / 134 test. Task B: excerpts, 157,302 train, sampled per run. See [common/datasets.md](../common/datasets.md).
 - **Evaluation:** 01's reference on the same test items: mean agreement with GLM-5.3-Flash and DeepSeek-V4.1-Flash. Training targets come from the same two LLMs (soft labels; see [First step](#first-step)), so zero-shot and fine-tuned scores compare directly. There is no human gold set, so scores measure agreement with LLMs, not correctness ([01](../01-many-option-classification/README.md#reference-labels)).
-- **Training labels:** soft GLM + DeepSeek labels (see [First step](#first-step)). One run on pipeline labels for the same excerpts shows how much the label source matters.
+- **Training labels:** soft GLM + DeepSeek labels (see [Method](#method)). One run on pipeline labels for the same excerpts shows how much the label source matters.
 
-## Models
+## Not run
 
-| Model | Size | Method | Where it trains |
-|---|---|---|---|
-| [GLiNER2.5-Decide](../../docs/models/gliner-decide.md) | 340M | full and LoRA (`gliner2[train]`) | HF Jobs (CPU-only on this Mac) |
-| [Laya](../../docs/models/laya.md) | 421M | full | This Mac (MPS) |
-| [openJev Verdict](../../docs/models/rlcd-modernbert.md) | 151M | full | This Mac (MPS) |
-| [Kev-0.8B](../../docs/models/kev.md) | 0.8B | LoRA + pointer head | HF Jobs (`a10g-large`) |
-| [Kev-4B](../../docs/models/kev.md) | 4B | LoRA + pointer head | HF Jobs (`a10g-large`) |
-| Plain ModernBERT-base classifier (control) | 150M | full, one head per field | This Mac (MPS) |
-
-- Every decision model has a zero-shot score from 01; plain encoders have no zero-shot mode.
-- Kev-0.8B against Kev-4B shows the effect of size; Verdict against Laya does the same for encoders.
-- Multi-label fields are trained the way 01 asks them: one Noul per label (Kev, Laya, Verdict) or GLiNER2's native multi-label `true_label` list.
-
-## Variables
-
-- Training examples per label:
-  - Task A: 8, 32, 128, all (up to 1,148 docs).
-  - Task B: 8, 32, 128, 1,000, all.
-- Method: full fine-tune vs LoRA, where both exist.
-- Seeds: 3 per run at 8, 32 and 128 examples per label, where variance is high; 1 above.
-- **Stop rule:** a model gets the task B "all" run only if its 1,000-example run is within 10 points of 01's LLM range. This caps HF Jobs spend on models that have plateaued.
-
-## Metrics
-
-- The same as 01, including the per-model write-up (fine-tuning, limitations, opportunities, further work), so zero-shot, fine-tuned and SFT-LLM rows sit in one table.
-- Training time and cost: record the Job ID, flavor and USD.
-- Inference speed of each fine-tuned model, in seconds per item, against the 0.1 s target.
-- Forgetting: accuracy before and after fine-tuning on a fixed 200-item sample of the [Decision Index 0.2.1](../../docs/benchmarks.md#decision-index).
-- Transfer: one extra run per model at 1,000 examples per label leaves `regions` out of training and scores it zero-shot. Main runs train on every field.
+The original plan also fine-tuned the decision models GLiNER2.5-Decide, Laya, openJev Verdict and Kev-0.8B/4B, with per-label sample sizes, LoRA vs full fine-tuning, a forgetting check and a transfer run. The encoder results made it moot for this task: a general 31M encoder already reaches 80.4, ModernJEV-Decide fine-tunes no better than general encoders, and earlier fine-tuning of GLiNER2.5 plateaued at 57–58. The zero-shot scores of these models are in [01](../01-many-option-classification/README.md#zero-shot-decision-models).
 
 ## Data governance
 
@@ -145,3 +205,5 @@ All training excerpts are real excerpts labelled by GLM-5.3-Flash and DeepSeek-V
 - **Replace the LLM in ingestion:** a fine-tuned small model scores within 01's LLM range at a small fraction of DeepSeek-V4.1-Flash's compute per excerpt.
 - **Keep the LLM:** the best fine-tuned small model stays more than ~10 points below the LLM range after 10,000 examples.
 - **Keep the SFT LLMs:** decision models plateau near GLiNER2.5's 57–58.
+
+**Outcome:** a 31M–270M encoder reaches 80–81, within 8 points of the LLM range, at about 3.4 × 10¹⁰ FLOPs per excerpt for Ettin-32M. On themes, the best models match the LLMs' per-label agreement with each other. The decision about production moved to excerpt extraction, because production tags in the same call that extracts.

@@ -1,0 +1,2044 @@
+{
+ "repo": "baobabtech/evaldocs-excerpt-tagger-ettin-encoder-32m-llm-nocountries-lookup-random-n5000",
+ "threshold": 0.35,
+ "test_mean_field_score": 75.57,
+ "test": {
+  "themes": {
+   "n_excerpts": 450,
+   "n_labels_scored": 16,
+   "min_support": 5,
+   "unmeasured": [
+    "diplomacy",
+    "energy",
+    "migration",
+    "multilateral",
+    "nature_environment"
+   ],
+   "macro_f1": 68.9,
+   "macro_ci": [
+    63.7,
+    71.8
+   ],
+   "llm_macro_f1": 73.6,
+   "labels": {
+    "civil_society": {
+     "n_ref": 17.5,
+     "n_pred": 14,
+     "llm_f1": 57.1,
+     "model_f1": 50.8,
+     "model_recall": 45.8,
+     "train_agreed": 152
+    },
+    "climate": {
+     "n_ref": 18.5,
+     "n_pred": 13,
+     "llm_f1": 91.9,
+     "model_f1": 69.9,
+     "model_recall": 59.5,
+     "train_agreed": 167
+    },
+    "conflict": {
+     "n_ref": 25.0,
+     "n_pred": 19,
+     "llm_f1": 72.0,
+     "model_f1": 52.7,
+     "model_recall": 46.9,
+     "train_agreed": 212
+    },
+    "diplomacy": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 2
+    },
+    "economic_development": {
+     "n_ref": 81.5,
+     "n_pred": 56,
+     "llm_f1": 78.5,
+     "model_f1": 67.6,
+     "model_recall": 57.9,
+     "train_agreed": 479
+    },
+    "education": {
+     "n_ref": 132.0,
+     "n_pred": 118,
+     "llm_f1": 92.4,
+     "model_f1": 89.6,
+     "model_recall": 84.9,
+     "train_agreed": 841
+    },
+    "energy": {
+     "n_ref": 4.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 66.7,
+     "model_recall": 50.0,
+     "train_agreed": 39
+    },
+    "food_agriculture": {
+     "n_ref": 39.0,
+     "n_pred": 37,
+     "llm_f1": 94.9,
+     "model_f1": 79.0,
+     "model_recall": 77.1,
+     "train_agreed": 495
+    },
+    "gender_equalities": {
+     "n_ref": 99.0,
+     "n_pred": 104,
+     "llm_f1": 89.9,
+     "model_f1": 89.1,
+     "model_recall": 91.8,
+     "train_agreed": 699
+    },
+    "global_health": {
+     "n_ref": 73.0,
+     "n_pred": 77,
+     "llm_f1": 93.2,
+     "model_f1": 88.0,
+     "model_recall": 90.4,
+     "train_agreed": 805
+    },
+    "global_partnerships": {
+     "n_ref": 20.0,
+     "n_pred": 26,
+     "llm_f1": 25.0,
+     "model_f1": 34.4,
+     "model_recall": 47.1,
+     "train_agreed": 145
+    },
+    "governance": {
+     "n_ref": 105.0,
+     "n_pred": 105,
+     "llm_f1": 71.4,
+     "model_f1": 71.6,
+     "model_recall": 74.0,
+     "train_agreed": 560
+    },
+    "growth": {
+     "n_ref": 9.0,
+     "n_pred": 8,
+     "llm_f1": 100.0,
+     "model_f1": 94.1,
+     "model_recall": 88.9,
+     "train_agreed": 143
+    },
+    "humanitarian": {
+     "n_ref": 97.5,
+     "n_pred": 82,
+     "llm_f1": 95.4,
+     "model_f1": 88.0,
+     "model_recall": 81.0,
+     "train_agreed": 555
+    },
+    "information_digital": {
+     "n_ref": 37.0,
+     "n_pred": 33,
+     "llm_f1": 89.2,
+     "model_f1": 88.6,
+     "model_recall": 83.9,
+     "train_agreed": 198
+    },
+    "infrastructure": {
+     "n_ref": 5.0,
+     "n_pred": 2,
+     "llm_f1": 40.0,
+     "model_f1": 62.2,
+     "model_recall": 47.6,
+     "train_agreed": 131
+    },
+    "migration": {
+     "n_ref": 4.0,
+     "n_pred": 1,
+     "llm_f1": 50.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 82
+    },
+    "multilateral": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 1
+    },
+    "nature_environment": {
+     "n_ref": 2.0,
+     "n_pred": 1,
+     "llm_f1": 50.0,
+     "model_f1": 66.7,
+     "model_recall": 50.0,
+     "train_agreed": 41
+    },
+    "science_technology": {
+     "n_ref": 14.5,
+     "n_pred": 2,
+     "llm_f1": 6.9,
+     "model_f1": 6.9,
+     "model_recall": 3.7,
+     "train_agreed": 38
+    },
+    "social_development": {
+     "n_ref": 98.5,
+     "n_pred": 84,
+     "llm_f1": 79.2,
+     "model_f1": 69.6,
+     "model_recall": 64.4,
+     "train_agreed": 525
+    }
+   }
+  },
+  "regions": {
+   "n_excerpts": 450,
+   "n_labels_scored": 5,
+   "min_support": 5,
+   "unmeasured": [
+    "eastern_asia",
+    "eastern_europe",
+    "northern_africa",
+    "northern_europe",
+    "western_europe"
+   ],
+   "macro_f1": 91.5,
+   "macro_ci": [
+    88.3,
+    94.0
+   ],
+   "llm_macro_f1": 96.1,
+   "labels": {
+    "australia_new_zealand": {
+     "n_ref": 0.0,
+     "n_pred": 9,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "eastern_asia": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 28
+    },
+    "eastern_europe": {
+     "n_ref": 2.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 8
+    },
+    "latin_america_caribbean": {
+     "n_ref": 11.0,
+     "n_pred": 11,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 136
+    },
+    "northern_africa": {
+     "n_ref": 4.5,
+     "n_pred": 7,
+     "llm_f1": 88.9,
+     "model_f1": 69.7,
+     "model_recall": 90.0,
+     "train_agreed": 36
+    },
+    "northern_europe": {
+     "n_ref": 0.5,
+     "n_pred": 52,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 14
+    },
+    "south_eastern_asia": {
+     "n_ref": 31.0,
+     "n_pred": 29,
+     "llm_f1": 96.8,
+     "model_f1": 95.0,
+     "model_recall": 91.9,
+     "train_agreed": 152
+    },
+    "southern_asia": {
+     "n_ref": 66.5,
+     "n_pred": 82,
+     "llm_f1": 94.7,
+     "model_f1": 82.8,
+     "model_recall": 92.6,
+     "train_agreed": 670
+    },
+    "southern_europe": {
+     "n_ref": 0.0,
+     "n_pred": 4,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 10
+    },
+    "sub_saharan_africa": {
+     "n_ref": 206.5,
+     "n_pred": 219,
+     "llm_f1": 94.9,
+     "model_f1": 94.9,
+     "model_recall": 97.8,
+     "train_agreed": 1691
+    },
+    "western_asia": {
+     "n_ref": 17.0,
+     "n_pred": 23,
+     "llm_f1": 94.1,
+     "model_f1": 84.9,
+     "model_recall": 100.0,
+     "train_agreed": 110
+    },
+    "western_europe": {
+     "n_ref": 1.5,
+     "n_pred": 1,
+     "llm_f1": 66.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    }
+   }
+  },
+  "countries": {
+   "n_excerpts": 450,
+   "n_labels_scored": 21,
+   "min_support": 5,
+   "unmeasured": [
+    "AF",
+    "AZ",
+    "BI",
+    "BR",
+    "CF",
+    "CI",
+    "CN",
+    "EG",
+    "HN",
+    "IL",
+    "IQ",
+    "LB",
+    "MZ",
+    "PS",
+    "SD",
+    "TL",
+    "TR",
+    "UA",
+    "US",
+    "VE",
+    "VN",
+    "ZM"
+   ],
+   "macro_f1": 76.2,
+   "macro_ci": [
+    73.3,
+    78.2
+   ],
+   "llm_macro_f1": 88.7,
+   "labels": {
+    "AF": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 39
+    },
+    "AU": {
+     "n_ref": 0.0,
+     "n_pred": 9,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "AZ": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "BD": {
+     "n_ref": 31.5,
+     "n_pred": 23,
+     "llm_f1": 98.4,
+     "model_f1": 84.4,
+     "model_recall": 73.0,
+     "train_agreed": 174
+    },
+    "BI": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 5
+    },
+    "BR": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 8
+    },
+    "CD": {
+     "n_ref": 12.0,
+     "n_pred": 12,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 39
+    },
+    "CF": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 8
+    },
+    "CI": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 11
+    },
+    "CN": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 29
+    },
+    "DE": {
+     "n_ref": 0.0,
+     "n_pred": 1,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "EG": {
+     "n_ref": 3.0,
+     "n_pred": 6,
+     "llm_f1": 66.7,
+     "model_f1": 65.0,
+     "model_recall": 100.0,
+     "train_agreed": 25
+    },
+    "ET": {
+     "n_ref": 42.0,
+     "n_pred": 41,
+     "llm_f1": 100.0,
+     "model_f1": 98.8,
+     "model_recall": 97.6,
+     "train_agreed": 178
+    },
+    "GB": {
+     "n_ref": 8.5,
+     "n_pred": 52,
+     "llm_f1": 35.3,
+     "model_f1": 1.5,
+     "model_recall": 3.8,
+     "train_agreed": 61
+    },
+    "GH": {
+     "n_ref": 23.0,
+     "n_pred": 2,
+     "llm_f1": 78.3,
+     "model_f1": 8.1,
+     "model_recall": 4.4,
+     "train_agreed": 95
+    },
+    "HN": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 1
+    },
+    "ID": {
+     "n_ref": 5.0,
+     "n_pred": 5,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 36
+    },
+    "IL": {
+     "n_ref": 0.5,
+     "n_pred": 6,
+     "llm_f1": 0.0,
+     "model_f1": 14.3,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "IN": {
+     "n_ref": 7.0,
+     "n_pred": 27,
+     "llm_f1": 71.4,
+     "model_f1": 29.2,
+     "model_recall": 73.3,
+     "train_agreed": 200
+    },
+    "IQ": {
+     "n_ref": 1.5,
+     "n_pred": 6,
+     "llm_f1": 66.7,
+     "model_f1": 39.3,
+     "model_recall": 100.0,
+     "train_agreed": 16
+    },
+    "IT": {
+     "n_ref": 0.0,
+     "n_pred": 4,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "KE": {
+     "n_ref": 36.0,
+     "n_pred": 32,
+     "llm_f1": 94.4,
+     "model_f1": 94.2,
+     "model_recall": 89.2,
+     "train_agreed": 310
+    },
+    "LB": {
+     "n_ref": 3.0,
+     "n_pred": 3,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 13
+    },
+    "MW": {
+     "n_ref": 12.0,
+     "n_pred": 12,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 112
+    },
+    "MX": {
+     "n_ref": 8.0,
+     "n_pred": 8,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 19
+    },
+    "MZ": {
+     "n_ref": 3.0,
+     "n_pred": 3,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 18
+    },
+    "NG": {
+     "n_ref": 25.5,
+     "n_pred": 8,
+     "llm_f1": 70.6,
+     "model_f1": 13.2,
+     "model_recall": 8.3,
+     "train_agreed": 133
+    },
+    "NP": {
+     "n_ref": 7.0,
+     "n_pred": 7,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 77
+    },
+    "PH": {
+     "n_ref": 22.0,
+     "n_pred": 20,
+     "llm_f1": 100.0,
+     "model_f1": 95.2,
+     "model_recall": 90.9,
+     "train_agreed": 28
+    },
+    "PK": {
+     "n_ref": 20.5,
+     "n_pred": 8,
+     "llm_f1": 97.6,
+     "model_f1": 56.2,
+     "model_recall": 39.0,
+     "train_agreed": 156
+    },
+    "PS": {
+     "n_ref": 1.5,
+     "n_pred": 2,
+     "llm_f1": 66.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 17
+    },
+    "RW": {
+     "n_ref": 15.0,
+     "n_pred": 14,
+     "llm_f1": 93.3,
+     "model_f1": 96.7,
+     "model_recall": 93.8,
+     "train_agreed": 95
+    },
+    "SD": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 10
+    },
+    "SL": {
+     "n_ref": 5.0,
+     "n_pred": 5,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 46
+    },
+    "SO": {
+     "n_ref": 17.0,
+     "n_pred": 20,
+     "llm_f1": 82.4,
+     "model_f1": 91.2,
+     "model_recall": 100.0,
+     "train_agreed": 57
+    },
+    "SY": {
+     "n_ref": 6.0,
+     "n_pred": 6,
+     "llm_f1": 66.7,
+     "model_f1": 82.9,
+     "model_recall": 87.5,
+     "train_agreed": 26
+    },
+    "TL": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "TR": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 3
+    },
+    "TZ": {
+     "n_ref": 55.5,
+     "n_pred": 30,
+     "llm_f1": 88.3,
+     "model_f1": 70.3,
+     "model_recall": 54.3,
+     "train_agreed": 100
+    },
+    "UA": {
+     "n_ref": 2.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 6
+    },
+    "UG": {
+     "n_ref": 25.0,
+     "n_pred": 22,
+     "llm_f1": 92.0,
+     "model_f1": 93.8,
+     "model_recall": 88.6,
+     "train_agreed": 128
+    },
+    "US": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "VE": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "VN": {
+     "n_ref": 3.0,
+     "n_pred": 3,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 51
+    },
+    "YE": {
+     "n_ref": 7.5,
+     "n_pred": 10,
+     "llm_f1": 93.3,
+     "model_f1": 85.6,
+     "model_recall": 100.0,
+     "train_agreed": 9
+    },
+    "ZM": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 100
+    }
+   }
+  },
+  "methods": {
+   "n_excerpts": 150,
+   "n_labels_scored": 4,
+   "min_support": 5,
+   "unmeasured": [
+    "bayesian_updating",
+    "contribution_analysis",
+    "cost_benefit_analysis",
+    "cost_effectiveness_analysis",
+    "ethnography",
+    "instrumental_variables",
+    "interrupted_time_series",
+    "matching_methods",
+    "outcome_mapping",
+    "qualitative_longitudinal",
+    "realist_evaluation",
+    "regression_discontinuity",
+    "simulation_modelling"
+   ],
+   "macro_f1": 32.3,
+   "macro_ci": [
+    25.8,
+    38.0
+   ],
+   "llm_macro_f1": 80.1,
+   "labels": {
+    "bayesian_updating": {
+     "n_ref": 3.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 2
+    },
+    "case_based": {
+     "n_ref": 5.5,
+     "n_pred": 0,
+     "llm_f1": 72.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 33
+    },
+    "contribution_analysis": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 15
+    },
+    "cost_benefit_analysis": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 9
+    },
+    "cost_effectiveness_analysis": {
+     "n_ref": 3.0,
+     "n_pred": 0,
+     "llm_f1": 66.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 17
+    },
+    "difference_in_difference": {
+     "n_ref": 6.0,
+     "n_pred": 0,
+     "llm_f1": 83.3,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 31
+    },
+    "ethnography": {
+     "n_ref": 2.0,
+     "n_pred": 0,
+     "llm_f1": 50.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 7
+    },
+    "instrumental_variables": {
+     "n_ref": 2.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 20
+    },
+    "interrupted_time_series": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 2
+    },
+    "matching_methods": {
+     "n_ref": 3.0,
+     "n_pred": 1,
+     "llm_f1": 66.7,
+     "model_f1": 50.0,
+     "model_recall": 33.3,
+     "train_agreed": 46
+    },
+    "outcome_mapping": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 1
+    },
+    "qualitative_longitudinal": {
+     "n_ref": 3.5,
+     "n_pred": 0,
+     "llm_f1": 57.1,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 20
+    },
+    "quantitative_longitudinal": {
+     "n_ref": 13.0,
+     "n_pred": 6,
+     "llm_f1": 69.2,
+     "model_f1": 39.4,
+     "model_recall": 28.8,
+     "train_agreed": 61
+    },
+    "rct": {
+     "n_ref": 70.5,
+     "n_pred": 71,
+     "llm_f1": 95.0,
+     "model_f1": 89.8,
+     "model_recall": 90.1,
+     "train_agreed": 305
+    },
+    "realist_evaluation": {
+     "n_ref": 2.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 21
+    },
+    "regression_discontinuity": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 6
+    },
+    "simulation_modelling": {
+     "n_ref": 3.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 41
+    }
+   }
+  }
+ },
+ "validation_and_test": {
+  "themes": {
+   "n_excerpts": 675,
+   "n_labels_scored": 18,
+   "min_support": 5,
+   "unmeasured": [
+    "diplomacy",
+    "multilateral",
+    "nature_environment"
+   ],
+   "macro_f1": 67.1,
+   "macro_ci": [
+    63.3,
+    70.0
+   ],
+   "llm_macro_f1": 77.5,
+   "labels": {
+    "civil_society": {
+     "n_ref": 40.0,
+     "n_pred": 27,
+     "llm_f1": 65.0,
+     "model_f1": 52.2,
+     "model_recall": 43.7,
+     "train_agreed": 152
+    },
+    "climate": {
+     "n_ref": 54.0,
+     "n_pred": 44,
+     "llm_f1": 90.7,
+     "model_f1": 84.7,
+     "model_recall": 76.9,
+     "train_agreed": 167
+    },
+    "conflict": {
+     "n_ref": 44.0,
+     "n_pred": 37,
+     "llm_f1": 77.3,
+     "model_f1": 63.1,
+     "model_recall": 58.3,
+     "train_agreed": 212
+    },
+    "diplomacy": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 2
+    },
+    "economic_development": {
+     "n_ref": 115.0,
+     "n_pred": 88,
+     "llm_f1": 75.7,
+     "model_f1": 69.4,
+     "model_recall": 62.3,
+     "train_agreed": 479
+    },
+    "education": {
+     "n_ref": 182.5,
+     "n_pred": 167,
+     "llm_f1": 93.2,
+     "model_f1": 90.1,
+     "model_recall": 86.3,
+     "train_agreed": 841
+    },
+    "energy": {
+     "n_ref": 11.0,
+     "n_pred": 3,
+     "llm_f1": 100.0,
+     "model_f1": 42.9,
+     "model_recall": 27.3,
+     "train_agreed": 39
+    },
+    "food_agriculture": {
+     "n_ref": 61.5,
+     "n_pred": 60,
+     "llm_f1": 95.9,
+     "model_f1": 83.1,
+     "model_recall": 82.2,
+     "train_agreed": 495
+    },
+    "gender_equalities": {
+     "n_ref": 132.5,
+     "n_pred": 144,
+     "llm_f1": 90.6,
+     "model_f1": 87.9,
+     "model_recall": 92.0,
+     "train_agreed": 699
+    },
+    "global_health": {
+     "n_ref": 111.5,
+     "n_pred": 115,
+     "llm_f1": 92.4,
+     "model_f1": 85.2,
+     "model_recall": 86.5,
+     "train_agreed": 805
+    },
+    "global_partnerships": {
+     "n_ref": 41.5,
+     "n_pred": 48,
+     "llm_f1": 36.1,
+     "model_f1": 43.2,
+     "model_recall": 53.6,
+     "train_agreed": 145
+    },
+    "governance": {
+     "n_ref": 157.5,
+     "n_pred": 166,
+     "llm_f1": 69.2,
+     "model_f1": 68.9,
+     "model_recall": 73.2,
+     "train_agreed": 560
+    },
+    "growth": {
+     "n_ref": 9.0,
+     "n_pred": 8,
+     "llm_f1": 100.0,
+     "model_f1": 94.1,
+     "model_recall": 88.9,
+     "train_agreed": 143
+    },
+    "humanitarian": {
+     "n_ref": 143.0,
+     "n_pred": 122,
+     "llm_f1": 92.3,
+     "model_f1": 86.4,
+     "model_recall": 80.1,
+     "train_agreed": 555
+    },
+    "information_digital": {
+     "n_ref": 54.5,
+     "n_pred": 43,
+     "llm_f1": 82.6,
+     "model_f1": 78.1,
+     "model_recall": 70.3,
+     "train_agreed": 198
+    },
+    "infrastructure": {
+     "n_ref": 16.0,
+     "n_pred": 10,
+     "llm_f1": 68.8,
+     "model_f1": 62.4,
+     "model_recall": 51.8,
+     "train_agreed": 131
+    },
+    "migration": {
+     "n_ref": 11.5,
+     "n_pred": 4,
+     "llm_f1": 78.3,
+     "model_f1": 39.7,
+     "model_recall": 27.4,
+     "train_agreed": 82
+    },
+    "multilateral": {
+     "n_ref": 2.5,
+     "n_pred": 0,
+     "llm_f1": 40.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 1
+    },
+    "nature_environment": {
+     "n_ref": 4.5,
+     "n_pred": 3,
+     "llm_f1": 66.7,
+     "model_f1": 80.4,
+     "model_recall": 67.5,
+     "train_agreed": 41
+    },
+    "science_technology": {
+     "n_ref": 16.5,
+     "n_pred": 2,
+     "llm_f1": 6.1,
+     "model_f1": 6.1,
+     "model_recall": 3.2,
+     "train_agreed": 38
+    },
+    "social_development": {
+     "n_ref": 131.0,
+     "n_pred": 119,
+     "llm_f1": 80.2,
+     "model_f1": 71.2,
+     "model_recall": 67.9,
+     "train_agreed": 525
+    }
+   }
+  },
+  "regions": {
+   "n_excerpts": 675,
+   "n_labels_scored": 7,
+   "min_support": 5,
+   "unmeasured": [
+    "eastern_europe",
+    "melanesia",
+    "micronesia",
+    "northern_america",
+    "northern_europe",
+    "polynesia",
+    "western_europe"
+   ],
+   "macro_f1": 83.0,
+   "macro_ci": [
+    74.9,
+    88.3
+   ],
+   "llm_macro_f1": 93.6,
+   "labels": {
+    "australia_new_zealand": {
+     "n_ref": 0.0,
+     "n_pred": 10,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "eastern_asia": {
+     "n_ref": 5.0,
+     "n_pred": 7,
+     "llm_f1": 100.0,
+     "model_f1": 83.3,
+     "model_recall": 100.0,
+     "train_agreed": 28
+    },
+    "eastern_europe": {
+     "n_ref": 3.0,
+     "n_pred": 6,
+     "llm_f1": 66.7,
+     "model_f1": 65.0,
+     "model_recall": 100.0,
+     "train_agreed": 8
+    },
+    "latin_america_caribbean": {
+     "n_ref": 19.5,
+     "n_pred": 20,
+     "llm_f1": 92.3,
+     "model_f1": 78.5,
+     "model_recall": 79.5,
+     "train_agreed": 136
+    },
+    "melanesia": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "micronesia": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "northern_africa": {
+     "n_ref": 5.0,
+     "n_pred": 7,
+     "llm_f1": 80.0,
+     "model_f1": 66.7,
+     "model_recall": 80.0,
+     "train_agreed": 36
+    },
+    "northern_america": {
+     "n_ref": 1.5,
+     "n_pred": 7,
+     "llm_f1": 66.7,
+     "model_f1": 11.1,
+     "model_recall": 25.0,
+     "train_agreed": 0
+    },
+    "northern_europe": {
+     "n_ref": 0.5,
+     "n_pred": 84,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 14
+    },
+    "polynesia": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "south_eastern_asia": {
+     "n_ref": 52.5,
+     "n_pred": 46,
+     "llm_f1": 97.1,
+     "model_f1": 92.4,
+     "model_recall": 86.7,
+     "train_agreed": 152
+    },
+    "southern_asia": {
+     "n_ref": 95.5,
+     "n_pred": 110,
+     "llm_f1": 94.2,
+     "model_f1": 84.2,
+     "model_recall": 90.7,
+     "train_agreed": 670
+    },
+    "southern_europe": {
+     "n_ref": 0.0,
+     "n_pred": 10,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 10
+    },
+    "sub_saharan_africa": {
+     "n_ref": 293.0,
+     "n_pred": 309,
+     "llm_f1": 95.2,
+     "model_f1": 93.5,
+     "model_recall": 96.1,
+     "train_agreed": 1691
+    },
+    "western_asia": {
+     "n_ref": 28.0,
+     "n_pred": 35,
+     "llm_f1": 96.4,
+     "model_f1": 82.5,
+     "model_recall": 92.8,
+     "train_agreed": 110
+    },
+    "western_europe": {
+     "n_ref": 2.5,
+     "n_pred": 6,
+     "llm_f1": 40.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    }
+   }
+  },
+  "countries": {
+   "n_excerpts": 675,
+   "n_labels_scored": 25,
+   "min_support": 5,
+   "unmeasured": [
+    "AE",
+    "AF",
+    "AZ",
+    "BH",
+    "BI",
+    "BR",
+    "CF",
+    "CI",
+    "CL",
+    "CM",
+    "EG",
+    "HN",
+    "IL",
+    "IQ",
+    "JO",
+    "JP",
+    "KH",
+    "KW",
+    "MM",
+    "OM",
+    "PE",
+    "PS",
+    "PT",
+    "QA",
+    "SA",
+    "SD",
+    "SN",
+    "SZ",
+    "TH",
+    "TL",
+    "TR",
+    "UA",
+    "US",
+    "VE",
+    "ZA",
+    "ZM",
+    "ZW"
+   ],
+   "macro_f1": 81.5,
+   "macro_ci": [
+    79.3,
+    83.0
+   ],
+   "llm_macro_f1": 91.3,
+   "labels": {
+    "AE": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "AF": {
+     "n_ref": 2.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 39
+    },
+    "AU": {
+     "n_ref": 0.0,
+     "n_pred": 10,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "AZ": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "BD": {
+     "n_ref": 36.0,
+     "n_pred": 26,
+     "llm_f1": 97.2,
+     "model_f1": 83.9,
+     "model_recall": 72.3,
+     "train_agreed": 174
+    },
+    "BE": {
+     "n_ref": 0.0,
+     "n_pred": 1,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "BH": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "BI": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 5
+    },
+    "BJ": {
+     "n_ref": 0.0,
+     "n_pred": 1,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 4
+    },
+    "BR": {
+     "n_ref": 3.5,
+     "n_pred": 3,
+     "llm_f1": 85.7,
+     "model_f1": 76.2,
+     "model_recall": 70.8,
+     "train_agreed": 8
+    },
+    "CA": {
+     "n_ref": 0.0,
+     "n_pred": 2,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "CD": {
+     "n_ref": 15.0,
+     "n_pred": 15,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 39
+    },
+    "CF": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 8
+    },
+    "CI": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 11
+    },
+    "CL": {
+     "n_ref": 1.0,
+     "n_pred": 3,
+     "llm_f1": 100.0,
+     "model_f1": 50.0,
+     "model_recall": 100.0,
+     "train_agreed": 5
+    },
+    "CM": {
+     "n_ref": 2.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 3
+    },
+    "CN": {
+     "n_ref": 5.0,
+     "n_pred": 5,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 29
+    },
+    "DE": {
+     "n_ref": 0.0,
+     "n_pred": 1,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "DO": {
+     "n_ref": 0.0,
+     "n_pred": 1,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 2
+    },
+    "EG": {
+     "n_ref": 3.0,
+     "n_pred": 6,
+     "llm_f1": 66.7,
+     "model_f1": 65.0,
+     "model_recall": 100.0,
+     "train_agreed": 25
+    },
+    "ES": {
+     "n_ref": 0.0,
+     "n_pred": 5,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "ET": {
+     "n_ref": 46.5,
+     "n_pred": 44,
+     "llm_f1": 98.9,
+     "model_f1": 97.2,
+     "model_recall": 94.6,
+     "train_agreed": 178
+    },
+    "GB": {
+     "n_ref": 14.0,
+     "n_pred": 79,
+     "llm_f1": 28.6,
+     "model_f1": 8.2,
+     "model_recall": 23.8,
+     "train_agreed": 61
+    },
+    "GH": {
+     "n_ref": 26.5,
+     "n_pred": 2,
+     "llm_f1": 79.2,
+     "model_f1": 7.1,
+     "model_recall": 3.8,
+     "train_agreed": 95
+    },
+    "HN": {
+     "n_ref": 3.0,
+     "n_pred": 3,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 1
+    },
+    "ID": {
+     "n_ref": 5.0,
+     "n_pred": 5,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 36
+    },
+    "IE": {
+     "n_ref": 0.0,
+     "n_pred": 5,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "IL": {
+     "n_ref": 0.5,
+     "n_pred": 6,
+     "llm_f1": 0.0,
+     "model_f1": 14.3,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "IN": {
+     "n_ref": 21.0,
+     "n_pred": 38,
+     "llm_f1": 90.5,
+     "model_f1": 54.2,
+     "model_recall": 76.4,
+     "train_agreed": 200
+    },
+    "IQ": {
+     "n_ref": 1.5,
+     "n_pred": 6,
+     "llm_f1": 66.7,
+     "model_f1": 39.3,
+     "model_recall": 100.0,
+     "train_agreed": 16
+    },
+    "IT": {
+     "n_ref": 0.0,
+     "n_pred": 5,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "JO": {
+     "n_ref": 1.0,
+     "n_pred": 4,
+     "llm_f1": 100.0,
+     "model_f1": 40.0,
+     "model_recall": 100.0,
+     "train_agreed": 14
+    },
+    "JP": {
+     "n_ref": 1.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 66.7,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "KE": {
+     "n_ref": 56.0,
+     "n_pred": 41,
+     "llm_f1": 92.9,
+     "model_f1": 84.7,
+     "model_recall": 73.6,
+     "train_agreed": 310
+    },
+    "KH": {
+     "n_ref": 2.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 5
+    },
+    "KW": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "LB": {
+     "n_ref": 5.0,
+     "n_pred": 5,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 13
+    },
+    "MM": {
+     "n_ref": 2.5,
+     "n_pred": 0,
+     "llm_f1": 80.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 33
+    },
+    "MW": {
+     "n_ref": 15.0,
+     "n_pred": 13,
+     "llm_f1": 100.0,
+     "model_f1": 92.9,
+     "model_recall": 86.7,
+     "train_agreed": 112
+    },
+    "MX": {
+     "n_ref": 8.5,
+     "n_pred": 8,
+     "llm_f1": 94.1,
+     "model_f1": 97.1,
+     "model_recall": 94.4,
+     "train_agreed": 19
+    },
+    "MZ": {
+     "n_ref": 7.0,
+     "n_pred": 7,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 18
+    },
+    "NG": {
+     "n_ref": 36.5,
+     "n_pred": 16,
+     "llm_f1": 79.5,
+     "model_f1": 39.5,
+     "model_recall": 28.4,
+     "train_agreed": 133
+    },
+    "NL": {
+     "n_ref": 0.0,
+     "n_pred": 4,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "NO": {
+     "n_ref": 0.0,
+     "n_pred": 1,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 1
+    },
+    "NP": {
+     "n_ref": 12.0,
+     "n_pred": 12,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 77
+    },
+    "OM": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "PE": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 9
+    },
+    "PH": {
+     "n_ref": 29.0,
+     "n_pred": 21,
+     "llm_f1": 100.0,
+     "model_f1": 84.0,
+     "model_recall": 72.4,
+     "train_agreed": 28
+    },
+    "PK": {
+     "n_ref": 25.5,
+     "n_pred": 15,
+     "llm_f1": 94.1,
+     "model_f1": 64.1,
+     "model_recall": 50.9,
+     "train_agreed": 156
+    },
+    "PS": {
+     "n_ref": 3.5,
+     "n_pred": 2,
+     "llm_f1": 85.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 17
+    },
+    "PT": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "QA": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "RW": {
+     "n_ref": 22.5,
+     "n_pred": 21,
+     "llm_f1": 93.3,
+     "model_f1": 96.7,
+     "model_recall": 93.8,
+     "train_agreed": 95
+    },
+    "SA": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 0
+    },
+    "SD": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 10
+    },
+    "SE": {
+     "n_ref": 0.0,
+     "n_pred": 5,
+     "llm_f1": null,
+     "model_f1": 0.0,
+     "model_recall": null,
+     "train_agreed": 0
+    },
+    "SL": {
+     "n_ref": 5.0,
+     "n_pred": 5,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 46
+    },
+    "SN": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 26
+    },
+    "SO": {
+     "n_ref": 17.0,
+     "n_pred": 20,
+     "llm_f1": 82.4,
+     "model_f1": 91.2,
+     "model_recall": 100.0,
+     "train_agreed": 57
+    },
+    "SY": {
+     "n_ref": 11.5,
+     "n_pred": 11,
+     "llm_f1": 78.3,
+     "model_f1": 88.7,
+     "model_recall": 87.3,
+     "train_agreed": 26
+    },
+    "SZ": {
+     "n_ref": 2.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 3
+    },
+    "TH": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 9
+    },
+    "TL": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "TR": {
+     "n_ref": 3.0,
+     "n_pred": 0,
+     "llm_f1": 66.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 3
+    },
+    "TZ": {
+     "n_ref": 72.5,
+     "n_pred": 42,
+     "llm_f1": 91.0,
+     "model_f1": 73.4,
+     "model_recall": 58.1,
+     "train_agreed": 100
+    },
+    "UA": {
+     "n_ref": 3.0,
+     "n_pred": 6,
+     "llm_f1": 66.7,
+     "model_f1": 65.0,
+     "model_recall": 100.0,
+     "train_agreed": 6
+    },
+    "UG": {
+     "n_ref": 36.0,
+     "n_pred": 34,
+     "llm_f1": 88.9,
+     "model_f1": 88.7,
+     "model_recall": 86.9,
+     "train_agreed": 128
+    },
+    "US": {
+     "n_ref": 2.5,
+     "n_pred": 5,
+     "llm_f1": 80.0,
+     "model_f1": 26.8,
+     "model_recall": 41.7,
+     "train_agreed": 0
+    },
+    "VE": {
+     "n_ref": 1.0,
+     "n_pred": 1,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 0
+    },
+    "VN": {
+     "n_ref": 11.0,
+     "n_pred": 11,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 51
+    },
+    "YE": {
+     "n_ref": 7.5,
+     "n_pred": 10,
+     "llm_f1": 93.3,
+     "model_f1": 85.6,
+     "model_recall": 100.0,
+     "train_agreed": 9
+    },
+    "ZA": {
+     "n_ref": 2.0,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 155
+    },
+    "ZM": {
+     "n_ref": 2.0,
+     "n_pred": 2,
+     "llm_f1": 100.0,
+     "model_f1": 100.0,
+     "model_recall": 100.0,
+     "train_agreed": 100
+    },
+    "ZW": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 48
+    }
+   }
+  },
+  "methods": {
+   "n_excerpts": 225,
+   "n_labels_scored": 4,
+   "min_support": 5,
+   "unmeasured": [
+    "bayesian_updating",
+    "contribution_analysis",
+    "cost_benefit_analysis",
+    "cost_effectiveness_analysis",
+    "ethnography",
+    "instrumental_variables",
+    "interrupted_time_series",
+    "matching_methods",
+    "outcome_mapping",
+    "process_tracing",
+    "qualitative_longitudinal",
+    "realist_evaluation",
+    "regression_discontinuity",
+    "simulation_modelling",
+    "timing_of_events"
+   ],
+   "macro_f1": 46.3,
+   "macro_ci": [
+    31.9,
+    58.5
+   ],
+   "llm_macro_f1": 77.7,
+   "labels": {
+    "bayesian_updating": {
+     "n_ref": 3.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 2
+    },
+    "case_based": {
+     "n_ref": 9.0,
+     "n_pred": 3,
+     "llm_f1": 66.7,
+     "model_f1": 41.7,
+     "model_recall": 27.8,
+     "train_agreed": 33
+    },
+    "contribution_analysis": {
+     "n_ref": 4.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 15
+    },
+    "cost_benefit_analysis": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 9
+    },
+    "cost_effectiveness_analysis": {
+     "n_ref": 4.5,
+     "n_pred": 0,
+     "llm_f1": 66.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 17
+    },
+    "difference_in_difference": {
+     "n_ref": 8.0,
+     "n_pred": 1,
+     "llm_f1": 87.5,
+     "model_f1": 22.2,
+     "model_recall": 12.5,
+     "train_agreed": 31
+    },
+    "ethnography": {
+     "n_ref": 4.0,
+     "n_pred": 0,
+     "llm_f1": 75.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 7
+    },
+    "instrumental_variables": {
+     "n_ref": 4.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 20
+    },
+    "interrupted_time_series": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 2
+    },
+    "matching_methods": {
+     "n_ref": 4.0,
+     "n_pred": 1,
+     "llm_f1": 75.0,
+     "model_f1": 40.0,
+     "model_recall": 25.0,
+     "train_agreed": 46
+    },
+    "outcome_mapping": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 1
+    },
+    "process_tracing": {
+     "n_ref": 1.0,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 1
+    },
+    "qualitative_longitudinal": {
+     "n_ref": 4.5,
+     "n_pred": 0,
+     "llm_f1": 66.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 20
+    },
+    "quantitative_longitudinal": {
+     "n_ref": 16.0,
+     "n_pred": 6,
+     "llm_f1": 62.5,
+     "model_f1": 34.0,
+     "model_recall": 23.4,
+     "train_agreed": 61
+    },
+    "rct": {
+     "n_ref": 96.5,
+     "n_pred": 97,
+     "llm_f1": 94.3,
+     "model_f1": 87.3,
+     "model_recall": 87.6,
+     "train_agreed": 305
+    },
+    "realist_evaluation": {
+     "n_ref": 3.0,
+     "n_pred": 0,
+     "llm_f1": 66.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 21
+    },
+    "regression_discontinuity": {
+     "n_ref": 2.0,
+     "n_pred": 0,
+     "llm_f1": 100.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 6
+    },
+    "simulation_modelling": {
+     "n_ref": 3.5,
+     "n_pred": 0,
+     "llm_f1": 85.7,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 41
+    },
+    "timing_of_events": {
+     "n_ref": 0.5,
+     "n_pred": 0,
+     "llm_f1": 0.0,
+     "model_f1": 0.0,
+     "model_recall": 0.0,
+     "train_agreed": 1
+    }
+   }
+  }
+ }
+}
