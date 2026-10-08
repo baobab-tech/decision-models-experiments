@@ -16,3 +16,4 @@
 2026-10-06T23:39:12Z	6ac586a0404719ba37664114	jhu-clsp/ettin-encoder-32m	--train-sample random
 2026-10-08T21:02:50Z	6ac804f3095c5780892fe0cf	Hcompany/NeoMME-260M	--epochs 12
 2026-10-08T21:02:50Z	6ac804f4095c5780892fe0d1	microsoft/harrier-oss-v1-270m	--epochs 12
+2026-10-08T22:34:39Z	-	-	6ac804f3095c5780892fe0cf and 6ac804f4095c5780892fe0d1 (--epochs 12) cancelled 2026-10-08: not needed after 02 closed

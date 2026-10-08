@@ -16,9 +16,8 @@ EvalExplorer production work moved to the `eval-explorer-fine-tune` repo (privat
 
 ## Open items
 
-1. **12-epoch NeoMME and harrier runs** (HF Jobs `6ac804f3095c5780892fe0cf`, `6ac804f4095c5780892fe0d1`, launched 2026-10-08, 6 h timeout). They push to `baobabtech/evaldocs-excerpt-tagger-<model>-llm-nocountries-lookup-e12` with `probs.npz`. Score with `cd experiments/02-fine-tuning && uv run score_per_label.py <repo>`. Add a line to the 02 README only if either beats 81.4.
-2. **Country-lookup donor bug.** It's documented as a limitation in the 02 conclusion and not fixed. The proposed rule: keep a lookup country only if the excerpt names it, or if its region is outside northern, southern and western Europe, northern America, and Australia/NZ. Test result: countries 72.3 → 78.4. If adopted, change `common/country_lookup.py` and the copy in `train_encoder.py`, then re-score 01 (`fit.py`) and 02 (`score_per_label.py`).
-3. **Hand over to the EvalExplorer repo** (these are findings about production, not about decision models):
+1. **Country-lookup donor bug.** It's documented as a limitation in the 02 conclusion and not fixed. The proposed rule: keep a lookup country only if the excerpt names it, or if its region is outside northern, southern and western Europe, northern America, and Australia/NZ. Test result: countries 72.3 → 78.4. If adopted, change `common/country_lookup.py` and the copy in `train_encoder.py`, then re-score 01 (`fit.py`) and 02 (`score_per_label.py`).
+2. **Hand over to the EvalExplorer repo** (these are findings about production, not about decision models):
    - Taxonomy note for the owner:
      - Theme definitions overlap: cash transfers, renewable energy, refugees, mediation and technology transfer each appear under 2–3 themes. Growth lists only trade. Conflict reads as humanitarian practice.
      - Per-label LLM agreement backs this: science_technology F1 6, global_partnerships 36, multilateral 40.
@@ -30,7 +29,7 @@ EvalExplorer production work moved to the `eval-explorer-fine-tune` repo (privat
      - Methodology excerpts are not checked against the source.
      - No character offsets are stored.
    - Reusable code from this repo: `experiments/common/per_label.py` (per-label F1, LLM-vs-LLM agreement, macro with bootstrap CI), `02-fine-tuning/train_encoder.py`, `predict_saved.py`, `score_per_label.py`.
-4. **Housekeeping:**
+3. **Housekeeping:**
    - Dataset viewer for `decision-models-evaluation-docs`.
    - Decide whether to publish the fine-tuned tagger repos (`baobabtech/evaldocs-excerpt-tagger-*`, private).
    - Decide on publishing the earlier classifier leaderboard (`evalexplorer-classify-experiments`, private).
